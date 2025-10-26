@@ -1,8 +1,9 @@
 # claud - A cloud based file storage
 
-We are building a remote file storage system `claud` (*/klɔːd/*) kind of like Google Drive alternative but with bunch of cool stuffs.
+We are building a remote file storage system `claud` (_/klɔːd/_) kind of like Google Drive alternative but with bunch of cool stuffs.
 
 ### Members
+
 1. Rohit Sharma
 2. Prajwal Jha
 3. Aniket Sah
@@ -13,11 +14,12 @@ We are building a remote file storage system `claud` (*/klɔːd/*) kind of like 
 Soon everyone will be assigned their role with the project structure to follow in [INSTRUCTIONS.md](/INSTRUCTIONS.md). While we wait, lets read the rules and guidelines below.
 
 ### Repo structure
+
 1. Root files in repo should be
-    - `/frontend` -> Contains react code
-    - `/backend` -> Contains nodejs/bun (hono) code
-    - Utility scripts
-    - Repository related assets, `README.md`, etc.
+   - `/frontend` -> Contains react code
+   - `/backend` -> Contains nodejs/bun (hono) code
+   - Utility scripts
+   - Repository related assets, `README.md`, etc.
 
 ### How to contribute?
 
@@ -25,21 +27,21 @@ I hope you understand Git basics: `add`, `commit`, `push`, `pull`, `rebase`, if 
 I hope you take git seriously because this will be our very foundation to build this project as a team.
 
 1. Clone the repo
-    ```bash
-    git clone https://github.com/rohitaryal/claud/
-    cd claud/
-    ```
+   ```bash
+   git clone https://github.com/rohitaryal/claud/
+   cd claud/
+   ```
 2. Create branch with **your name**
-    ```bash
-    git checkout -b rohitaryal # replace with your name
-    ```
+   ```bash
+   git checkout -b rohitaryal # replace with your name
+   ```
 3. Now write your code in this branch and be ready for commit.
-    ```bash
-    git add <edited_file_path>
-    git commit -m "What changes you made in the code"
-    git push origin rohitaryal # replace with branchname you used above
-    ```
-    
+   ```bash
+   git add <edited_file_path>
+   git commit -m "What changes you made in the code"
+   git push origin rohitaryal # replace with branchname you used above
+   ```
+
 > [!TIP]
 > Please read [COMMIT GUIDELINES](#commit-guidelines) to learn how to make good commits.
 
@@ -53,41 +55,40 @@ what changes have been made recently and what feature did the guy `x` made which
 So it is very important to follow some soft rules before you commit something. You can follow these simple rules:
 
 1. Make your commit messages are very descriptive.
-    - It doesn't need to be a 10 page essay.
-    - Think it like those `very short questions` but this time the question is: `What changes did you make?`
+   - It doesn't need to be a 10 page essay.
+   - Think it like those `very short questions` but this time the question is: `What changes did you make?`
 2. Only make commit after a feature is completely implemented
-    - Do: You added a sign-up page with everything from header to footer -> Make a commit
-    - Do: You optimized a function in commited code -> Make another commit
-    - Do: You caught some typo in your commited code -> Make another commit
-    - Do not: You added a feature but its buggy/wrong -> Make a commit
-    - Do not: You add a input box -> Make a commit, You add a link -> Make a commit, You wrote some code -> Make a commit because: You are going to khaogali with your room-mate.
-    - Do not: You added asset for password icon -> Make a commit, You added asset for email icon -> Make a commit
+   - Do: You added a sign-up page with everything from header to footer -> Make a commit
+   - Do: You optimized a function in commited code -> Make another commit
+   - Do: You caught some typo in your commited code -> Make another commit
+   - Do not: You added a feature but its buggy/wrong -> Make a commit
+   - Do not: You add a input box -> Make a commit, You add a link -> Make a commit, You wrote some code -> Make a commit because: You are going to khaogali with your room-mate.
+   - Do not: You added asset for password icon -> Make a commit, You added asset for email icon -> Make a commit
 3. Please append these words to your commit messages so the log viewer knows what kind of change was it.
-    1. `feat` - Abbr. for feature. Used when a commit adds a feature. Example:
-          ```bash
-          git commit -m "feat: Added sign-up page"
-          ```
-     2. `fix` - Used when a commit fixes something. Example:
-           ```bash
-           git commit -m "fix: fix infinite redirect problem"
-           ```
-     3. `docs` - Used when you made a change in documentation, or comment used as documentation.
-          ```bash
-          git commit -m "docs: Added documentation for sign-up function"
-          ```
-     4. `refactor` - Changes like: Renaming variables, changes that don't make change in actual working
-         ```bash
-         git commit -m "refactor: change username variable from name to username"
-         ```
-     5. `test` - Addition, changes in testing code
-         ```bash
-         git commit -m "test: add test for xss on forms"
-         ```
+   1. `feat` - Abbr. for feature. Used when a commit adds a feature. Example:
+      ```bash
+      git commit -m "feat: Added sign-up page"
+      ```
+   2. `fix` - Used when a commit fixes something. Example:
+      ```bash
+      git commit -m "fix: fix infinite redirect problem"
+      ```
+   3. `docs` - Used when you made a change in documentation, or comment used as documentation.
+      ```bash
+      git commit -m "docs: Added documentation for sign-up function"
+      ```
+   4. `refactor` - Changes like: Renaming variables, changes that don't make change in actual working
+      ```bash
+      git commit -m "refactor: change username variable from name to username"
+      ```
+   5. `test` - Addition, changes in testing code
+      ```bash
+      git commit -m "test: add test for xss on forms"
+      ```
 4. Don't do anything that will make you loose your code like:
-    - `push --force`
-    - Changing branch without commiting
+   - `push --force`
+   - Changing branch without commiting
 5. Take AI help in case you are completely lost
-  
 
 ### Wait before you provide your task to AI
 
