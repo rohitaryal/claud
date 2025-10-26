@@ -1,14 +1,14 @@
 services:
-  front-end:
-    build:
-      context: ./frontend/
-      dockerfile: Dockerfile
-    ports:
-      - 5173:5173
-    command: ["bun", "run", "dev", "--host"]
-  back-end:
-    build:
-      context: ./backend/
-      dockerfile: Dockerfile
-    ports:
-      - 3000:3000
+    front-end:
+        build:
+            context: ./frontend/
+            dockerfile: Dockerfile
+        ports:
+            - 5173:5173
+        command: ['bun', 'run', 'dev', '--host']
+    back-end:
+        build:
+            context: ./backend/
+            dockerfile: Dockerfile
+        ports:
+            - 3000:3000

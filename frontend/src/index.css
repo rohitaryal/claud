@@ -1,27 +1,27 @@
 ::root {
-  --white: #fff;
-  --black: #1d1f22;
-  --blue: #1233c1;
-  --gradient-blue: #1cd9f1;
-  --light-blue: #e1effd;
-  --dark-blue: #0b102b;
-  --grey: #4e4d4a;
-  --background: #fff;
-  --light-grey: #ebebeb;
-  --dark-grey: #353432;
-  --success: #6dc78e;
-  --danger: #e8645a;
-  --info: #4a90e2;
-  --light-info: #a9d1ff;
-  --short-transition: all 0.2s ease-in-out;
-  --long-transition: all 0.5s ease-in-out;
-  --xl-transition: all 1s ease-in-out;
-  --border-radius: 18px;
-  --max-width: 1440px;
+    --white: #fff;
+    --black: #1d1f22;
+    --blue: #1233c1;
+    --gradient-blue: #1cd9f1;
+    --light-blue: #e1effd;
+    --dark-blue: #0b102b;
+    --grey: #4e4d4a;
+    --background: #fff;
+    --light-grey: #ebebeb;
+    --dark-grey: #353432;
+    --success: #6dc78e;
+    --danger: #e8645a;
+    --info: #4a90e2;
+    --light-info: #a9d1ff;
+    --short-transition: all 0.2s ease-in-out;
+    --long-transition: all 0.5s ease-in-out;
+    --xl-transition: all 1s ease-in-out;
+    --border-radius: 18px;
+    --max-width: 1440px;
 }
 
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
