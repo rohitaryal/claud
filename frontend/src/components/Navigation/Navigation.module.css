@@ -1,0 +1,31 @@
+.navContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    height: 6em;
+    width: 100vw;
+    padding: 1em;
+    border-bottom: 1px solid black;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 1em;
+}
+
+.navContainer .logo {
+    height: 100%;
+    filter: grayscale(100%);
+}
+
+.navContainer .navLinksContainer {
+    display: flex;
+}
+
+.navContainer .navLinksContainer a {
+    margin: 1em;
+    text-decoration: none;
+    color: var(--blue-dark);
+    font-weight: bold;
+}
