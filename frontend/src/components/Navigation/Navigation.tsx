@@ -1,4 +1,4 @@
-import LoginButton from '../LoginButton/LoginButton'
+import LoginButton from '../Button/Button'
 import styles from './Navigation.module.css'
 
 const Navigation = function () {
@@ -12,7 +12,7 @@ const Navigation = function () {
                 <a href="#">About Us</a>
                 <a href="#">Terms & Conditions</a>
             </div>
-            <LoginButton />
+            <LoginButton text="Login to Claud" colored={true} />
         </nav>
     )
 }

@@ -1,12 +1,10 @@
 .navContainer {
-    position: fixed;
     top: 0;
     left: 0;
 
     height: 6em;
-    width: 100vw;
+    width: 100%;
     padding: 1em;
-    border-bottom: 1px solid black;
 
     display: flex;
     align-items: center;
@@ -21,6 +19,7 @@
 
 .navContainer .navLinksContainer {
     display: flex;
+    align-items: center;
 }
 
 .navContainer .navLinksContainer a {
