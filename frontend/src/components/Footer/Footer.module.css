@@ -1,0 +1,27 @@
+.footer {
+    width: 100%;
+    color: white;
+    text-align: center;
+    background-color: var(--blue);
+    background-image: radial-gradient(circle at bottom, var(--blue-dark) 10%, transparent);
+}
+
+.footer .largeText {
+    font-size: 25em;
+    font-weight: bold;
+    color: var(--blue-light);
+}
+
+.footer .footerEnd {
+    padding: 1em 5em;
+    background-color: var(--blue-dark);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.footer .footerEnd .links a {
+    margin-left: 1em;
+    text-decoration: none;
+    color: white;
+}
