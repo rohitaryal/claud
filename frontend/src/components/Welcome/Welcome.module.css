@@ -1,0 +1,52 @@
+.welcomeContainer {
+    height: 135vh;
+    width: 100%;
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-image:
+        linear-gradient(to bottom, var(--blue-light), white, transparent),
+        linear-gradient(to top, var(--blue) 5%, skyblue 80%, transparent);
+}
+
+.welcomeContainer .welcomeText {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 5em;
+    font-weight: bolder;
+}
+
+.welcomeContainer .welcomeText .secondLine {
+    background: -webkit-linear-gradient(blue, skyblue);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.welcomeContainer .welcomeText .finalLine {
+    padding: 1em;
+    font-weight: normal;
+    font-size: 0.5em;
+    text-align: center;
+}
+
+.welcomeContainer .welcomeText .finalLine span {
+    font-weight: bold;
+    color: var(--blue-dark);
+}
+
+.welcomeContainer .buttonsContainer {
+    width: 100%;
+    gap: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.welcomeContainer .people {
+    width: 60%;
+    margin: 5em;
+    border-radius: 1em;
+}
