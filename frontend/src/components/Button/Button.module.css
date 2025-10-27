@@ -14,7 +14,6 @@
 
     background-size: 200% auto;
     background-position: 50% 50%;
-
 }
 
 .blueButton {
@@ -28,26 +27,26 @@
 }
 
 .blueButton .arrow {
-  color: var(--blue-dark);
-  background-color: white;
+    color: var(--blue-dark);
+    background-color: white;
 }
 
 .whiteButton {
-  background-color: white;
-  border: 1px solid grey;
+    background-color: white;
+    border: 1px solid grey;
 }
 
 .whiteButton .arrow {
-  color: white;
-  background-color: var(--blue-dark);
+    color: white;
+    background-color: var(--blue-dark);
 }
 
 .button .text {
-  flex: 1;
-  padding-left: 1em;
+    flex: 1;
+    padding-left: 1em;
 }
 
 .button .arrow {
-  padding: .3em;
-  border-radius: 2em;
+    padding: 0.3em;
+    border-radius: 2em;
 }
