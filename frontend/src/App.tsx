@@ -1,13 +1,7 @@
-import Navigation from './components/Navigation/Navigation'
-import Welcome from './components/Welcome/Welcome'
+import Welcome from './pages/Welcome/Welcome'
 
 const App = function () {
-    return (
-        <>
-            <Navigation />
-            <Welcome />
-        </>
-    )
+    return Welcome()
 }
 
 export default App
