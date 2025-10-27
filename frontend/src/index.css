@@ -1,24 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
-
 :root {
-  --white: #ffffff;
-  --black: #1d1f22;
+    --white: #ffffff;
+    --black: #1d1f22;
 
-  --blue: #1233c1;
-  --blue-dark: #0b102b;
-  --blue-light: #e1effd;
+    --blue: #1233c1;
+    --blue-dark: #0b102b;
+    --blue-light: #e1effd;
 
-  --blue-gradient: linear-gradient(to right, var(--blue), #1cd9f1);
+    --blue-gradient: linear-gradient(to right, var(--blue), #1cd9f1);
 
-  --background: var(--white);
-  --border-radius: 18px;
-  --max-width: 1440px;
+    --background: var(--white);
+    --border-radius: 18px;
+    --max-width: 1440px;
 
-  --transition-short: 0.2s ease-in-out;
-  --transition-long: 0.5s ease-in-out;
+    --transition-short: 0.2s ease-in-out;
+    --transition-long: 0.5s ease-in-out;
 }
-
 
 * {
     margin: 0;
