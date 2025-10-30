@@ -5,10 +5,12 @@ services:
             dockerfile: Dockerfile
         ports:
             - 5173:5173
+        volumes:
+            - ./frontend/:/claud
         command: ['bun', 'run', 'dev', '--host']
-    back-end:
-        build:
-            context: ./backend/
-            dockerfile: Dockerfile
-        ports:
-            - 3000:3000
+#    back-end:
+#        build:
+#            context: ./backend/
+#            dockerfile: Dockerfile
+#        ports:
+#            - 3000:3000
