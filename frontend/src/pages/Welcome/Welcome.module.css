@@ -1,13 +1,12 @@
 .welcomeContainer {
-    height: 135vh;
     width: 100%;
     padding: 1em;
     display: flex;
     flex-direction: column;
     align-items: center;
     background-image:
-        linear-gradient(to bottom, var(--blue-light), white, transparent),
-        linear-gradient(to top, var(--blue) 5%, skyblue 80%, transparent);
+        linear-gradient(to bottom, var(--blue-light), transparent),
+        radial-gradient(circle at bottom, var(--blue-dark) 10%, white 100%);
 }
 
 .welcomeContainer .welcomeText {
@@ -15,7 +14,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 5em;
+    font-size: 5vw;
     font-weight: bolder;
 }
 
@@ -46,7 +45,9 @@
 }
 
 .welcomeContainer .people {
-    width: 60%;
-    margin: 5em;
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 5em;
     border-radius: 1em;
+    filter: grayscale(100%);
 }
