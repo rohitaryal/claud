@@ -2,16 +2,13 @@
     width: 100%;
     color: white;
     text-align: center;
-    background-color: var(--blue);
-    background-image: radial-gradient(circle at bottom, var(--blue-dark) 10%, transparent);
-}
-
-.footer .largeText {
-    font-weight: bold;
-    color: var(--blue-light);
+    background-image: linear-gradient(to top, var(--blue-dark) 50px, white);
+    position: relative;
+    z-index: -2;
 }
 
 .footer .footerEnd {
+    z-index: 1;
     padding: 1em 5em;
     background-color: var(--blue-dark);
     display: flex;

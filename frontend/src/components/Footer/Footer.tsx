@@ -3,7 +3,6 @@ import styles from './Footer.module.css'
 const Footer = function () {
     return (
         <footer className={styles.footer}>
-            <span className={styles.largeText}>Claud</span>
             <div className={styles.footerEnd}>
                 <span className={styles.copyright}>
                     Copyright (c) 2025 Claud. All Rights Reserved.
