@@ -14,3 +14,17 @@ services:
 #            dockerfile: Dockerfile
 #        ports:
 #            - 3000:3000
+    postgres:
+        image: postgres:16-alpine
+        environment:
+            POSTGRES_USER: claud
+            POSTGRES_PASSWORD: claud_password
+            POSTGRES_DB: claud
+        ports:
+            - 5432:5432
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        restart: unless-stopped
+
+volumes:
+    postgres_data:
