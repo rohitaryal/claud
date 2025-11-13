@@ -1,21 +1,50 @@
 services:
-    front-end:
+    frontend:
         build:
             context: ./frontend/
             dockerfile: Dockerfile
+        container_name: claud-frontend
         ports:
             - 5173:5173
         volumes:
             - ./frontend/:/claud
-        command: ['bun', 'run', 'dev', '--host']
-#    back-end:
-#        build:
-#            context: ./backend/
-#            dockerfile: Dockerfile
-#        ports:
-#            - 3000:3000
+            - /claud/node_modules
+        environment:
+            - VITE_API_URL=http://backend:3000
+        depends_on:
+            backend:
+                condition: service_started
+        networks:
+            - claud-network
+        restart: unless-stopped
+
+    backend:
+        build:
+            context: ./backend/
+            dockerfile: Dockerfile
+        container_name: claud-backend
+        ports:
+            - 3000:3000
+        volumes:
+            - ./backend/:/claud
+            - /claud/node_modules
+        environment:
+            - PORT=3000
+            - DB_HOST=postgres
+            - DB_NAME=claud
+            - DB_USER=claud
+            - DB_PASSWORD=claud_password
+            - DB_PORT=5432
+        depends_on:
+            postgres:
+                condition: service_started
+        networks:
+            - claud-network
+        restart: unless-stopped
+
     postgres:
         image: postgres:16-alpine
+        container_name: claud-postgres
         environment:
             POSTGRES_USER: claud
             POSTGRES_PASSWORD: claud_password
@@ -24,7 +53,18 @@ services:
             - 5432:5432
         volumes:
             - postgres_data:/var/lib/postgresql/data
+        networks:
+            - claud-network
         restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U claud"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+networks:
+    claud-network:
+        driver: bridge
 
 volumes:
     postgres_data:
