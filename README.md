@@ -2,6 +2,33 @@
 
 We are building a remote file storage system `claud` (_/klɔːd/_) kind of like Google Drive alternative but with bunch of cool stuffs.
 
+## 🐳 Quick Start with Docker
+
+The easiest way to run the entire application is using Docker:
+
+```bash
+# Start all services (frontend, backend, and database)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
+```
+
+**Access the application:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3000
+- Health Check: http://localhost:3000/api/health
+
+For detailed Docker setup documentation, see [README.docker.md](README.docker.md).
+
+To verify your Docker setup is working correctly, run:
+```bash
+./verify-docker.sh
+```
+
 ### Members
 
 1. Rohit Sharma
