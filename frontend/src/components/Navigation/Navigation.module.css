@@ -12,6 +12,12 @@
 .navContainer .logo {
     height: 100%;
     filter: grayscale(100%);
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.navContainer .logo:hover {
+    opacity: 0.8;
 }
 
 .navContainer .navLinksContainer {

@@ -1,9 +1,12 @@
+import { useNavigate } from 'react-router-dom'
 import Button from '../../components/Button/Button'
 import Footer from '../../components/Footer/Footer'
 import Navigation from '../../components/Navigation/Navigation'
 import styles from './Welcome.module.css'
 
 const Welcome = function () {
+    const navigate = useNavigate()
+
     return (
         <>
             <Navigation />
@@ -18,8 +21,8 @@ const Welcome = function () {
                 </div>
 
                 <div className={styles.buttonsContainer}>
-                    <Button text="Log In" colored={false} />
-                    <Button text="Sign Up" colored={true} />
+                    <Button text="Log In" colored={false} onClick={() => navigate('/login')} />
+                    <Button text="Sign Up" colored={true} onClick={() => navigate('/signup')} />
                 </div>
                 <img src="/people.jpg" className={styles.people} />
             </div>
