@@ -2,10 +2,52 @@
     width: 100%;
     max-width: 500px;
     margin: 0 auto;
-    padding: 2.5rem;
     background-color: white;
     border-radius: var(--border-radius);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+}
+
+.tabsContainer {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    background-color: #f8f9fa;
+}
+
+.tab {
+    padding: 1rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: all var(--transition-short);
+    border: none;
+    background-color: transparent;
+    color: #999;
+}
+
+.tab:hover:not(.tabActive) {
+    background-color: #f0f0f0;
+}
+
+.tabActive {
+    background-color: white;
+    color: var(--black);
+    border-bottom: 3px solid var(--blue);
+}
+
+.tab:nth-child(2).tabActive {
+    border-bottom-color: #16c784;
+}
+
+.tab:nth-child(3).tabActive {
+    border-bottom-color: #1cd9f1;
+}
+
+.content {
+    padding: 2.5rem;
 }
 
 .header {
@@ -14,15 +56,15 @@
 }
 
 .title {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--black);
     margin-bottom: 0.5rem;
 }
 
 .subtitle {
-    font-size: 0.95rem;
-    color: #666;
+    font-size: 0.9rem;
+    color: #999;
     font-weight: 400;
 }
 
@@ -34,11 +76,19 @@
 
 @media (max-width: 768px) {
     .formCard {
-        padding: 1.5rem;
         margin: 1rem;
     }
 
+    .content {
+        padding: 1.5rem;
+    }
+
     .title {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+    }
+
+    .tab {
+        padding: 0.75rem;
+        font-size: 0.8rem;
     }
 }
