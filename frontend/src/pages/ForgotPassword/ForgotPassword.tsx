@@ -4,6 +4,7 @@ import Input from '../../components/Input/Input'
 import FormCard from '../../components/FormCard/FormCard'
 import Navigation from '../../components/Navigation/Navigation'
 import Footer from '../../components/Footer/Footer'
+import { apiForgotPassword } from '../../utils/api'
 import styles from './ForgotPassword.module.css'
 
 const ForgotPassword = function () {
@@ -33,18 +34,13 @@ const ForgotPassword = function () {
 
         setLoading(true)
         try {
-            // TODO: API call to backend
-            // const response = await fetch('/api/auth/forgot-password', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ email })
-            // })
-            // const data = await response.json()
+            const response = await apiForgotPassword(email)
 
-            // Mock success
-            setTimeout(() => {
+            if (response.success) {
                 setSubmitted(true)
-            }, 500)
+            } else {
+                setErrors({ email: response.message || 'Failed to send reset email' })
+            }
         } catch (error) {
             console.error(error)
             setErrors({ email: 'Failed to send reset email. Please try again.' })

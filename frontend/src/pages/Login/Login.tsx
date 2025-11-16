@@ -4,7 +4,7 @@ import Input from '../../components/Input/Input'
 import FormCard from '../../components/FormCard/FormCard'
 import Navigation from '../../components/Navigation/Navigation'
 import Footer from '../../components/Footer/Footer'
-import Button from '../../components/Button/Button'
+import { apiLogin } from '../../utils/api'
 import styles from './Login.module.css'
 
 const Login = function () {
@@ -40,18 +40,13 @@ const Login = function () {
 
         setLoading(true)
         try {
-            // TODO: API call to backend
-            // const response = await fetch('/api/auth/login', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ email, password })
-            // })
-            // const data = await response.json()
+            const response = await apiLogin(email, password)
 
-            // Mock success
-            setTimeout(() => {
+            if (response.success) {
                 navigate('/home')
-            }, 500)
+            } else {
+                setErrors({ email: response.message || 'Login failed' })
+            }
         } catch (error) {
             console.error(error)
             setErrors({ email: 'Login failed. Please try again.' })

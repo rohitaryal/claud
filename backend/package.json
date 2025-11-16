@@ -4,9 +4,12 @@
         "dev": "bun run --hot src/index.ts"
     },
     "dependencies": {
+        "@types/node": "^24.10.1",
         "@types/pg": "^8.15.6",
+        "bcryptjs": "^2.4.3",
         "hono": "^4.10.3",
-        "pg": "^8.16.3"
+        "pg": "^8.16.3",
+        "uuid": "^9.0.0"
     },
     "devDependencies": {
         "@types/bun": "latest"

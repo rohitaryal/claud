@@ -4,6 +4,7 @@ import Input from '../../components/Input/Input'
 import FormCard from '../../components/FormCard/FormCard'
 import Navigation from '../../components/Navigation/Navigation'
 import Footer from '../../components/Footer/Footer'
+import { apiRegister } from '../../utils/api'
 import styles from './Signup.module.css'
 
 interface SignupErrors {
@@ -77,22 +78,13 @@ const Signup = function () {
 
         setLoading(true)
         try {
-            // TODO: API call to backend
-            // const response = await fetch('/api/auth/register', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({
-            //         username: formData.username,
-            //         email: formData.email,
-            //         password: formData.password
-            //     })
-            // })
-            // const data = await response.json()
+            const response = await apiRegister(formData.username, formData.email, formData.password)
 
-            // Mock success
-            setTimeout(() => {
-                navigate('/login')
-            }, 500)
+            if (response.success) {
+                navigate('/home')
+            } else {
+                setErrors({ email: response.message })
+            }
         } catch (error) {
             console.error(error)
             setErrors({ email: 'Signup failed. Please try again.' })
