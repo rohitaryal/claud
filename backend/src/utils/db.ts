@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from "pg";
+import { Pool, QueryResult, QueryResultRow } from "pg";
 import { dbConfig } from "../config/db";
 
 // Create a connection pool
@@ -29,7 +29,7 @@ pool.on("error", (err) => {
  * @param params Query parameters
  * @returns Query result
  */
-export async function query<T = any>(
+export async function query<T extends QueryResultRow = any>(
   text: string,
   params?: any[]
 ): Promise<QueryResult<T>> {
