@@ -7,14 +7,16 @@ interface InputProps {
     value: string
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     error?: string
+    name?: string
 }
 
-const Input = function ({ label, type, placeholder, value, onChange, error }: InputProps) {
+const Input = function ({ label, type, placeholder, value, onChange, error, name }: InputProps) {
     return (
         <div className={styles.inputGroup}>
             <label className={styles.label}>{label}</label>
             <input
                 type={type}
+                name={name}
                 placeholder={placeholder}
                 value={value}
                 onChange={onChange}
