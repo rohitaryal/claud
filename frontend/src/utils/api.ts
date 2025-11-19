@@ -1,6 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   message: string
   data?: T
@@ -18,6 +18,7 @@ export interface AuthResponse {
   message: string
   user?: AuthUser
   session?: string
+  code?: string
 }
 
 /**
