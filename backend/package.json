@@ -1,7 +1,9 @@
 {
     "name": "backend",
     "scripts": {
-        "dev": "bun run --hot src/index.ts"
+        "dev": "bun run --hot src/index.ts",
+        "start": "tsx src/index.ts",
+        "test": "tsx src/index.ts"
     },
     "dependencies": {
         "@types/node": "^24.10.1",
@@ -14,6 +16,7 @@
     "devDependencies": {
         "@types/bcryptjs": "^2.4.6",
         "@types/bun": "latest",
-        "@types/uuid": "^10.0.0"
+        "@types/uuid": "^10.0.0",
+        "tsx": "^4.20.6"
     }
 }
