@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Input from '../../components/Input/Input'
 import FormCard from '../../components/FormCard/FormCard'
 import Navigation from '../../components/Navigation/Navigation'
@@ -8,7 +8,6 @@ import { apiLogin } from '../../utils/api'
 import styles from './Login.module.css'
 
 const Login = function () {
-    const navigate = useNavigate()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
@@ -43,14 +42,15 @@ const Login = function () {
             const response = await apiLogin(email, password)
 
             if (response.success) {
-                navigate('/home')
+                // Force a full page reload to ensure all components re-check auth state
+                window.location.href = '/home'
             } else {
                 setErrors({ email: response.message || 'Login failed' })
+                setLoading(false)
             }
         } catch (error) {
             console.error(error)
             setErrors({ email: 'Login failed. Please try again.' })
-        } finally {
             setLoading(false)
         }
     }

@@ -11,7 +11,7 @@ export interface ApiResponse<T = unknown> {
   code?: string
 }
 
-export interface AuthUser {
+export type AuthUser = {
   uuid: string
   username: string
   email: string
