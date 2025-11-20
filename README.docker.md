@@ -12,7 +12,7 @@ All services run in isolated containers and communicate through a Docker network
 ```
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
 │   Frontend      │      │    Backend      │      │   PostgreSQL    │
-│   (port 5173)   │─────▶│   (port 3000)   │─────▶│   (port 5432)   │
+│   (port 5173)   │────▶│   (port 3000)   │─────▶│   (port 5432)   │
 │   React + Vite  │      │   Bun + Hono    │      │   Database      │
 └─────────────────┘      └─────────────────┘      └─────────────────┘
 ```
