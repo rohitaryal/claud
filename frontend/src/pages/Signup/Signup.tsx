@@ -105,6 +105,7 @@ const Signup = function () {
                         <Input
                             label="Username"
                             type="text"
+                            name="username"
                             placeholder="choose_username"
                             value={formData.username}
                             onChange={handleChange}
@@ -113,6 +114,7 @@ const Signup = function () {
                         <Input
                             label="Email"
                             type="email"
+                            name="email"
                             placeholder="your@email.com"
                             value={formData.email}
                             onChange={handleChange}
@@ -121,6 +123,7 @@ const Signup = function () {
                         <Input
                             label="Password"
                             type="password"
+                            name="password"
                             placeholder="At least 8 characters"
                             value={formData.password}
                             onChange={handleChange}
@@ -129,6 +132,7 @@ const Signup = function () {
                         <Input
                             label="Confirm Password"
                             type="password"
+                            name="confirmPassword"
                             placeholder="Confirm your password"
                             value={formData.confirmPassword}
                             onChange={handleChange}

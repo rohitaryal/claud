@@ -18,7 +18,7 @@ export const deocdeCookie = function (cookieStr: string): UserCookie | null {
   // Decode from base64 first
   let decodedCookie: string;
   try {
-    decodedCookie = atob(sessionCookie);
+    decodedCookie = Buffer.from(sessionCookie, 'base64').toString('utf-8');
   } catch (err) {
     console.log(err);
     return null;

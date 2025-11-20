@@ -264,6 +264,76 @@ fileRouter.get('/', async (c) => {
 })
 
 /**
+ * GET /files/storage/usage
+ * Get user's storage usage
+ */
+fileRouter.get('/storage/usage', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    // Get storage usage
+    const totalSize = await getUserStorageUsage(user.uuid)
+
+    return c.json({
+      success: true,
+      storage: {
+        used: totalSize,
+        max: MAX_FILE_SIZE,
+        usedFormatted: `${(totalSize / 1024 / 1024).toFixed(2)} MB`,
+        maxFormatted: `${(MAX_FILE_SIZE / 1024 / 1024).toFixed(2)} MB`
+      }
+    })
+  } catch (error) {
+    console.error('Get storage usage endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
  * GET /files/:fileId
  * Get file metadata
  */
@@ -329,153 +399,6 @@ fileRouter.get('/:fileId', async (c) => {
     })
   } catch (error) {
     console.error('Get file metadata endpoint error:', error)
-    return c.json(
-      {
-        success: false,
-        message: 'Internal server error',
-        code: 'SERVER_ERROR'
-      },
-      500
-    )
-  }
-})
-
-/**
- * DELETE /files/:fileId
- * Delete a file
- */
-fileRouter.delete('/:fileId', async (c) => {
-  try {
-    // Get session from cookie
-    const cookies = c.req.header('Cookie')
-    if (!cookies) {
-      return c.json(
-        {
-          success: false,
-          message: 'Not authenticated',
-          code: 'NOT_AUTHENTICATED'
-        },
-        401
-      )
-    }
-
-    const sessionMatch = cookies.match(/session=([^;]+)/)
-    if (!sessionMatch) {
-      return c.json(
-        {
-          success: false,
-          message: 'Not authenticated',
-          code: 'NOT_AUTHENTICATED'
-        },
-        401
-      )
-    }
-
-    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
-    const user = await getFromSession(sessionId)
-
-    if (!user) {
-      return c.json(
-        {
-          success: false,
-          message: 'Not authenticated',
-          code: 'NOT_AUTHENTICATED'
-        },
-        401
-      )
-    }
-
-    const fileId = c.req.param('fileId')
-
-    // Delete file
-    const deleted = await deleteFile(fileId, user.uuid)
-    if (!deleted) {
-      return c.json(
-        {
-          success: false,
-          message: 'File not found or already deleted',
-          code: 'FILE_NOT_FOUND'
-        },
-        404
-      )
-    }
-
-    return c.json({
-      success: true,
-      message: 'File deleted successfully'
-    })
-  } catch (error) {
-    console.error('Delete file endpoint error:', error)
-    return c.json(
-      {
-        success: false,
-        message: 'Internal server error',
-        code: 'SERVER_ERROR'
-      },
-      500
-    )
-  }
-})
-
-/**
- * GET /files/storage/usage
- * Get user's storage usage
- */
-fileRouter.get('/storage/usage', async (c) => {
-  try {
-    // Get session from cookie
-    const cookies = c.req.header('Cookie')
-    if (!cookies) {
-      return c.json(
-        {
-          success: false,
-          message: 'Not authenticated',
-          code: 'NOT_AUTHENTICATED'
-        },
-        401
-      )
-    }
-
-    const sessionMatch = cookies.match(/session=([^;]+)/)
-    if (!sessionMatch) {
-      return c.json(
-        {
-          success: false,
-          message: 'Not authenticated',
-          code: 'NOT_AUTHENTICATED'
-        },
-        401
-      )
-    }
-
-    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
-    const user = await getFromSession(sessionId)
-
-    if (!user) {
-      return c.json(
-        {
-          success: false,
-          message: 'Not authenticated',
-          code: 'NOT_AUTHENTICATED'
-        },
-        401
-      )
-    }
-
-    // Get storage usage
-    const totalSize = await getUserStorageUsage(user.uuid)
-
-    return c.json({
-      success: true,
-      storage: {
-        used: totalSize,
-        max: MAX_FILE_SIZE,
-        usedFormatted: `${(totalSize / 1024 / 1024).toFixed(2)} MB`,
-        maxFormatted: `${(MAX_FILE_SIZE / 1024 / 1024).toFixed(2)} MB`
-      }
-    })
-  } catch (error) {
-    console.error('Get storage usage endpoint error:', error)
     return c.json(
       {
         success: false,

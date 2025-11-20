@@ -61,6 +61,9 @@ export async function initDatabase() {
   try {
     await client.query("BEGIN");
 
+    // Enable pgcrypto extension for gen_random_uuid()
+    await client.query("CREATE EXTENSION IF NOT EXISTS pgcrypto");
+
     // Create users table
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (

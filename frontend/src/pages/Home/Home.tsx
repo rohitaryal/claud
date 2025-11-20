@@ -166,11 +166,42 @@ const Home = function () {
                             onDrop={(e) => {
                                 e.preventDefault()
                                 e.currentTarget.classList.remove(styles.dragOver)
-                                if (e.dataTransfer.files) {
-                                    fileInputRef.current!.files = e.dataTransfer.files
-                                    handleFileSelect({
-                                        currentTarget: fileInputRef.current!
-                                    } as React.ChangeEvent<HTMLInputElement>)
+                                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                    // Process dropped files directly
+                                    setUploading(true)
+                                    try {
+                                        for (let i = 0; i < e.dataTransfer.files.length; i++) {
+                                            const file = e.dataTransfer.files[i]
+
+                                            // Create FormData for file upload
+                                            const formData = new FormData()
+                                            formData.append('file', file)
+
+                                            // TODO: API call to backend
+                                            // const response = await fetch('/api/files/upload', {
+                                            //     method: 'POST',
+                                            //     body: formData
+                                            // })
+                                            // const data = await response.json()
+
+                                            // Mock upload
+                                            const newFile: UploadedFile = {
+                                                id: `file-${Date.now()}-${i}`,
+                                                name: file.name,
+                                                size: file.size,
+                                                type: file.type,
+                                                uploadedAt: new Date(),
+                                                originalName: file.name
+                                            }
+
+                                            setFiles((prev) => [newFile, ...prev])
+                                        }
+                                    } catch (error) {
+                                        console.error('Upload failed:', error)
+                                        alert('Failed to upload file. Please try again.')
+                                    } finally {
+                                        setUploading(false)
+                                    }
                                 }
                             }}
                         >
