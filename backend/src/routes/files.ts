@@ -5,6 +5,7 @@ import {
   getFileStream, 
   listUserFiles, 
   deleteFile,
+  permanentlyDeleteFile,
   getUserStorageUsage,
   updateFileMetadata,
   searchFiles,
@@ -243,9 +244,10 @@ fileRouter.get('/', async (c) => {
     const parentFolderId = c.req.query('parentFolderId')
     const limit = parseInt(c.req.query('limit') || '50')
     const offset = parseInt(c.req.query('offset') || '0')
+    const includeDeleted = c.req.query('includeDeleted') === 'true'
 
     // List files
-    const files = await listUserFiles(user.uuid, parentFolderId || undefined, limit, offset)
+    const files = await listUserFiles(user.uuid, parentFolderId || undefined, limit, offset, includeDeleted)
 
     return c.json({
       success: true,
@@ -622,10 +624,10 @@ fileRouter.get('/search', async (c) => {
       )
     }
 
-    const query = c.req.query('q') || ''
+    const searchQuery = c.req.query('q') || ''
     const limit = parseInt(c.req.query('limit') || '20')
 
-    if (!query || query.trim().length === 0) {
+    if (!searchQuery || searchQuery.trim().length === 0) {
       return c.json({
         success: true,
         files: [],
@@ -634,7 +636,7 @@ fileRouter.get('/search', async (c) => {
     }
 
     // Search files
-    const files = await searchFiles(user.uuid, query.trim(), limit)
+    const files = await searchFiles(user.uuid, searchQuery.trim(), limit)
 
     return c.json({
       success: true,
@@ -643,6 +645,83 @@ fileRouter.get('/search', async (c) => {
     })
   } catch (error) {
     console.error('Search endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * DELETE /files/:fileId/permanent
+ * Permanently delete a file from trash
+ */
+fileRouter.delete('/:fileId/permanent', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const fileId = c.req.param('fileId')
+
+    // Permanently delete file
+    const result = await permanentlyDeleteFile(fileId, user.uuid)
+    if (!result.success) {
+      return c.json(
+        {
+          success: false,
+          message: 'File not found in trash or already deleted',
+          code: 'FILE_NOT_FOUND'
+        },
+        404
+      )
+    }
+
+    return c.json({
+      success: true,
+      message: 'File permanently deleted'
+    })
+  } catch (error) {
+    console.error('Permanent delete endpoint error:', error)
     return c.json(
       {
         success: false,

@@ -117,12 +117,14 @@ export async function listUserFiles(
   userUuid: string,
   parentFolderId?: string,
   limit: number = 50,
-  offset: number = 0
+  offset: number = 0,
+  includeDeleted: boolean = false
 ): Promise<any[]> {
+  const deletedCondition = includeDeleted ? 'is_deleted = TRUE' : 'is_deleted = FALSE'
   const result = await query(
-    `SELECT file_id, filename, original_name, file_size, mime_type, parent_folder_id, created_at, updated_at
+    `SELECT file_id, filename, original_name, file_size, mime_type, parent_folder_id, created_at, updated_at, is_deleted
      FROM files
-     WHERE user_uuid = $1 AND is_deleted = FALSE AND parent_folder_id ${parentFolderId ? '= $2' : 'IS NULL'}
+     WHERE user_uuid = $1 AND ${deletedCondition} AND parent_folder_id ${parentFolderId ? '= $2' : 'IS NULL'}
      ORDER BY created_at DESC
      LIMIT $${parentFolderId ? '3' : '2'} OFFSET $${parentFolderId ? '4' : '3'}`,
     parentFolderId 
@@ -147,6 +149,52 @@ export async function deleteFile(fileId: string, userUuid: string): Promise<bool
   } catch (error) {
     console.error('Error deleting file:', error)
     return false
+  }
+}
+
+/**
+ * Permanently delete file (hard delete)
+ */
+export async function permanentlyDeleteFile(fileId: string, userUuid: string): Promise<{ success: boolean; filePath?: string }> {
+  try {
+    // First get the file path before deleting
+    const fileResult = await query(
+      `SELECT file_path FROM files
+       WHERE file_id = $1 AND user_uuid = $2 AND is_deleted = TRUE`,
+      [fileId, userUuid]
+    )
+
+    if (fileResult.rows.length === 0) {
+      return { success: false }
+    }
+
+    const filePath = fileResult.rows[0].file_path
+
+    // Delete from database
+    const deleteResult = await query(
+      `DELETE FROM files
+       WHERE file_id = $1 AND user_uuid = $2 AND is_deleted = TRUE`,
+      [fileId, userUuid]
+    )
+
+    if (deleteResult.rowCount === 0) {
+      return { success: false }
+    }
+
+    // Delete physical file
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
+      }
+    } catch (fileError) {
+      console.error('Error deleting physical file:', fileError)
+      // Continue even if physical file deletion fails
+    }
+
+    return { success: true, filePath }
+  } catch (error) {
+    console.error('Error permanently deleting file:', error)
+    return { success: false }
   }
 }
 
@@ -248,10 +296,11 @@ export async function updateFileMetadata(
  */
 export async function searchFiles(
   userUuid: string,
-  query: string,
+  searchQuery: string,
   limit: number = 20
 ): Promise<any[]> {
-  const searchPattern = `%${query}%`
+  const searchPattern = `%${searchQuery}%`
+  const exactPattern = `${searchQuery}%`
   const result = await query(
     `SELECT file_id, filename, original_name, file_size, mime_type, parent_folder_id, created_at, updated_at
      FROM files
@@ -264,7 +313,7 @@ export async function searchFiles(
        END,
        created_at DESC
      LIMIT $5`,
-    [userUuid, searchPattern, `${query}%`, `%${query}%`, limit]
+    [userUuid, searchPattern, exactPattern, searchPattern, limit]
   )
   return result.rows
 }

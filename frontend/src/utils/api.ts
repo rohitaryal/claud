@@ -299,10 +299,11 @@ export async function apiUploadFile(
 /**
  * List user files
  */
-export async function apiListFiles(limit = 50, offset = 0): Promise<{ success: boolean; files?: any[]; count?: number }> {
+export async function apiListFiles(limit = 50, offset = 0, includeDeleted = false): Promise<{ success: boolean; files?: any[]; count?: number }> {
   try {
-    logger.api('GET /api/files', { limit, offset })
-    const response = await fetch(`${API_BASE}/api/files?limit=${limit}&offset=${offset}`, {
+    logger.api('GET /api/files', { limit, offset, includeDeleted })
+    const url = `${API_BASE}/api/files?limit=${limit}&offset=${offset}${includeDeleted ? '&includeDeleted=true' : ''}`
+    const response = await fetch(url, {
       method: 'GET',
       credentials: 'include'
     })
@@ -430,6 +431,33 @@ export async function apiUpdateFile(fileId: string, originalName: string): Promi
     return data
   } catch (error) {
     logger.error('Update file error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Permanently delete a file from trash
+ */
+export async function apiPermanentDeleteFile(fileId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    logger.api('DELETE /api/files/:fileId/permanent', { fileId })
+    const response = await fetch(`${API_BASE}/api/files/${fileId}/permanent`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('File permanently deleted', fileId)
+    } else {
+      logger.warn('Failed to permanently delete file', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Permanent delete file error', error)
     return {
       success: false,
       message: 'Network error. Please try again.'

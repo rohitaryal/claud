@@ -5,7 +5,7 @@ import Sidebar from '../../components/Sidebar/Sidebar'
 import Dialog from '../../components/Dialog/Dialog'
 import styles from './MyFiles.module.css'
 import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoDocumentTextOutline, IoFolderOutline, IoEyeOutline, IoCloseOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile } from '../../utils/api'
+import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile } from '../../utils/api'
 import { logger } from '../../utils/logger'
 import { getFileIcon } from '../../utils/fileIcons'
 import { showDialog } from '../../utils/dialog'
@@ -17,6 +17,7 @@ interface FileItem {
     mime_type: string
     created_at: string
     isFolder?: boolean
+    is_deleted?: boolean
 }
 
 const MyFiles = function () {
@@ -50,7 +51,8 @@ const MyFiles = function () {
     const loadFiles = async () => {
         setLoading(true)
         try {
-            const response = await apiListFiles()
+            const includeDeleted = activeSection === 'trash'
+            const response = await apiListFiles(50, 0, includeDeleted)
             if (response.success && response.files) {
                 setFiles(response.files)
             }
@@ -60,6 +62,10 @@ const MyFiles = function () {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        loadFiles()
+    }, [activeSection])
 
     const handleNewClick = () => {
         navigate('/home')
@@ -192,10 +198,10 @@ const MyFiles = function () {
     }
 
     // Filter files based on active section
-    const filteredFiles = files.filter(() => {
+    const filteredFiles = files.filter((file) => {
         switch (activeSection) {
             case 'trash':
-                return false // TODO: Implement trash filter
+                return file.is_deleted === true
             case 'starred':
                 return false // TODO: Implement starred filter
             case 'recent':
@@ -203,9 +209,27 @@ const MyFiles = function () {
             case 'shared':
                 return false // TODO: Implement shared filter
             default:
-                return true
+                return !file.is_deleted
         }
     })
+
+    const handlePermanentDelete = async (id: string, name: string) => {
+        if (confirm(`Are you sure you want to permanently delete "${name}"? This action cannot be undone.`)) {
+            try {
+                const response = await apiPermanentDeleteFile(id)
+                if (response.success) {
+                    setFiles((prev) => prev.filter((f) => f.file_id !== id))
+                    logger.success('File permanently deleted', name)
+                } else {
+                    logger.error('Permanent delete failed', response.message)
+                    alert(`Failed to permanently delete file: ${response.message}`)
+                }
+            } catch (error) {
+                logger.error('Permanent delete error', error)
+                alert('Failed to permanently delete file. Please try again.')
+            }
+        }
+    }
 
     // Separate folders and files
     const folders = filteredFiles.filter(f => f.isFolder)
@@ -272,9 +296,15 @@ const MyFiles = function () {
                                                     <span className={styles.fileName}>{file.original_name}</span>
                                                     <span className={styles.fileDate}>{formatDate(file.created_at)}</span>
                                                     <div className={styles.fileActions}>
-                                                        <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id, file.original_name)}>
-                                                            <IoTrashOutline size={18} />
-                                                        </button>
+                                                        {activeSection === 'trash' ? (
+                                                            <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(file.file_id, file.original_name)}>
+                                                                <IoTrashOutline size={18} />
+                                                            </button>
+                                                        ) : (
+                                                            <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id, file.original_name)}>
+                                                                <IoTrashOutline size={18} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
@@ -302,9 +332,15 @@ const MyFiles = function () {
                                                             <button className={styles.actionButton} title="Download" onClick={() => handleDownloadFile(fileItem)}>
                                                                 <IoDownloadOutline size={18} />
                                                             </button>
-                                                            <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(fileItem.file_id, fileItem.original_name)}>
-                                                                <IoTrashOutline size={18} />
-                                                            </button>
+                                                            {activeSection === 'trash' ? (
+                                                                <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(fileItem.file_id, fileItem.original_name)}>
+                                                                    <IoTrashOutline size={18} />
+                                                                </button>
+                                                            ) : (
+                                                                <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(fileItem.file_id, fileItem.original_name)}>
+                                                                    <IoTrashOutline size={18} />
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )
@@ -335,9 +371,15 @@ const MyFiles = function () {
                                                             <IoDownloadOutline size={18} />
                                                         </button>
                                                     )}
-                                                    <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id, file.original_name)}>
-                                                        <IoTrashOutline size={18} />
-                                                    </button>
+                                                    {activeSection === 'trash' ? (
+                                                        <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(file.file_id, file.original_name)}>
+                                                            <IoTrashOutline size={18} />
+                                                        </button>
+                                                    ) : (
+                                                        <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id, file.original_name)}>
+                                                            <IoTrashOutline size={18} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         )
