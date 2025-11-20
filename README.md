@@ -7,7 +7,7 @@ We are building a remote file storage system `claud` (_/klɔːd/_) kind of like 
 The easiest way to run the entire application is using Docker:
 
 ```bash
-# Start all services (frontend, backend, and database)
+# Start all services (frontend, backend, and database) 
 docker compose up -d
 
 # View logs
