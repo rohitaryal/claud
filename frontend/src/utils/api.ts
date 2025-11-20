@@ -200,3 +200,29 @@ export async function apiLogout(): Promise<{ success: boolean; message: string }
     }
   }
 }
+
+/**
+ * Get storage usage
+ */
+export async function getUserStorageUsage(): Promise<{ success: boolean; storage?: { used: number; max: number; usedFormatted: string; maxFormatted: string } }> {
+  try {
+    logger.api('GET /api/files/storage/usage')
+    const response = await fetch(`${API_BASE}/api/files/storage/usage`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Storage usage fetched', data.storage)
+    } else {
+      logger.warn('Failed to fetch storage usage', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Get storage usage error', error)
+    return {
+      success: false
+    }
+  }
+}

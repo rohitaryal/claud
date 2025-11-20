@@ -1,9 +1,25 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LoginButton from '../Button/Button'
+import { apiGetCurrentUser } from '../../utils/api'
 import styles from './Navigation.module.css'
 
 const Navigation = function () {
     const navigate = useNavigate()
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const response = await apiGetCurrentUser()
+            setIsAuthenticated(response.success && !!response.user)
+        }
+        checkAuth()
+    }, [])
+
+    // Don't show navigation if user is authenticated (they'll see dashboard header instead)
+    if (isAuthenticated) {
+        return null
+    }
 
     return (
         <nav className={styles.navContainer}>

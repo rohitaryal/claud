@@ -1,9 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navigation from '../../components/Navigation/Navigation'
-import Footer from '../../components/Footer/Footer'
+import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
+import Sidebar from '../../components/Sidebar/Sidebar'
 import styles from './Home.module.css'
-import { IoCloudUploadOutline, IoTrashOutline, IoDownloadOutline, IoLogOutOutline } from 'react-icons/io5'
+import { IoCloudUploadOutline, IoTrashOutline, IoDownloadOutline, IoFolderOutline, IoGridOutline, IoListOutline } from 'react-icons/io5'
+import { apiGetCurrentUser } from '../../utils/api'
+import { logger } from '../../utils/logger'
 
 interface UploadedFile {
     id: string
@@ -12,6 +14,7 @@ interface UploadedFile {
     type: string
     uploadedAt: Date
     originalName: string
+    isFolder?: boolean
 }
 
 const Home = function () {
@@ -19,12 +22,29 @@ const Home = function () {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [files, setFiles] = useState<UploadedFile[]>([])
     const [uploading, setUploading] = useState(false)
-    const [userInfo] = useState({
-        username: 'John Doe',
-        email: 'john@example.com',
-        storageUsed: 125, // MB
-        storageLimit: 5120 // 5GB
-    })
+    const [activeSection, setActiveSection] = useState('my-files')
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+    const [, setUser] = useState<any>(null)
+
+    useEffect(() => {
+        // Check authentication
+        const checkAuth = async () => {
+            const response = await apiGetCurrentUser()
+            if (!response.success || !response.user) {
+                navigate('/login')
+                return
+            }
+            setUser(response.user)
+        }
+        checkAuth()
+
+        // Storage usage is loaded in Sidebar component
+    }, [navigate])
+
+    const handleNewClick = () => {
+        // Show options: Upload File, New Folder
+        fileInputRef.current?.click()
+    }
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFiles = e.currentTarget.files
@@ -34,14 +54,13 @@ const Home = function () {
         try {
             for (let i = 0; i < selectedFiles.length; i++) {
                 const file = selectedFiles[i]
-
-                // Create FormData for file upload
                 const formData = new FormData()
                 formData.append('file', file)
 
                 // TODO: API call to backend
-                // const response = await fetch('/api/files/upload', {
+                // const response = await fetch(`${API_BASE}/api/files/upload`, {
                 //     method: 'POST',
+                //     credentials: 'include',
                 //     body: formData
                 // })
                 // const data = await response.json()
@@ -57,9 +76,10 @@ const Home = function () {
                 }
 
                 setFiles((prev) => [newFile, ...prev])
+                logger.success('File uploaded', file.name)
             }
         } catch (error) {
-            console.error('Upload failed:', error)
+            logger.error('Upload failed', error)
             alert('Failed to upload file. Please try again.')
         } finally {
             setUploading(false)
@@ -72,12 +92,8 @@ const Home = function () {
     const handleDeleteFile = (id: string) => {
         if (confirm('Are you sure you want to delete this file?')) {
             setFiles((prev) => prev.filter((f) => f.id !== id))
+            logger.info('File deleted', id)
         }
-    }
-
-    const handleLogout = () => {
-        // TODO: API call to logout
-        navigate('/')
     }
 
     const formatFileSize = (bytes: number): string => {
@@ -98,188 +114,147 @@ const Home = function () {
         })
     }
 
-    const totalStoragePercent = Math.round((userInfo.storageUsed / userInfo.storageLimit) * 100)
+    // Filter files based on active section
+    const filteredFiles = files.filter(() => {
+        switch (activeSection) {
+            case 'trash':
+                return false // TODO: Implement trash filter
+            case 'starred':
+                return false // TODO: Implement starred filter
+            case 'recent':
+                return true // Show all for now
+            case 'shared':
+                return false // TODO: Implement shared filter
+            default:
+                return true
+        }
+    })
+
+    // Separate folders and files
+    const folders = filteredFiles.filter(f => f.isFolder)
+    const regularFiles = filteredFiles.filter(f => !f.isFolder)
 
     return (
-        <>
-            <Navigation />
-            <div className={styles.homeContainer}>
-                <div className={styles.header}>
-                    <div className={styles.headerContent}>
-                        <h1>Welcome, {userInfo.username}!</h1>
-                        <p>Manage your files securely in the cloud</p>
-                    </div>
-                    <button onClick={handleLogout} className={styles.logoutButton}>
-                        <IoLogOutOutline size={20} />
-                        Logout
-                    </button>
-                </div>
-
-                <div className={styles.mainContent}>
-                    {/* User Info Section */}
-                    <div className={styles.userInfoCard}>
-                        <h2>Account Information</h2>
-                        <div className={styles.userInfoGrid}>
-                            <div className={styles.infoItem}>
-                                <span className={styles.label}>Username</span>
-                                <span className={styles.value}>{userInfo.username}</span>
-                            </div>
-                            <div className={styles.infoItem}>
-                                <span className={styles.label}>Email</span>
-                                <span className={styles.value}>{userInfo.email}</span>
-                            </div>
-                            <div className={styles.infoItem}>
-                                <span className={styles.label}>Storage Used</span>
-                                <span className={styles.value}>
-                                    {userInfo.storageUsed} MB / {userInfo.storageLimit} MB
-                                </span>
-                            </div>
-                            <div className={styles.infoItem}>
-                                <span className={styles.label}>Usage</span>
-                                <div className={styles.storageBar}>
-                                    <div
-                                        className={styles.storageProgress}
-                                        style={{
-                                            width: `${Math.min(totalStoragePercent, 100)}%`,
-                                            background: totalStoragePercent > 90 ? '#ef4444' : 'var(--blue-gradient)'
-                                        }}
-                                    ></div>
-                                </div>
-                                <span className={styles.percentage}>{totalStoragePercent}%</span>
-                            </div>
+        <div className={styles.dashboard}>
+            <DashboardHeader />
+            <div className={styles.dashboardContent}>
+                <Sidebar
+                    activeSection={activeSection}
+                    onSectionChange={setActiveSection}
+                    onNewClick={handleNewClick}
+                />
+                <main className={styles.mainContent}>
+                    <div className={styles.contentHeader}>
+                        <h1 className={styles.contentTitle}>
+                            {activeSection === 'my-files' && 'My Files'}
+                            {activeSection === 'shared' && 'Shared With Me'}
+                            {activeSection === 'recent' && 'Recent'}
+                            {activeSection === 'starred' && 'Starred'}
+                            {activeSection === 'trash' && 'Trash'}
+                        </h1>
+                        <div className={styles.viewControls}>
+                            <button
+                                className={`${styles.viewButton} ${viewMode === 'grid' ? styles.viewButtonActive : ''}`}
+                                onClick={() => setViewMode('grid')}
+                                title="Grid view"
+                            >
+                                <IoGridOutline size={20} />
+                            </button>
+                            <button
+                                className={`${styles.viewButton} ${viewMode === 'list' ? styles.viewButtonActive : ''}`}
+                                onClick={() => setViewMode('list')}
+                                title="List view"
+                            >
+                                <IoListOutline size={20} />
+                            </button>
                         </div>
                     </div>
 
-                    {/* Upload Section */}
-                    <div className={styles.uploadSection}>
-                        <h2>Upload Files</h2>
-                        <div
-                            className={styles.uploadBox}
-                            onClick={() => fileInputRef.current?.click()}
-                            onDragOver={(e) => {
-                                e.preventDefault()
-                                e.currentTarget.classList.add(styles.dragOver)
-                            }}
-                            onDragLeave={(e) => {
-                                e.currentTarget.classList.remove(styles.dragOver)
-                            }}
-                            onDrop={(e) => {
-                                e.preventDefault()
-                                e.currentTarget.classList.remove(styles.dragOver)
-                                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                                    // Process dropped files directly
-                                    setUploading(true)
-                                    try {
-                                        for (let i = 0; i < e.dataTransfer.files.length; i++) {
-                                            const file = e.dataTransfer.files[i]
-
-                                            // Create FormData for file upload
-                                            const formData = new FormData()
-                                            formData.append('file', file)
-
-                                            // TODO: API call to backend
-                                            // const response = await fetch('/api/files/upload', {
-                                            //     method: 'POST',
-                                            //     body: formData
-                                            // })
-                                            // const data = await response.json()
-
-                                            // Mock upload
-                                            const newFile: UploadedFile = {
-                                                id: `file-${Date.now()}-${i}`,
-                                                name: file.name,
-                                                size: file.size,
-                                                type: file.type,
-                                                uploadedAt: new Date(),
-                                                originalName: file.name
-                                            }
-
-                                            setFiles((prev) => [newFile, ...prev])
-                                        }
-                                    } catch (error) {
-                                        console.error('Upload failed:', error)
-                                        alert('Failed to upload file. Please try again.')
-                                    } finally {
-                                        setUploading(false)
-                                    }
-                                }
-                            }}
-                        >
-                            <IoCloudUploadOutline size={48} color="var(--blue)" />
-                            <p className={styles.uploadText}>
-                                Drag and drop files here or click to select
-                            </p>
-                            <span className={styles.uploadSubtext}>
-                                Supports multiple files up to {userInfo.storageLimit} MB each
-                            </span>
+                    {filteredFiles.length === 0 ? (
+                        <div className={styles.emptyState}>
+                            <IoFolderOutline size={64} color="#ccc" />
+                            <p>No files yet</p>
+                            <button className={styles.uploadButton} onClick={handleNewClick}>
+                                <IoCloudUploadOutline size={20} />
+                                Upload Files
+                            </button>
                         </div>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            multiple
-                            onChange={handleFileSelect}
-                            disabled={uploading}
-                            style={{ display: 'none' }}
-                        />
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className={styles.uploadButton}
-                            disabled={uploading}
-                        >
-                            {uploading ? 'Uploading...' : 'Select Files to Upload'}
-                        </button>
-                    </div>
-
-                    {/* Files Section */}
-                    <div className={styles.filesSection}>
-                        <h2>Your Files ({files.length})</h2>
-                        {files.length === 0 ? (
-                            <div className={styles.emptyState}>
-                                <p>No files uploaded yet. Start by uploading your first file!</p>
-                            </div>
-                        ) : (
-                            <div className={styles.filesTable}>
-                                <div className={styles.tableHeader}>
-                                    <div className={styles.colName}>File Name</div>
-                                    <div className={styles.colSize}>Size</div>
-                                    <div className={styles.colDate}>Uploaded</div>
-                                    <div className={styles.colActions}>Actions</div>
+                    ) : (
+                        <div className={styles.filesContainer}>
+                            {viewMode === 'list' ? (
+                                <div className={styles.filesList}>
+                                    {folders.length > 0 && (
+                                        <>
+                                            <div className={styles.sectionHeader}>Folders</div>
+                                            {folders.map((file) => (
+                                                <div key={file.id} className={styles.fileItem}>
+                                                    <IoFolderOutline size={24} color="var(--blue)" />
+                                                    <span className={styles.fileName}>{file.originalName}</span>
+                                                    <span className={styles.fileDate}>{formatDate(file.uploadedAt)}</span>
+                                                    <div className={styles.fileActions}>
+                                                        <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.id)}>
+                                                            <IoTrashOutline size={18} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
+                                    {regularFiles.length > 0 && (
+                                        <>
+                                            {folders.length > 0 && <div className={styles.sectionHeader}>Files</div>}
+                                            {regularFiles.map((fileItem) => (
+                                                <div key={fileItem.id} className={styles.fileItem}>
+                                                    <div className={styles.fileIcon}>📄</div>
+                                                    <span className={styles.fileName}>{fileItem.originalName}</span>
+                                                    <span className={styles.fileSize}>{formatFileSize(fileItem.size)}</span>
+                                                    <span className={styles.fileDate}>{formatDate(fileItem.uploadedAt)}</span>
+                                                    <div className={styles.fileActions}>
+                                                        <button className={styles.actionButton} title="Download" onClick={() => logger.info('Download', fileItem.originalName)}>
+                                                            <IoDownloadOutline size={18} />
+                                                        </button>
+                                                        <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(fileItem.id)}>
+                                                            <IoTrashOutline size={18} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
                                 </div>
-                                {files.map((file) => (
-                                    <div key={file.id} className={styles.tableRow}>
-                                        <div className={styles.colName}>
-                                            <span className={styles.fileName}>{file.originalName}</span>
+                            ) : (
+                                <div className={styles.filesGrid}>
+                                    {[...folders, ...regularFiles].map((file) => (
+                                        <div key={file.id} className={styles.fileCard}>
+                                            {file.isFolder ? (
+                                                <IoFolderOutline size={48} color="var(--blue)" />
+                                            ) : (
+                                                <div className={styles.fileIcon}>📄</div>
+                                            )}
+                                            <span className={styles.fileCardName}>{file.originalName}</span>
+                                            <div className={styles.fileCardActions}>
+                                                <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.id)}>
+                                                    <IoTrashOutline size={18} />
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className={styles.colSize}>{formatFileSize(file.size)}</div>
-                                        <div className={styles.colDate}>{formatDate(file.uploadedAt)}</div>
-                                        <div className={styles.colActions}>
-                                            <button
-                                                className={styles.actionButton}
-                                                title="Download"
-                                                onClick={() => {
-                                                    // TODO: Implement download
-                                                    alert('Download functionality coming soon')
-                                                }}
-                                            >
-                                                <IoDownloadOutline size={18} />
-                                            </button>
-                                            <button
-                                                className={styles.actionButton + ' ' + styles.deleteButton}
-                                                title="Delete"
-                                                onClick={() => handleDeleteFile(file.id)}
-                                            >
-                                                <IoTrashOutline size={18} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        onChange={handleFileSelect}
+                        disabled={uploading}
+                        style={{ display: 'none' }}
+                    />
+                </main>
             </div>
-            <Footer />
-        </>
+        </div>
     )
 }
 
