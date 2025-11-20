@@ -7,9 +7,7 @@ import {
     IoCodeSlashOutline,
     IoFolderOutline,
     IoDocumentOutline,
-    IoLogoPdf,
-    IoLogoWord,
-    IoLogoExcel
+    IoGridOutline
 } from 'react-icons/io5'
 import React from 'react'
 
@@ -45,17 +43,17 @@ export function getFileIcon(filename: string, mimeType?: string): IconComponent 
 
     // PDF
     if (ext === 'pdf' || mimeType === 'application/pdf') {
-        return IoLogoPdf
+        return IoDocumentTextOutline
     }
 
     // Word documents
     if (['doc', 'docx'].includes(ext) || mimeType?.includes('word')) {
-        return IoLogoWord
+        return IoDocumentOutline
     }
 
-    // Excel
+    // Excel/Spreadsheets
     if (['xls', 'xlsx', 'csv'].includes(ext) || mimeType?.includes('spreadsheet') || mimeType?.includes('excel')) {
-        return IoLogoExcel
+        return IoGridOutline
     }
 
     // Code files
