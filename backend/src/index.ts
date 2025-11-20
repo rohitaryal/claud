@@ -2,7 +2,9 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
 import { initDatabase } from './utils/db'
+import { initUploadDir } from './services/file'
 import authRouter from './routes/auth'
+import fileRouter from './routes/files'
 
 const app = new Hono()
 
@@ -15,6 +17,9 @@ initDatabase().catch((error) => {
   process.exit(1)
 })
 
+// Initialize upload directory
+initUploadDir()
+
 // Health check endpoint
 app.get('/api/health', (c) => {
   return c.json({ status: 'healthy', timestamp: new Date().toISOString() })
@@ -22,6 +27,9 @@ app.get('/api/health', (c) => {
 
 // Auth routes
 app.route('/api/auth', authRouter)
+
+// File routes
+app.route('/api/files', fileRouter)
 
 // Root endpoint
 app.get('/', (c) => {
