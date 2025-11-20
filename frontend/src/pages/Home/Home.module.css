@@ -38,218 +38,145 @@
     margin: 0;
 }
 
-.viewControls {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.viewButton {
-    padding: 0.5rem;
-    background-color: transparent;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #666;
-    transition: all var(--transition-short);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.viewButton:hover {
-    background-color: var(--blue-light);
-    border-color: var(--blue);
-    color: var(--blue);
-}
-
-.viewButtonActive {
-    background-color: var(--blue);
-    border-color: var(--blue);
-    color: white;
-}
-
-.emptyState {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+.uploadZone {
+    border: 3px dashed #d1d5db;
+    border-radius: 16px;
     padding: 4rem 2rem;
     text-align: center;
-    color: #999;
-}
-
-.emptyState p {
-    margin: 1rem 0 1.5rem;
-    font-size: 1.1rem;
-}
-
-.uploadButton {
-    padding: 0.75rem 1.5rem;
-    background: var(--blue-gradient);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 12px rgba(18, 51, 193, 0.3);
+    background-color: #fafafa;
     transition: all var(--transition-short);
+    cursor: pointer;
 }
 
-.uploadButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(18, 51, 193, 0.4);
+.uploadZone:hover {
+    border-color: var(--blue);
+    background-color: #f0f4ff;
 }
 
-.filesContainer {
-    width: 100%;
+.uploadZoneDragging {
+    border-color: var(--blue);
+    background-color: #e8f0fe;
+    transform: scale(1.02);
 }
 
-.filesList {
+.uploadButtonContainer {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-}
-
-.sectionHeader {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 1rem 0 0.5rem;
-    padding: 0.5rem 0;
-}
-
-.fileItem {
-    display: grid;
-    grid-template-columns: auto 2fr 1fr 1.5fr auto;
-    gap: 1rem;
     align-items: center;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    transition: all var(--transition-short);
-    cursor: pointer;
-}
-
-.fileItem:hover {
-    background-color: var(--blue-light);
-}
-
-.fileIcon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    color: var(--blue);
-}
-
-.fileName {
-    font-weight: 500;
-    color: var(--black);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.fileSize {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.fileDate {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.fileActions {
-    display: flex;
-    gap: 0.5rem;
-    opacity: 0;
-    transition: opacity var(--transition-short);
-}
-
-.fileItem:hover .fileActions {
-    opacity: 1;
-}
-
-.actionButton {
-    padding: 0.5rem;
-    background-color: transparent;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #666;
-    transition: all var(--transition-short);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.actionButton:hover {
-    background-color: var(--blue-light);
-    color: var(--blue);
-}
-
-.filesGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1.5rem;
 }
 
-.fileCard {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1.5rem 1rem;
-    border-radius: 12px;
-    border: 1px solid #e5e5e5;
-    transition: all var(--transition-short);
-    cursor: pointer;
-    position: relative;
+.uploadButton {
+    width: 200px;
+    height: 200px;
+    border: 3px dashed var(--blue);
+    border-radius: 16px;
     background-color: white;
-}
-
-.fileCard:hover {
-    border-color: var(--blue);
-    box-shadow: 0 4px 12px rgba(18, 51, 193, 0.15);
-    transform: translateY(-2px);
-}
-
-.fileCard .fileIcon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    cursor: pointer;
+    transition: all var(--transition-short);
+    color: var(--blue);
+}
+
+.uploadButton:hover {
+    border-color: var(--blue);
+    background-color: var(--blue-light);
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(18, 51, 193, 0.2);
+}
+
+.uploadPlaceholder {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 0;
+    font-weight: 500;
+}
+
+.uploadList {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e5e5;
+}
+
+.uploadListTitle {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--black);
+    margin-bottom: 1.5rem;
+}
+
+.uploadItem {
+    background-color: #f9fafb;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.uploadItemHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.75rem;
 }
 
-.fileCardName {
-    font-size: 0.9rem;
+.uploadItemName {
     font-weight: 500;
     color: var(--black);
-    text-align: center;
+    flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    margin-right: 1rem;
+}
+
+.uploadItemSize {
+    font-size: 0.9rem;
+    color: #666;
+    white-space: nowrap;
+}
+
+.progressBarContainer {
     width: 100%;
+    height: 8px;
+    background-color: #e5e5e5;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
 }
 
-.fileCardActions {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    opacity: 0;
-    transition: opacity var(--transition-short);
+.progressBar {
+    height: 100%;
+    background: var(--blue-gradient);
+    transition: width 0.3s ease;
+    border-radius: 4px;
 }
 
-.fileCard:hover .fileCardActions {
-    opacity: 1;
+.progressBarSuccess {
+    background: #10b981;
+}
+
+.progressBarError {
+    background: #ef4444;
+}
+
+.uploadItemStatus {
+    display: flex;
+    justify-content: flex-end;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.statusSuccess {
+    color: #10b981;
+    font-weight: 500;
+}
+
+.statusError {
+    color: #ef4444;
+    font-weight: 500;
 }
 
 /* Responsive */
@@ -269,18 +196,16 @@
         gap: 1rem;
     }
 
-    .fileItem {
-        grid-template-columns: auto 1fr auto;
-        gap: 0.75rem;
+    .uploadZone {
+        padding: 2rem 1rem;
     }
 
-    .fileSize,
-    .fileDate {
-        display: none;
+    .uploadButton {
+        width: 150px;
+        height: 150px;
     }
 
-    .filesGrid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 1rem;
+    .uploadPlaceholder {
+        font-size: 1rem;
     }
 }

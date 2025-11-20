@@ -226,3 +226,98 @@ export async function getUserStorageUsage(): Promise<{ success: boolean; storage
     }
   }
 }
+
+/**
+ * Upload a file with progress tracking
+ */
+export async function apiUploadFile(
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<{ success: boolean; file?: any; message?: string; code?: string }> {
+  try {
+    logger.api('POST /api/files/upload', { filename: file.name, size: file.size })
+    
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const xhr = new XMLHttpRequest()
+
+    return new Promise((resolve, reject) => {
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && onProgress) {
+          const progress = (e.loaded / e.total) * 100
+          onProgress(progress)
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText)
+            if (data.success) {
+              logger.success('File uploaded', data.file)
+              resolve(data)
+            } else {
+              logger.error('Upload failed', data)
+              resolve(data)
+            }
+          } catch (error) {
+            logger.error('Parse response error', error)
+            reject(error)
+          }
+        } else {
+          try {
+            const data = JSON.parse(xhr.responseText)
+            logger.error('Upload failed', data)
+            resolve(data)
+          } catch (error) {
+            logger.error('Upload error', error)
+            reject(error)
+          }
+        }
+      })
+
+      xhr.addEventListener('error', () => {
+        logger.error('Upload network error')
+        reject(new Error('Network error'))
+      })
+
+      xhr.open('POST', `${API_BASE}/api/files/upload`)
+      xhr.withCredentials = true
+      xhr.send(formData)
+    })
+  } catch (error) {
+    logger.error('Upload error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.',
+      code: 'NETWORK_ERROR'
+    }
+  }
+}
+
+/**
+ * List user files
+ */
+export async function apiListFiles(limit = 50, offset = 0): Promise<{ success: boolean; files?: any[]; count?: number }> {
+  try {
+    logger.api('GET /api/files', { limit, offset })
+    const response = await fetch(`${API_BASE}/api/files?limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Files fetched', { count: data.count })
+    } else {
+      logger.warn('Failed to fetch files', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('List files error', error)
+    return {
+      success: false
+    }
+  }
+}

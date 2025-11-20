@@ -1,0 +1,287 @@
+.dashboard {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboardContent {
+    display: flex;
+    flex: 1;
+    margin-top: 64px;
+    margin-left: 240px;
+}
+
+.mainContent {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background-color: white;
+    margin: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.contentHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.contentTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--black);
+    margin: 0;
+}
+
+.viewControls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.viewButton {
+    padding: 0.5rem;
+    background-color: transparent;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #666;
+    transition: all var(--transition-short);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.viewButton:hover {
+    background-color: var(--blue-light);
+    border-color: var(--blue);
+    color: var(--blue);
+}
+
+.viewButtonActive {
+    background-color: var(--blue);
+    border-color: var(--blue);
+    color: white;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: #999;
+}
+
+.emptyState p {
+    margin: 1rem 0 1.5rem;
+    font-size: 1.1rem;
+}
+
+.uploadButton {
+    padding: 0.75rem 1.5rem;
+    background: var(--blue-gradient);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(18, 51, 193, 0.3);
+    transition: all var(--transition-short);
+}
+
+.uploadButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(18, 51, 193, 0.4);
+}
+
+.filesContainer {
+    width: 100%;
+}
+
+.filesList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sectionHeader {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 1rem 0 0.5rem;
+    padding: 0.5rem 0;
+}
+
+.fileItem {
+    display: grid;
+    grid-template-columns: auto 2fr 1fr 1.5fr auto;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all var(--transition-short);
+    cursor: pointer;
+}
+
+.fileItem:hover {
+    background-color: var(--blue-light);
+}
+
+.fileIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: var(--blue);
+}
+
+.fileName {
+    font-weight: 500;
+    color: var(--black);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fileSize {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.fileDate {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.fileActions {
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity var(--transition-short);
+}
+
+.fileItem:hover .fileActions {
+    opacity: 1;
+}
+
+.actionButton {
+    padding: 0.5rem;
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #666;
+    transition: all var(--transition-short);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actionButton:hover {
+    background-color: var(--blue-light);
+    color: var(--blue);
+}
+
+.filesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.5rem;
+}
+
+.fileCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+    transition: all var(--transition-short);
+    cursor: pointer;
+    position: relative;
+    background-color: white;
+}
+
+.fileCard:hover {
+    border-color: var(--blue);
+    box-shadow: 0 4px 12px rgba(18, 51, 193, 0.15);
+    transform: translateY(-2px);
+}
+
+.fileCard .fileIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.75rem;
+}
+
+.fileCardName {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--black);
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.fileCardActions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    opacity: 0;
+    transition: opacity var(--transition-short);
+}
+
+.fileCard:hover .fileCardActions {
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboardContent {
+        margin-left: 0;
+    }
+
+    .mainContent {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+
+    .contentHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .fileItem {
+        grid-template-columns: auto 1fr auto;
+        gap: 0.75rem;
+    }
+
+    .fileSize,
+    .fileDate {
+        display: none;
+    }
+
+    .filesGrid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+    }
+}
+

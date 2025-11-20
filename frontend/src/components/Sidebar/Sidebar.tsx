@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { 
     IoAddOutline, 
     IoFolderOutline, 
@@ -17,6 +18,8 @@ interface SidebarProps {
 }
 
 const Sidebar = function ({ activeSection, onSectionChange, onNewClick }: SidebarProps) {
+    const navigate = useNavigate()
+    const location = useLocation()
     const [storageUsed, setStorageUsed] = useState(0)
     const [storageLimit, setStorageLimit] = useState(5 * 1024 * 1024 * 1024) // 5GB in bytes
 
@@ -48,9 +51,24 @@ const Sidebar = function ({ activeSection, onSectionChange, onNewClick }: Sideba
         { id: 'trash', label: 'Trash', icon: IoTrashOutline },
     ]
 
+    const handleSectionClick = (sectionId: string) => {
+        if (sectionId === 'my-files') {
+            navigate('/files')
+        } else {
+            onSectionChange(sectionId)
+        }
+    }
+
+    const handleNewClick = () => {
+        navigate('/home')
+    }
+
+    // Determine active section based on current route
+    const currentActiveSection = location.pathname === '/files' ? 'my-files' : activeSection
+
     return (
         <aside className={styles.sidebar}>
-            <button className={styles.newButton} onClick={onNewClick}>
+            <button className={styles.newButton} onClick={handleNewClick}>
                 <IoAddOutline size={20} />
                 <span>New</span>
             </button>
@@ -61,8 +79,8 @@ const Sidebar = function ({ activeSection, onSectionChange, onNewClick }: Sideba
                     return (
                         <button
                             key={section.id}
-                            className={`${styles.navItem} ${activeSection === section.id ? styles.navItemActive : ''}`}
-                            onClick={() => onSectionChange(section.id)}
+                            className={`${styles.navItem} ${currentActiveSection === section.id ? styles.navItemActive : ''}`}
+                            onClick={() => handleSectionClick(section.id)}
                         >
                             <Icon size={20} />
                             <span>{section.label}</span>

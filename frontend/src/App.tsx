@@ -5,6 +5,7 @@ import Login from './pages/Login/Login'
 import Signup from './pages/Signup/Signup'
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword'
 import Home from './pages/Home/Home'
+import MyFiles from './pages/MyFiles/MyFiles'
 import AboutUs from './pages/AboutUs/AboutUs'
 
 const App = function () {
@@ -41,6 +42,14 @@ const App = function () {
                     element={
                         <ProtectedRoute requireAuth={true}>
                             <Home />
+                        </ProtectedRoute>
+                    } 
+                />
+                <Route 
+                    path="/files" 
+                    element={
+                        <ProtectedRoute requireAuth={true}>
+                            <MyFiles />
                         </ProtectedRoute>
                     } 
                 />
