@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import LoginButton from '../Button/Button'
 import { apiGetCurrentUser } from '../../utils/api'
 import styles from './Navigation.module.css'
@@ -28,7 +28,7 @@ const Navigation = function () {
             <div className={styles.navLinksContainer}>
                 <a href="#">Join Claud</a>
                 <a href="#">Documentation</a>
-                <a href="#">About Us</a>
+                <Link to="/about-us">About Us</Link>
                 <a href="#">Terms & Conditions</a>
             </div>
             <LoginButton

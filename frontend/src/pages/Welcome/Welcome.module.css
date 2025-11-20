@@ -4,9 +4,29 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-image:
-        linear-gradient(to bottom, var(--blue-light), transparent),
-        radial-gradient(circle at bottom, var(--blue-dark) 10%, white 100%);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(to bottom, var(--blue-light), transparent);
+}
+
+.welcomeContainer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(18, 51, 193, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(28, 217, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(11, 16, 43, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.welcomeContainer > * {
+    position: relative;
+    z-index: 1;
 }
 
 .welcomeContainer .welcomeText {
@@ -47,7 +67,11 @@
 .welcomeContainer .people {
     width: 100%;
     max-width: 1200px;
-    margin-top: 5em;
+    margin-top: 3em;
     border-radius: 1em;
-    filter: grayscale(100%);
+    box-shadow: 0 20px 60px rgba(18, 51, 193, 0.2), 0 0 40px rgba(28, 217, 241, 0.15);
+    position: relative;
+    z-index: 1;
+    object-fit: cover;
+    object-position: center;
 }

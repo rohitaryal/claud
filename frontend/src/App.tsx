@@ -5,6 +5,7 @@ import Login from './pages/Login/Login'
 import Signup from './pages/Signup/Signup'
 import ForgotPassword from './pages/ForgotPassword/ForgotPassword'
 import Home from './pages/Home/Home'
+import AboutUs from './pages/AboutUs/AboutUs'
 
 const App = function () {
     return (
@@ -43,6 +44,7 @@ const App = function () {
                         </ProtectedRoute>
                     } 
                 />
+                <Route path="/about-us" element={<AboutUs />} />
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
         </BrowserRouter>
