@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { IoCloudOutline, IoRefreshOutline, IoLockClosedOutline, IoGlobeOutline } from 'react-icons/io5'
 import Navigation from '../../components/Navigation/Navigation'
 import Footer from '../../components/Footer/Footer'
 import styles from './AboutUs.module.css'
@@ -64,28 +65,36 @@ const AboutUs = function () {
                         <h2 className={styles.sectionTitle}>Key Features</h2>
                         <div className={styles.featuresGrid}>
                             <div className={styles.featureCard}>
-                                <div className={styles.featureIcon}>☁️</div>
+                                <div className={styles.featureIcon}>
+                                    <IoCloudOutline size={48} />
+                                </div>
                                 <h3 className={styles.featureTitle}>Cloud Storage</h3>
                                 <p className={styles.featureDescription}>
                                     Store your files securely in the cloud with instant access from anywhere
                                 </p>
                             </div>
                             <div className={styles.featureCard}>
-                                <div className={styles.featureIcon}>🔄</div>
+                                <div className={styles.featureIcon}>
+                                    <IoRefreshOutline size={48} />
+                                </div>
                                 <h3 className={styles.featureTitle}>Real-time Sync</h3>
                                 <p className={styles.featureDescription}>
                                     Automatic synchronization across all your devices in real-time
                                 </p>
                             </div>
                             <div className={styles.featureCard}>
-                                <div className={styles.featureIcon}>🔒</div>
+                                <div className={styles.featureIcon}>
+                                    <IoLockClosedOutline size={48} />
+                                </div>
                                 <h3 className={styles.featureTitle}>Secure & Private</h3>
                                 <p className={styles.featureDescription}>
                                     Your data is encrypted and protected with industry-standard security
                                 </p>
                             </div>
                             <div className={styles.featureCard}>
-                                <div className={styles.featureIcon}>🌐</div>
+                                <div className={styles.featureIcon}>
+                                    <IoGlobeOutline size={48} />
+                                </div>
                                 <h3 className={styles.featureTitle}>Open Source</h3>
                                 <p className={styles.featureDescription}>
                                     Built on open-source principles, transparent and community-driven

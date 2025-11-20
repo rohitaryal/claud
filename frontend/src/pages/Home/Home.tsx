@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import styles from './Home.module.css'
-import { IoCloudUploadOutline, IoTrashOutline, IoDownloadOutline, IoFolderOutline, IoGridOutline, IoListOutline } from 'react-icons/io5'
+import { IoCloudUploadOutline, IoTrashOutline, IoDownloadOutline, IoFolderOutline, IoGridOutline, IoListOutline, IoDocumentTextOutline } from 'react-icons/io5'
 import { apiGetCurrentUser } from '../../utils/api'
 import { logger } from '../../utils/logger'
 
@@ -205,7 +205,9 @@ const Home = function () {
                                             {folders.length > 0 && <div className={styles.sectionHeader}>Files</div>}
                                             {regularFiles.map((fileItem) => (
                                                 <div key={fileItem.id} className={styles.fileItem}>
-                                                    <div className={styles.fileIcon}>📄</div>
+                                                    <div className={styles.fileIcon}>
+                                                        <IoDocumentTextOutline size={24} />
+                                                    </div>
                                                     <span className={styles.fileName}>{fileItem.originalName}</span>
                                                     <span className={styles.fileSize}>{formatFileSize(fileItem.size)}</span>
                                                     <span className={styles.fileDate}>{formatDate(fileItem.uploadedAt)}</span>
@@ -229,7 +231,9 @@ const Home = function () {
                                             {file.isFolder ? (
                                                 <IoFolderOutline size={48} color="var(--blue)" />
                                             ) : (
-                                                <div className={styles.fileIcon}>📄</div>
+                                                <div className={styles.fileIcon}>
+                                                    <IoDocumentTextOutline size={48} color="var(--blue)" />
+                                                </div>
                                             )}
                                             <span className={styles.fileCardName}>{file.originalName}</span>
                                             <div className={styles.fileCardActions}>

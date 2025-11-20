@@ -140,12 +140,12 @@
 }
 
 .fileIcon {
-    font-size: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 32px;
     height: 32px;
+    color: var(--blue);
 }
 
 .fileName {
@@ -221,6 +221,11 @@
 }
 
 .fileCard .fileIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
     margin-bottom: 0.75rem;
 }
 
