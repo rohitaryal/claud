@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoSearchOutline, IoPersonCircleOutline, IoLogOutOutline, IoSettingsOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiLogout, AuthUser } from '../../utils/api'
+import { apiGetCurrentUser, apiLogout } from '../../utils/api'
+import type { AuthUser } from '../../utils/api'
 import styles from './DashboardHeader.module.css'
 
 const DashboardHeader = function () {
