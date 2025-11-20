@@ -340,6 +340,83 @@ fileRouter.get('/storage/usage', async (c) => {
 })
 
 /**
+ * GET /files/search
+ * Search files by name
+ */
+fileRouter.get('/search', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const searchQuery = c.req.query('q') || ''
+    const limit = parseInt(c.req.query('limit') || '20')
+
+    if (!searchQuery || searchQuery.trim().length === 0) {
+      return c.json({
+        success: true,
+        files: [],
+        count: 0
+      })
+    }
+
+    // Search files
+    const files = await searchFiles(user.uuid, searchQuery.trim(), limit)
+
+    return c.json({
+      success: true,
+      files,
+      count: files.length
+    })
+  } catch (error) {
+    console.error('Search endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
  * GET /files/:fileId
  * Get file metadata
  */
@@ -570,83 +647,6 @@ fileRouter.delete('/:fileId', async (c) => {
     })
   } catch (error) {
     console.error('Delete endpoint error:', error)
-    return c.json(
-      {
-        success: false,
-        message: 'Internal server error',
-        code: 'SERVER_ERROR'
-      },
-      500
-    )
-  }
-})
-
-/**
- * GET /files/search
- * Search files by name
- */
-fileRouter.get('/search', async (c) => {
-  try {
-    // Get session from cookie
-    const cookies = c.req.header('Cookie')
-    if (!cookies) {
-      return c.json(
-        {
-          success: false,
-          message: 'Not authenticated',
-          code: 'NOT_AUTHENTICATED'
-        },
-        401
-      )
-    }
-
-    const sessionMatch = cookies.match(/session=([^;]+)/)
-    if (!sessionMatch) {
-      return c.json(
-        {
-          success: false,
-          message: 'Not authenticated',
-          code: 'NOT_AUTHENTICATED'
-        },
-        401
-      )
-    }
-
-    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
-    const user = await getFromSession(sessionId)
-
-    if (!user) {
-      return c.json(
-        {
-          success: false,
-          message: 'Not authenticated',
-          code: 'NOT_AUTHENTICATED'
-        },
-        401
-      )
-    }
-
-    const searchQuery = c.req.query('q') || ''
-    const limit = parseInt(c.req.query('limit') || '20')
-
-    if (!searchQuery || searchQuery.trim().length === 0) {
-      return c.json({
-        success: true,
-        files: [],
-        count: 0
-      })
-    }
-
-    // Search files
-    const files = await searchFiles(user.uuid, searchQuery.trim(), limit)
-
-    return c.json({
-      success: true,
-      files,
-      count: files.length
-    })
-  } catch (error) {
-    console.error('Search endpoint error:', error)
     return c.json(
       {
         success: false,

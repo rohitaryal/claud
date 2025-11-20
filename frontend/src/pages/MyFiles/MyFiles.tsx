@@ -111,7 +111,8 @@ const MyFiles = function () {
             try {
                 const response = await apiDeleteFile(id)
                 if (response.success) {
-                    setFiles((prev) => prev.filter((f) => f.file_id !== id))
+                    // Reload files to reflect the deletion
+                    await loadFiles()
                     logger.success('File deleted', name)
                 } else {
                     logger.error('Delete failed', response.message)
@@ -305,7 +306,8 @@ const MyFiles = function () {
             try {
                 const response = await apiRestoreFile(id)
                 if (response.success) {
-                    setFiles((prev) => prev.filter((f) => f.file_id !== id))
+                    // Reload files to reflect the restoration
+                    await loadFiles()
                     logger.success('File restored', name)
                 } else {
                     logger.error('Restore failed', response.message)
@@ -332,7 +334,12 @@ const MyFiles = function () {
                         alert(`File shared publicly! Share link: ${shareUrl}`)
                     })
                 } else {
-                    alert(`Failed to share file: ${response.message || 'Unknown error'}`)
+                    const errorMsg = response.message || 'Unknown error'
+                    if (errorMsg.includes('already shared')) {
+                        alert('This file is already shared publicly or privately. You cannot share it again.')
+                    } else {
+                        alert(`Failed to share file: ${errorMsg}`)
+                    }
                 }
             } else {
                 // Link-only sharing - same as public for now
@@ -346,7 +353,12 @@ const MyFiles = function () {
                         alert(`Share link: ${shareUrl}`)
                     })
                 } else {
-                    alert(`Failed to create share link: ${response.message || 'Unknown error'}`)
+                    const errorMsg = response.message || 'Unknown error'
+                    if (errorMsg.includes('already shared')) {
+                        alert('This file is already shared publicly or privately. You cannot share it again.')
+                    } else {
+                        alert(`Failed to create share link: ${errorMsg}`)
+                    }
                 }
             }
         } catch (error) {
@@ -402,7 +414,8 @@ const MyFiles = function () {
             try {
                 const response = await apiPermanentDeleteFile(id)
                 if (response.success) {
-                    setFiles((prev) => prev.filter((f) => f.file_id !== id))
+                    // Reload files to reflect the deletion
+                    await loadFiles()
                     logger.success('File permanently deleted', name)
                 } else {
                     logger.error('Permanent delete failed', response.message)

@@ -47,6 +47,24 @@ export async function shareFileWithUser(params: ShareFileParams): Promise<{
       }
     }
 
+    // Check if file is already shared (publicly or with this user)
+    const existingShare = await query(
+      `SELECT share_id FROM file_shares 
+       WHERE file_id = $1 AND (
+         (is_public = TRUE AND (expires_at IS NULL OR expires_at > NOW()))
+         OR (shared_with = $2 AND (expires_at IS NULL OR expires_at > NOW()))
+       )`,
+      [fileId, sharedWith || null]
+    )
+
+    if (existingShare.rows.length > 0) {
+      return {
+        success: false,
+        message: 'File is already shared',
+        code: 'ALREADY_SHARED'
+      }
+    }
+
     // Verify shared_with user exists if provided
     if (sharedWith) {
       const userResult = await query('SELECT uuid FROM users WHERE uuid = $1', [sharedWith])
@@ -134,6 +152,21 @@ export async function createPublicShare(params: PublicShareParams): Promise<{
         success: false,
         message: 'File not found',
         code: 'FILE_NOT_FOUND'
+      }
+    }
+
+    // Check if file is already publicly shared
+    const existingPublicShare = await query(
+      `SELECT share_id FROM file_shares 
+       WHERE file_id = $1 AND is_public = TRUE AND (expires_at IS NULL OR expires_at > NOW())`,
+      [fileId]
+    )
+
+    if (existingPublicShare.rows.length > 0) {
+      return {
+        success: false,
+        message: 'File is already publicly shared',
+        code: 'ALREADY_SHARED'
       }
     }
 
