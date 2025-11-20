@@ -321,3 +321,118 @@ export async function apiListFiles(limit = 50, offset = 0): Promise<{ success: b
     }
   }
 }
+
+/**
+ * Search files
+ */
+export async function apiSearchFiles(query: string, limit = 20): Promise<{ success: boolean; files?: any[]; count?: number }> {
+  try {
+    logger.api('GET /api/files/search', { query, limit })
+    const response = await fetch(`${API_BASE}/api/files/search?q=${encodeURIComponent(query)}&limit=${limit}`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Files searched', { count: data.count })
+    } else {
+      logger.warn('Failed to search files', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Search files error', error)
+    return {
+      success: false
+    }
+  }
+}
+
+/**
+ * Delete a file
+ */
+export async function apiDeleteFile(fileId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    logger.api('DELETE /api/files/:fileId', { fileId })
+    const response = await fetch(`${API_BASE}/api/files/${fileId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('File deleted', fileId)
+    } else {
+      logger.warn('Failed to delete file', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Delete file error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Download a file
+ */
+export async function apiDownloadFile(fileId: string, filename: string): Promise<void> {
+  try {
+    logger.api('GET /api/files/:fileId/download', { fileId })
+    const response = await fetch(`${API_BASE}/api/files/${fileId}/download`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+
+    if (!response.ok) {
+      throw new Error('Download failed')
+    }
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    logger.success('File downloaded', filename)
+  } catch (error) {
+    logger.error('Download file error', error)
+    throw error
+  }
+}
+
+/**
+ * Update file metadata (e.g., rename file)
+ */
+export async function apiUpdateFile(fileId: string, originalName: string): Promise<{ success: boolean; file?: any; message?: string }> {
+  try {
+    logger.api('PUT /api/files/:fileId', { fileId, originalName })
+    const response = await fetch(`${API_BASE}/api/files/${fileId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ original_name: originalName })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('File updated', fileId)
+    } else {
+      logger.warn('Failed to update file', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Update file error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}

@@ -243,4 +243,30 @@ export async function updateFileMetadata(
   }
 }
 
+/**
+ * Search files by name
+ */
+export async function searchFiles(
+  userUuid: string,
+  query: string,
+  limit: number = 20
+): Promise<any[]> {
+  const searchPattern = `%${query}%`
+  const result = await query(
+    `SELECT file_id, filename, original_name, file_size, mime_type, parent_folder_id, created_at, updated_at
+     FROM files
+     WHERE user_uuid = $1 AND is_deleted = FALSE AND original_name ILIKE $2
+     ORDER BY 
+       CASE 
+         WHEN original_name ILIKE $3 THEN 1
+         WHEN original_name ILIKE $4 THEN 2
+         ELSE 3
+       END,
+       created_at DESC
+     LIMIT $5`,
+    [userUuid, searchPattern, `${query}%`, `%${query}%`, limit]
+  )
+  return result.rows
+}
+
 export { MAX_FILE_SIZE }

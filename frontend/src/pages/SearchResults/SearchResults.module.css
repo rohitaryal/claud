@@ -1,0 +1,129 @@
+.dashboard {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboardContent {
+    display: flex;
+    flex: 1;
+    margin-top: 64px;
+    margin-left: 240px;
+}
+
+.mainContent {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background-color: white;
+    margin: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.contentHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.contentTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--black);
+    margin: 0;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: #999;
+}
+
+.emptyState p {
+    margin: 1rem 0 1.5rem;
+    font-size: 1.1rem;
+}
+
+.filesContainer {
+    width: 100%;
+}
+
+.filesList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fileItem {
+    display: grid;
+    grid-template-columns: auto 2fr 1fr 1.5fr;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all var(--transition-short);
+    cursor: pointer;
+}
+
+.fileItem:hover {
+    background-color: var(--blue-light);
+}
+
+.fileIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: var(--blue);
+}
+
+.fileName {
+    font-weight: 500;
+    color: var(--black);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fileSize {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.fileDate {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboardContent {
+        margin-left: 0;
+    }
+
+    .mainContent {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+
+    .fileItem {
+        grid-template-columns: auto 1fr;
+        gap: 0.75rem;
+    }
+
+    .fileSize,
+    .fileDate {
+        display: none;
+    }
+}
+

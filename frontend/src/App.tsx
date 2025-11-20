@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword/ForgotPassword'
 import Home from './pages/Home/Home'
 import MyFiles from './pages/MyFiles/MyFiles'
 import AboutUs from './pages/AboutUs/AboutUs'
+import SearchResults from './pages/SearchResults/SearchResults'
 
 const App = function () {
     return (
@@ -50,6 +51,14 @@ const App = function () {
                     element={
                         <ProtectedRoute requireAuth={true}>
                             <MyFiles />
+                        </ProtectedRoute>
+                    } 
+                />
+                <Route 
+                    path="/search" 
+                    element={
+                        <ProtectedRoute requireAuth={true}>
+                            <SearchResults />
                         </ProtectedRoute>
                     } 
                 />

@@ -3,15 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import styles from './Home.module.css'
-import { IoAddOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiUploadFile } from '../../utils/api'
+import { IoAddOutline, IoCloudUploadOutline, IoCloseOutline, IoCreateOutline } from 'react-icons/io5'
+import { apiGetCurrentUser, apiUploadFile, apiUpdateFile } from '../../utils/api'
 import { logger } from '../../utils/logger'
+import { getFileIcon } from '../../utils/fileIcons'
 
 interface UploadProgress {
     file: File
     progress: number
-    status: 'uploading' | 'success' | 'error'
+    status: 'pending' | 'uploading' | 'success' | 'error'
     error?: string
+    fileId?: string
+    customName?: string
 }
 
 const Home = function () {
@@ -21,6 +24,8 @@ const Home = function () {
     const [isDragging, setIsDragging] = useState(false)
     const [uploads, setUploads] = useState<UploadProgress[]>([])
     const [, setUser] = useState<any>(null)
+    const [editingFileName, setEditingFileName] = useState<string | null>(null)
+    const [editingName, setEditingName] = useState('')
 
     useEffect(() => {
         // Check authentication
@@ -39,16 +44,15 @@ const Home = function () {
         fileInputRef.current?.click()
     }
 
-    const uploadFile = async (file: File) => {
-        // Add to uploads list
-        setUploads((prev) => [
-            ...prev,
-            {
-                file,
-                progress: 0,
-                status: 'uploading'
-            }
-        ])
+    const uploadFile = async (file: File, customName?: string) => {
+        // Update status to uploading
+        setUploads((prev) =>
+            prev.map((upload) =>
+                upload.file === file
+                    ? { ...upload, status: 'uploading' }
+                    : upload
+            )
+        )
 
         try {
             const response = await apiUploadFile(file, (progress) => {
@@ -61,20 +65,26 @@ const Home = function () {
                 )
             })
 
-            if (response.success) {
+            if (response.success && response.file) {
+                const fileId = response.file.file_id
+                
+                // If custom name is different, update it
+                if (customName && customName !== file.name) {
+                    try {
+                        await apiUpdateFile(fileId, customName)
+                    } catch (error) {
+                        logger.error('Failed to update file name', error)
+                    }
+                }
+
                 setUploads((prev) =>
                     prev.map((upload) =>
                         upload.file === file
-                            ? { ...upload, progress: 100, status: 'success' }
+                            ? { ...upload, progress: 100, status: 'success', fileId }
                             : upload
                     )
                 )
-                logger.success('File uploaded', file.name)
-                
-                // Remove from list after 2 seconds
-                setTimeout(() => {
-                    setUploads((prev) => prev.filter((upload) => upload.file !== file))
-                }, 2000)
+                logger.success('File uploaded', customName || file.name)
             } else {
                 setUploads((prev) =>
                     prev.map((upload) =>
@@ -97,17 +107,56 @@ const Home = function () {
         }
     }
 
-    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFiles = e.currentTarget.files
         if (!selectedFiles) return
 
-        for (let i = 0; i < selectedFiles.length; i++) {
-            await uploadFile(selectedFiles[i])
-        }
+        // Add files to uploads list with pending status
+        const newUploads: UploadProgress[] = Array.from(selectedFiles).map(file => ({
+            file,
+            progress: 0,
+            status: 'pending',
+            customName: file.name
+        }))
+
+        setUploads((prev) => [...prev, ...newUploads])
 
         if (fileInputRef.current) {
             fileInputRef.current.value = ''
         }
+    }
+
+    const handleUploadAll = async () => {
+        const pendingUploads = uploads.filter(u => u.status === 'pending')
+        for (const upload of pendingUploads) {
+            await uploadFile(upload.file, upload.customName)
+        }
+    }
+
+    const handleRemoveFile = (index: number) => {
+        setUploads((prev) => prev.filter((_, i) => i !== index))
+    }
+
+    const handleStartEditName = (index: number, currentName: string) => {
+        setEditingFileName(`${index}`)
+        setEditingName(currentName)
+    }
+
+    const handleSaveEditName = (index: number) => {
+        if (editingName.trim()) {
+            setUploads((prev) =>
+                prev.map((upload, i) =>
+                    i === index ? { ...upload, customName: editingName.trim() } : upload
+                )
+            )
+        }
+        setEditingFileName(null)
+        setEditingName('')
+    }
+
+    const handleCancelEditName = () => {
+        setEditingFileName(null)
+        setEditingName('')
     }
 
     const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -127,15 +176,20 @@ const Home = function () {
         e.stopPropagation()
     }, [])
 
-    const handleDrop = useCallback(async (e: React.DragEvent) => {
+    const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
         setIsDragging(false)
 
         const droppedFiles = Array.from(e.dataTransfer.files)
-        for (const file of droppedFiles) {
-            await uploadFile(file)
-        }
+        const newUploads: UploadProgress[] = droppedFiles.map(file => ({
+            file,
+            progress: 0,
+            status: 'pending',
+            customName: file.name
+        }))
+
+        setUploads((prev) => [...prev, ...newUploads])
     }, [])
 
     const formatFileSize = (bytes: number): string => {
@@ -188,40 +242,118 @@ const Home = function () {
 
                     {uploads.length > 0 && (
                         <div className={styles.uploadList}>
-                            <h2 className={styles.uploadListTitle}>Upload Status</h2>
-                            {uploads.map((upload, index) => (
-                                <div key={`${upload.file.name}-${index}`} className={styles.uploadItem}>
-                                    <div className={styles.uploadItemHeader}>
-                                        <span className={styles.uploadItemName}>{upload.file.name}</span>
-                                        <span className={styles.uploadItemSize}>{formatFileSize(upload.file.size)}</span>
-                                    </div>
-                                    <div className={styles.progressBarContainer}>
+                            <div className={styles.uploadListHeader}>
+                                <h2 className={styles.uploadListTitle}>Files to Upload</h2>
+                                {uploads.some(u => u.status === 'pending') && (
+                                    <button
+                                        className={styles.uploadAllButton}
+                                        onClick={handleUploadAll}
+                                        disabled={!uploads.some(u => u.status === 'pending')}
+                                    >
+                                        <IoCloudUploadOutline size={20} />
+                                        Upload All
+                                    </button>
+                                )}
+                            </div>
+                            <div className={styles.uploadGrid}>
+                                {uploads.map((upload, index) => {
+                                    const IconComponent = getFileIcon(upload.file.name, upload.file.type)
+                                    const displayName = upload.customName || upload.file.name
+                                    const isEditing = editingFileName === `${index}`
+                                    
+                                    return (
                                         <div
-                                            className={`${styles.progressBar} ${
-                                                upload.status === 'success'
-                                                    ? styles.progressBarSuccess
-                                                    : upload.status === 'error'
-                                                    ? styles.progressBarError
-                                                    : ''
+                                            key={`${upload.file.name}-${index}`}
+                                            className={`${styles.uploadCard} ${
+                                                upload.status === 'success' ? styles.uploadCardSuccess : ''
                                             }`}
-                                            style={{ width: `${upload.progress}%` }}
-                                        />
-                                    </div>
-                                    <div className={styles.uploadItemStatus}>
-                                        {upload.status === 'uploading' && (
-                                            <span>{Math.round(upload.progress)}%</span>
-                                        )}
-                                        {upload.status === 'success' && (
-                                            <span className={styles.statusSuccess}>Upload complete</span>
-                                        )}
-                                        {upload.status === 'error' && (
-                                            <span className={styles.statusError}>
-                                                {upload.error || 'Upload failed'}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
+                                        >
+                                            <div className={styles.uploadCardHeader}>
+                                                <div className={styles.uploadCardIcon}>
+                                                    <IconComponent size={32} />
+                                                </div>
+                                                <button
+                                                    className={styles.uploadCardRemove}
+                                                    onClick={() => handleRemoveFile(index)}
+                                                    title="Remove"
+                                                >
+                                                    <IoCloseOutline size={18} />
+                                                </button>
+                                            </div>
+                                            {isEditing ? (
+                                                <div className={styles.uploadCardEdit}>
+                                                    <input
+                                                        type="text"
+                                                        value={editingName}
+                                                        onChange={(e) => setEditingName(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                handleSaveEditName(index)
+                                                            } else if (e.key === 'Escape') {
+                                                                handleCancelEditName()
+                                                            }
+                                                        }}
+                                                        className={styles.uploadCardEditInput}
+                                                        autoFocus
+                                                    />
+                                                    <div className={styles.uploadCardEditActions}>
+                                                        <button
+                                                            onClick={() => handleSaveEditName(index)}
+                                                            className={styles.uploadCardEditButton}
+                                                        >
+                                                            Save
+                                                        </button>
+                                                        <button
+                                                            onClick={handleCancelEditName}
+                                                            className={styles.uploadCardEditButton}
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className={styles.uploadCardContent}>
+                                                    <div className={styles.uploadCardNameRow}>
+                                                        <span className={styles.uploadCardName} title={displayName}>
+                                                            {displayName}
+                                                        </span>
+                                                        {upload.status === 'pending' && (
+                                                            <button
+                                                                className={styles.uploadCardEditButton}
+                                                                onClick={() => handleStartEditName(index, displayName)}
+                                                                title="Edit name"
+                                                            >
+                                                                <IoCreateOutline size={16} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <span className={styles.uploadCardSize}>
+                                                        {formatFileSize(upload.file.size)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {upload.status === 'uploading' && (
+                                                <div className={styles.progressBarContainer}>
+                                                    <div
+                                                        className={styles.progressBar}
+                                                        style={{ width: `${upload.progress}%` }}
+                                                    />
+                                                </div>
+                                            )}
+                                            {upload.status === 'success' && (
+                                                <div className={styles.uploadCardSuccessBadge}>
+                                                    Uploaded
+                                                </div>
+                                            )}
+                                            {upload.status === 'error' && (
+                                                <div className={styles.uploadCardError}>
+                                                    {upload.error || 'Upload failed'}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         </div>
                     )}
 

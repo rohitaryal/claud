@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
+import Dialog from '../../components/Dialog/Dialog'
 import styles from './MyFiles.module.css'
-import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoDocumentTextOutline, IoFolderOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiListFiles } from '../../utils/api'
+import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoDocumentTextOutline, IoFolderOutline, IoEyeOutline, IoCloseOutline } from 'react-icons/io5'
+import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile } from '../../utils/api'
 import { logger } from '../../utils/logger'
+import { getFileIcon } from '../../utils/fileIcons'
+import { showDialog } from '../../utils/dialog'
 
 interface FileItem {
     file_id: string
@@ -23,6 +26,10 @@ const MyFiles = function () {
     const [activeSection, setActiveSection] = useState('my-files')
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
     const [, setUser] = useState<any>(null)
+    const [previewFile, setPreviewFile] = useState<FileItem | null>(null)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [previewError, setPreviewError] = useState<string | null>(null)
+    const [previewText, setPreviewText] = useState<string | null>(null)
 
     useEffect(() => {
         // Check authentication
@@ -58,12 +65,112 @@ const MyFiles = function () {
         navigate('/home')
     }
 
-    const handleDeleteFile = (id: string) => {
-        if (confirm('Are you sure you want to delete this file?')) {
-            // TODO: Implement delete API call
-            setFiles((prev) => prev.filter((f) => f.file_id !== id))
-            logger.info('File deleted', id)
+    const handleDeleteFile = async (id: string, name: string) => {
+        if (confirm(`Are you sure you want to delete "${name}"? This will move it to trash.`)) {
+            try {
+                const response = await apiDeleteFile(id)
+                if (response.success) {
+                    setFiles((prev) => prev.filter((f) => f.file_id !== id))
+                    logger.success('File deleted', name)
+                } else {
+                    logger.error('Delete failed', response.message)
+                    alert(`Failed to delete file: ${response.message}`)
+                }
+            } catch (error) {
+                logger.error('Delete error', error)
+                alert('Failed to delete file. Please try again.')
+            }
         }
+    }
+
+    const handleDownloadFile = async (file: FileItem) => {
+        try {
+            await apiDownloadFile(file.file_id, file.original_name)
+            logger.success('File downloaded', file.original_name)
+        } catch (error) {
+            logger.error('Download error', error)
+            alert('Failed to download file. Please try again.')
+        }
+    }
+
+    const handlePreviewFile = async (file: FileItem) => {
+        setPreviewFile(file)
+        setPreviewError(null)
+        setPreviewUrl(null)
+        setPreviewText(null)
+
+        // Check if file can be previewed
+        const canPreview = canPreviewFile(file.mime_type, file.original_name)
+        
+        if (!canPreview) {
+            setPreviewError('This file type cannot be previewed. Please download it to view.')
+            return
+        }
+
+        try {
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+            const url = `${API_BASE}/api/files/${file.file_id}/download`
+            
+            // For images, videos, and PDFs, we can create a preview URL
+            if (file.mime_type?.startsWith('image/')) {
+                setPreviewUrl(url)
+            } else if (file.mime_type?.startsWith('video/')) {
+                setPreviewUrl(url)
+            } else if (file.mime_type === 'application/pdf') {
+                setPreviewUrl(url)
+            } else if (file.mime_type?.startsWith('text/')) {
+                // For text files, fetch and display content
+                const response = await fetch(url, { credentials: 'include' })
+                if (!response.ok) {
+                    throw new Error('Failed to fetch file')
+                }
+                const text = await response.text()
+                setPreviewText(text)
+            } else {
+                setPreviewError('This file type cannot be previewed. Please download it to view.')
+            }
+        } catch (error) {
+            logger.error('Preview error', error)
+            setPreviewError('Failed to load preview. Please download the file to view it.')
+        }
+    }
+
+    const canPreviewFile = (mimeType?: string, filename?: string): boolean => {
+        if (!mimeType && !filename) return false
+        
+        const ext = filename?.split('.').pop()?.toLowerCase() || ''
+        
+        // Images
+        if (mimeType?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(ext)) {
+            return true
+        }
+        
+        // Videos
+        if (mimeType?.startsWith('video/') || ['mp4', 'webm', 'ogg'].includes(ext)) {
+            return true
+        }
+        
+        // PDF
+        if (mimeType === 'application/pdf' || ext === 'pdf') {
+            return true
+        }
+        
+        // Text files
+        if (mimeType?.startsWith('text/') || ['txt', 'md', 'json', 'xml', 'csv'].includes(ext)) {
+            return true
+        }
+        
+        return false
+    }
+
+    const closePreview = () => {
+        setPreviewFile(null)
+        if (previewUrl && previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(previewUrl)
+        }
+        setPreviewUrl(null)
+        setPreviewError(null)
+        setPreviewText(null)
     }
 
     const formatFileSize = (bytes: number): string => {
@@ -165,7 +272,7 @@ const MyFiles = function () {
                                                     <span className={styles.fileName}>{file.original_name}</span>
                                                     <span className={styles.fileDate}>{formatDate(file.created_at)}</span>
                                                     <div className={styles.fileActions}>
-                                                        <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id)}>
+                                                        <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id, file.original_name)}>
                                                             <IoTrashOutline size={18} />
                                                         </button>
                                                     </div>
@@ -176,52 +283,116 @@ const MyFiles = function () {
                                     {regularFiles.length > 0 && (
                                         <>
                                             {folders.length > 0 && <div className={styles.sectionHeader}>Files</div>}
-                                            {regularFiles.map((fileItem) => (
-                                                <div key={fileItem.file_id} className={styles.fileItem}>
-                                                    <div className={styles.fileIcon}>
-                                                        <IoDocumentTextOutline size={24} />
+                                            {regularFiles.map((fileItem) => {
+                                                const IconComponent = getFileIcon(fileItem.original_name, fileItem.mime_type)
+                                                return (
+                                                    <div key={fileItem.file_id} className={styles.fileItem}>
+                                                        <div className={styles.fileIcon}>
+                                                            <IconComponent size={24} />
+                                                        </div>
+                                                        <span className={styles.fileName}>{fileItem.original_name}</span>
+                                                        <span className={styles.fileSize}>{formatFileSize(fileItem.file_size)}</span>
+                                                        <span className={styles.fileDate}>{formatDate(fileItem.created_at)}</span>
+                                                        <div className={styles.fileActions}>
+                                                            {canPreviewFile(fileItem.mime_type, fileItem.original_name) && (
+                                                                <button className={styles.actionButton} title="Preview" onClick={() => handlePreviewFile(fileItem)}>
+                                                                    <IoEyeOutline size={18} />
+                                                                </button>
+                                                            )}
+                                                            <button className={styles.actionButton} title="Download" onClick={() => handleDownloadFile(fileItem)}>
+                                                                <IoDownloadOutline size={18} />
+                                                            </button>
+                                                            <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(fileItem.file_id, fileItem.original_name)}>
+                                                                <IoTrashOutline size={18} />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <span className={styles.fileName}>{fileItem.original_name}</span>
-                                                    <span className={styles.fileSize}>{formatFileSize(fileItem.file_size)}</span>
-                                                    <span className={styles.fileDate}>{formatDate(fileItem.created_at)}</span>
-                                                    <div className={styles.fileActions}>
-                                                        <button className={styles.actionButton} title="Download" onClick={() => logger.info('Download', fileItem.original_name)}>
-                                                            <IoDownloadOutline size={18} />
-                                                        </button>
-                                                        <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(fileItem.file_id)}>
-                                                            <IoTrashOutline size={18} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                )
+                                            })}
                                         </>
                                     )}
                                 </div>
                             ) : (
                                 <div className={styles.filesGrid}>
-                                    {[...folders, ...regularFiles].map((file) => (
-                                        <div key={file.file_id} className={styles.fileCard}>
-                                            {file.isFolder ? (
-                                                <IoFolderOutline size={48} color="var(--blue)" />
-                                            ) : (
+                                    {[...folders, ...regularFiles].map((file) => {
+                                        const IconComponent = file.isFolder 
+                                            ? IoFolderOutline 
+                                            : getFileIcon(file.original_name, file.mime_type)
+                                        return (
+                                            <div key={file.file_id} className={styles.fileCard}>
                                                 <div className={styles.fileIcon}>
-                                                    <IoDocumentTextOutline size={48} color="var(--blue)" />
+                                                    <IconComponent size={48} color="var(--blue)" />
                                                 </div>
-                                            )}
-                                            <span className={styles.fileCardName}>{file.original_name}</span>
-                                            <div className={styles.fileCardActions}>
-                                                <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id)}>
-                                                    <IoTrashOutline size={18} />
-                                                </button>
+                                                <span className={styles.fileCardName}>{file.original_name}</span>
+                                                <div className={styles.fileCardActions}>
+                                                    {!file.isFolder && canPreviewFile(file.mime_type, file.original_name) && (
+                                                        <button className={styles.actionButton} title="Preview" onClick={() => handlePreviewFile(file)}>
+                                                            <IoEyeOutline size={18} />
+                                                        </button>
+                                                    )}
+                                                    {!file.isFolder && (
+                                                        <button className={styles.actionButton} title="Download" onClick={() => handleDownloadFile(file)}>
+                                                            <IoDownloadOutline size={18} />
+                                                        </button>
+                                                    )}
+                                                    <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id, file.original_name)}>
+                                                        <IoTrashOutline size={18} />
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             )}
                         </div>
                     )}
                 </main>
             </div>
+            
+            {previewFile && (
+                <Dialog
+                    isOpen={true}
+                    onClose={closePreview}
+                    title={previewFile.original_name}
+                    large={true}
+                >
+                    <div className={styles.previewContainer}>
+                        {previewError ? (
+                            <div className={styles.previewError}>
+                                <p>{previewError}</p>
+                                <button
+                                    className={styles.previewDownloadButton}
+                                    onClick={() => {
+                                        handleDownloadFile(previewFile)
+                                        closePreview()
+                                    }}
+                                >
+                                    <IoDownloadOutline size={20} />
+                                    Download File
+                                </button>
+                            </div>
+                        ) : previewUrl ? (
+                            <div className={styles.previewContent}>
+                                {previewFile.mime_type?.startsWith('image/') && (
+                                    <img src={previewUrl} alt={previewFile.original_name} className={styles.previewImage} />
+                                )}
+                                {previewFile.mime_type?.startsWith('video/') && (
+                                    <video src={previewUrl} controls className={styles.previewVideo} />
+                                )}
+                                {previewFile.mime_type === 'application/pdf' && (
+                                    <iframe src={previewUrl} className={styles.previewIframe} title={previewFile.original_name} />
+                                )}
+                            </div>
+                        ) : previewText !== null ? (
+                            <div className={styles.previewContent}>
+                                <pre className={styles.previewText}>{previewText}</pre>
+                            </div>
+                        ) : (
+                            <div className={styles.previewLoading}>Loading preview...</div>
+                        )}
+                    </div>
+                </Dialog>
+            )}
         </div>
     )
 }

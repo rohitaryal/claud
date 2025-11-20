@@ -8,9 +8,10 @@ interface DialogProps {
     title?: string
     message?: string
     children?: React.ReactNode
+    large?: boolean
 }
 
-const Dialog = function ({ isOpen, onClose, title, message, children }: DialogProps) {
+const Dialog = function ({ isOpen, onClose, title, message, children, large = false }: DialogProps) {
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden'
@@ -27,7 +28,7 @@ const Dialog = function ({ isOpen, onClose, title, message, children }: DialogPr
 
     return (
         <div className={styles.overlay} onClick={onClose}>
-            <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
+            <div className={`${styles.dialog} ${large ? styles.dialogLarge : ''}`} onClick={(e) => e.stopPropagation()}>
                 <button className={styles.closeButton} onClick={onClose} aria-label="Close">
                     <IoClose />
                 </button>

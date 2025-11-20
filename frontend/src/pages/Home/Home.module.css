@@ -45,12 +45,6 @@
     text-align: center;
     background-color: #fafafa;
     transition: all var(--transition-short);
-    cursor: pointer;
-}
-
-.uploadZone:hover {
-    border-color: var(--blue);
-    background-color: #f0f4ff;
 }
 
 .uploadZoneDragging {
@@ -100,11 +94,50 @@
     border-top: 1px solid #e5e5e5;
 }
 
+.uploadListHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
 .uploadListTitle {
     font-size: 1.2rem;
     font-weight: 600;
     color: var(--black);
-    margin-bottom: 1.5rem;
+    margin: 0;
+}
+
+.uploadAllButton {
+    padding: 0.5rem 1rem;
+    background: var(--blue-gradient);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(18, 51, 193, 0.2);
+    transition: all var(--transition-short);
+}
+
+.uploadAllButton:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(18, 51, 193, 0.3);
+}
+
+.uploadAllButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.uploadGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
 }
 
 .uploadItem {
@@ -113,6 +146,141 @@
     border-radius: 12px;
     padding: 1rem;
     margin-bottom: 1rem;
+}
+
+.uploadCard {
+    background-color: white;
+    border: 2px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    transition: all var(--transition-short);
+    position: relative;
+}
+
+.uploadCardSuccess {
+    border-color: #10b981;
+    background-color: #f0fdf4;
+}
+
+.uploadCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.uploadCardIcon {
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uploadCardRemove {
+    padding: 0.25rem;
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #999;
+    transition: all var(--transition-short);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uploadCardRemove:hover {
+    background-color: #fee2e2;
+    color: #ef4444;
+}
+
+.uploadCardContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.uploadCardNameRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.uploadCardName {
+    flex: 1;
+    font-weight: 500;
+    color: var(--black);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
+
+.uploadCardSize {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.uploadCardEdit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.uploadCardEditInput {
+    padding: 0.5rem;
+    border: 1px solid var(--blue);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.uploadCardEditActions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.uploadCardEditButton {
+    padding: 0.25rem 0.5rem;
+    background-color: var(--blue-light);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--blue);
+    font-size: 0.85rem;
+    transition: all var(--transition-short);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uploadCardEditButton:hover {
+    background-color: var(--blue);
+    color: white;
+}
+
+.uploadCardSuccessBadge {
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background-color: #10b981;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.uploadCardError {
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background-color: #fee2e2;
+    color: #ef4444;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    text-align: center;
 }
 
 .uploadItemHeader {
@@ -207,5 +375,10 @@
 
     .uploadPlaceholder {
         font-size: 1rem;
+    }
+
+    .uploadGrid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
     }
 }
