@@ -1,52 +1,129 @@
 .button {
-    width: 15em;
-    padding: 0.3em;
-    font-weight: bolder;
+    padding: 0.875rem 1.5rem;
+    font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
-
-    border-radius: calc(2em + 0.3em);
+    border-radius: 12px;
     border: none;
-
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1em;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all var(--transition-short);
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 
+.button:hover:not(.disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.button:active:not(.disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Variants */
+.gradient {
+    color: white;
+    background: var(--blue-gradient);
     background-size: 200% auto;
     background-position: 50% 50%;
 }
 
-.blueButton {
-    color: white;
-    background-image: linear-gradient(to right, var(--blue-light), var(--blue-dark));
-    transition: background-position var(--transition-short);
-}
-
-.blueButton:hover {
+.gradient:hover:not(.disabled) {
     background-position: 80% 50%;
 }
 
-.blueButton .arrow {
-    color: var(--blue-dark);
-    background-color: white;
-}
-
-.whiteButton {
-    background-color: white;
-    border: 1px solid grey;
-}
-
-.whiteButton .arrow {
+.primary {
     color: white;
+    background-color: var(--blue);
+}
+
+.primary:hover:not(.disabled) {
     background-color: var(--blue-dark);
 }
 
+.secondary {
+    color: var(--blue);
+    background-color: var(--blue-light);
+}
+
+.secondary:hover:not(.disabled) {
+    background-color: rgba(18, 51, 193, 0.15);
+}
+
+.outline {
+    color: var(--blue);
+    background-color: white;
+    border: 2px solid var(--blue);
+}
+
+.outline:hover:not(.disabled) {
+    background-color: var(--blue-light);
+}
+
+/* Sizes */
+.small {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    min-width: 100px;
+}
+
+.medium {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+}
+
+.large {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    min-width: 160px;
+}
+
+/* Full width */
+.fullWidth {
+    width: 100%;
+}
+
+/* Text and arrow */
 .button .text {
     flex: 1;
-    padding-left: 1em;
+    text-align: center;
 }
 
 .button .arrow {
     padding: 0.3em;
-    border-radius: 2em;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--transition-short);
+}
+
+.gradient .arrow,
+.primary .arrow {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.secondary .arrow {
+    background-color: rgba(18, 51, 193, 0.1);
+}
+
+.outline .arrow {
+    background-color: var(--blue-dark);
+    color: white;
+}
+
+.button:hover:not(.disabled) .arrow {
+    transform: translateX(4px);
 }

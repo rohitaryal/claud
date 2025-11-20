@@ -4,8 +4,14 @@
     margin: 0 auto;
     background-color: white;
     border-radius: var(--border-radius);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
     overflow: hidden;
+    border: 1px solid rgba(18, 51, 193, 0.1);
+    transition: box-shadow var(--transition-short);
+}
+
+.formCard:hover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .tabsContainer {

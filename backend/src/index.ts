@@ -1,28 +1,46 @@
 import { Hono } from 'hono'
-import { logger } from 'hono/logger'
+import { logger as honoLogger } from 'hono/logger'
 import { cors } from 'hono/cors'
 import { initDatabase } from './utils/db'
 import { initUploadDir } from './services/file'
+import { logger } from './utils/logger'
 import authRouter from './routes/auth'
 import fileRouter from './routes/files'
 import shareRouter from './routes/share'
 
 const app = new Hono()
 
-app.use(logger())
-app.use(cors())
+app.use(honoLogger())
+app.use('*', cors({
+  origin: (origin) => {
+    // For credentials to work, we must return the specific origin, not '*'
+    // Allow all origins for development - return the origin if provided
+    if (origin) {
+      return origin
+    }
+    // For same-origin requests (no origin header), allow
+    // In production, specify exact allowed origins
+    return 'http://localhost:5173'
+  },
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+  exposeHeaders: ['Content-Type', 'Set-Cookie'],
+}))
 
 // Initialize database
 initDatabase().catch((error) => {
-  console.error('Failed to initialize database:', error)
+  logger.error('Failed to initialize database', error)
   process.exit(1)
 })
 
 // Initialize upload directory
 initUploadDir()
+logger.success('Upload directory initialized')
 
 // Health check endpoint
 app.get('/api/health', (c) => {
+  logger.info('Health check requested')
   return c.json({ status: 'healthy', timestamp: new Date().toISOString() })
 })
 
@@ -41,7 +59,12 @@ app.get('/', (c) => {
 })
 
 const port = parseInt(process.env.PORT || '3000')
-console.log(`Server is running on port ${port}`)
+logger.success(`Server is running on port ${port}`)
+logger.info('API endpoints registered', {
+  auth: '/api/auth',
+  files: '/api/files',
+  shares: '/api/share'
+})
 
 export default {
   port,

@@ -15,24 +15,33 @@
 
 .submitButton {
     padding: 0.875rem 1.5rem;
-    background: linear-gradient(to right, var(--blue), #1cd9f1);
+    background: var(--blue-gradient);
     color: white;
     border: none;
     border-radius: 12px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform var(--transition-short);
+    transition: all var(--transition-short);
     margin-top: 0.5rem;
+    box-shadow: 0 4px 12px rgba(18, 51, 193, 0.3);
+    width: 100%;
 }
 
 .submitButton:hover:not(:disabled) {
     transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(18, 51, 193, 0.4);
+}
+
+.submitButton:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(18, 51, 193, 0.3);
 }
 
 .submitButton:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+    transform: none;
 }
 
 .links {
