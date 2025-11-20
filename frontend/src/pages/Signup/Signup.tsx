@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { FaGoogle } from 'react-icons/fa'
+import { FaGithub } from 'react-icons/fa'
+import { IoEye, IoEyeOff } from 'react-icons/io5'
 import Input from '../../components/Input/Input'
-import FormCard from '../../components/FormCard/FormCard'
-import Navigation from '../../components/Navigation/Navigation'
-import Footer from '../../components/Footer/Footer'
+import AuthLayout from '../../components/AuthLayout/AuthLayout'
 import { apiRegister } from '../../utils/api'
+import { showUnderDevelopmentDialog } from '../../utils/dialog'
 import styles from './Signup.module.css'
 
 interface SignupErrors {
+    firstName?: string
+    lastName?: string
     username?: string
     email?: string
     password?: string
@@ -17,13 +21,18 @@ interface SignupErrors {
 const Signup = function () {
     const navigate = useNavigate()
     const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
         username: '',
         email: '',
         password: '',
         confirmPassword: ''
     })
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [errors, setErrors] = useState<SignupErrors>({})
     const [loading, setLoading] = useState(false)
+    const [termsAccepted, setTermsAccepted] = useState(false)
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -38,8 +47,24 @@ const Signup = function () {
         }))
     }
 
+    const handleGoogleLogin = () => {
+        showUnderDevelopmentDialog('Google signup')
+    }
+
+    const handleGithubLogin = () => {
+        showUnderDevelopmentDialog('GitHub signup')
+    }
+
     const validateForm = () => {
         const newErrors: SignupErrors = {}
+
+        if (!formData.firstName.trim()) {
+            newErrors.firstName = 'First name is required'
+        }
+
+        if (!formData.lastName.trim()) {
+            newErrors.lastName = 'Last name is required'
+        }
 
         if (!formData.username.trim()) {
             newErrors.username = 'Username is required'
@@ -65,6 +90,11 @@ const Signup = function () {
             newErrors.confirmPassword = 'Please confirm your password'
         } else if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match'
+        }
+
+        if (!termsAccepted) {
+            newErrors.password = 'You must agree to the Terms & Conditions'
+            return false
         }
 
         setErrors(newErrors)
@@ -94,66 +124,117 @@ const Signup = function () {
     }
 
     return (
-        <>
-            <Navigation />
-            <div className={styles.signupContainer}>
-                <FormCard
-                    title="Create Account"
-                    subtitle="Join Claud and start storing files securely"
-                >
-                    <form onSubmit={handleSubmit} className={styles.form}>
-                        <Input
-                            label="Username"
-                            type="text"
-                            name="username"
-                            placeholder="choose_username"
-                            value={formData.username}
-                            onChange={handleChange}
-                            error={errors.username}
-                        />
-                        <Input
-                            label="Email"
-                            type="email"
-                            name="email"
-                            placeholder="your@email.com"
-                            value={formData.email}
-                            onChange={handleChange}
-                            error={errors.email}
-                        />
-                        <Input
-                            label="Password"
-                            type="password"
-                            name="password"
-                            placeholder="At least 8 characters"
-                            value={formData.password}
-                            onChange={handleChange}
-                            error={errors.password}
-                        />
-                        <Input
-                            label="Confirm Password"
-                            type="password"
-                            name="confirmPassword"
-                            placeholder="Confirm your password"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            error={errors.confirmPassword}
-                        />
+        <AuthLayout
+            title="Create an account"
+            subtitle="Already have an account? Log in"
+        >
+            <form onSubmit={handleSubmit} className={styles.form}>
+                <div className={styles.inputWrapper}>
+                    <Input
+                        label="First name"
+                        type="text"
+                        name="firstName"
+                        placeholder="First name"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        error={errors.firstName}
+                        variant="dark"
+                    />
+                    <Input
+                        label="Last name"
+                        type="text"
+                        name="lastName"
+                        placeholder="Last name"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        error={errors.lastName}
+                        variant="dark"
+                    />
+                </div>
+                <Input
+                    label="Username"
+                    type="text"
+                    name="username"
+                    placeholder="choose_username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    error={errors.username}
+                    variant="dark"
+                />
+                <Input
+                    label="Email"
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    error={errors.email}
+                    variant="dark"
+                />
+                <div className={styles.passwordWrapper}>
+                    <Input
+                        label="Password"
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        placeholder="Enter your password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        error={errors.password}
+                        variant="dark"
+                    />
+                    <button
+                        type="button"
+                        className={styles.passwordToggle}
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? <IoEyeOff /> : <IoEye />}
+                    </button>
+                </div>
 
-                        <button type="submit" className={styles.submitButton} disabled={loading}>
-                            {loading ? 'Creating account...' : 'Sign Up'}
-                        </button>
-                    </form>
-
-                    <div className={styles.links}>
-                        <span className={styles.text}>Already have an account?</span>
-                        <Link to="/login" className={styles.link}>
-                            Log in
+                <div className={styles.checkboxWrapper}>
+                    <input
+                        type="checkbox"
+                        id="terms"
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className={styles.checkbox}
+                    />
+                    <label htmlFor="terms" className={styles.checkboxLabel}>
+                        I agree to the{' '}
+                        <Link to="/terms" className={styles.link}>
+                            Terms & Conditions
                         </Link>
-                    </div>
-                </FormCard>
+                    </label>
+                </div>
+
+                <button type="submit" className={styles.submitButton} disabled={loading}>
+                    {loading ? 'Creating account...' : 'Create account'}
+                </button>
+            </form>
+
+            <div className={styles.separator}>
+                <span>Or register with</span>
             </div>
-            <Footer />
-        </>
+
+            <div className={styles.socialButtons}>
+                <button
+                    type="button"
+                    className={styles.socialButton}
+                    onClick={handleGoogleLogin}
+                >
+                    <FaGoogle className={styles.socialIcon} />
+                    <span>Google</span>
+                </button>
+                <button
+                    type="button"
+                    className={styles.socialButton}
+                    onClick={handleGithubLogin}
+                >
+                    <FaGithub className={styles.socialIcon} />
+                    <span>GitHub</span>
+                </button>
+            </div>
+        </AuthLayout>
     )
 }
 

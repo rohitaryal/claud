@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import Input from '../../components/Input/Input'
-import FormCard from '../../components/FormCard/FormCard'
-import Navigation from '../../components/Navigation/Navigation'
-import Footer from '../../components/Footer/Footer'
+import AuthLayout from '../../components/AuthLayout/AuthLayout'
 import { apiForgotPassword } from '../../utils/api'
 import styles from './ForgotPassword.module.css'
 
@@ -51,69 +49,61 @@ const ForgotPassword = function () {
 
     if (submitted) {
         return (
-            <>
-                <Navigation />
-                <div className={styles.forgotPasswordContainer}>
-                    <FormCard title="Check Your Email" subtitle="Password reset link sent">
-                        <div className={styles.successMessage}>
-                            <p>
-                                We've sent a password reset link to <strong>{email}</strong>
-                            </p>
-                            <p>
-                                Check your email and follow the link to reset your password. If you don't see
-                                the email, check your spam folder.
-                            </p>
-                        </div>
-
-                        <button
-                            onClick={() => navigate('/login')}
-                            className={styles.submitButton}
-                        >
-                            Back to Login
-                        </button>
-                    </FormCard>
+            <AuthLayout
+                title="Check Your Email"
+                subtitle="Password reset link sent"
+            >
+                <div className={styles.successMessage}>
+                    <p>
+                        We've sent a password reset link to <strong>{email}</strong>
+                    </p>
+                    <p>
+                        Check your email and follow the link to reset your password. If you don't see
+                        the email, check your spam folder.
+                    </p>
                 </div>
-                <Footer />
-            </>
+
+                <button
+                    onClick={() => navigate('/login')}
+                    className={styles.submitButton}
+                >
+                    Back to Login
+                </button>
+            </AuthLayout>
         )
     }
 
     return (
-        <>
-            <Navigation />
-            <div className={styles.forgotPasswordContainer}>
-                <FormCard
-                    title="Reset Password"
-                    subtitle="Enter your email to receive a password reset link"
-                >
-                    <form onSubmit={handleSubmit} className={styles.form}>
-                        <Input
-                            label="Email Address"
-                            type="email"
-                            placeholder="your@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            error={errors.email}
-                        />
+        <AuthLayout
+            title="Reset Password"
+            subtitle="Enter your email to receive a password reset link"
+        >
+            <form onSubmit={handleSubmit} className={styles.form}>
+                <Input
+                    label="Email Address"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    error={errors.email}
+                    variant="dark"
+                />
 
-                        <button type="submit" className={styles.submitButton} disabled={loading}>
-                            {loading ? 'Sending...' : 'Send Reset Link'}
-                        </button>
-                    </form>
+                <button type="submit" className={styles.submitButton} disabled={loading}>
+                    {loading ? 'Sending...' : 'Send Reset Link'}
+                </button>
+            </form>
 
-                    <div className={styles.links}>
-                        <Link to="/login" className={styles.link}>
-                            Back to Login
-                        </Link>
-                        <span className={styles.divider}>•</span>
-                        <Link to="/signup" className={styles.link}>
-                            Create Account
-                        </Link>
-                    </div>
-                </FormCard>
+            <div className={styles.links}>
+                <Link to="/login" className={styles.link}>
+                    Back to Login
+                </Link>
+                <span className={styles.divider}>•</span>
+                <Link to="/signup" className={styles.link}>
+                    Create Account
+                </Link>
             </div>
-            <Footer />
-        </>
+        </AuthLayout>
     )
 }
 

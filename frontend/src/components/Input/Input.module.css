@@ -46,3 +46,35 @@
     font-size: 0.85rem;
     font-weight: 500;
 }
+
+/* Dark variant */
+.dark.label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.dark.input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.dark.input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.dark.input:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.dark.inputError {
+    border-color: #ef4444;
+}
+
+.dark.inputError:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.dark.errorText {
+    color: #fca5a5;
+}

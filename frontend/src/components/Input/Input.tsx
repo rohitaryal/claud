@@ -8,21 +8,23 @@ interface InputProps {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     error?: string
     name?: string
+    variant?: 'light' | 'dark'
 }
 
-const Input = function ({ label, type, placeholder, value, onChange, error, name }: InputProps) {
+const Input = function ({ label, type, placeholder, value, onChange, error, name, variant = 'light' }: InputProps) {
+    const variantClass = variant === 'dark' ? styles.dark : ''
     return (
         <div className={styles.inputGroup}>
-            <label className={styles.label}>{label}</label>
+            <label className={`${styles.label} ${variantClass}`}>{label}</label>
             <input
                 type={type}
                 name={name}
                 placeholder={placeholder}
                 value={value}
                 onChange={onChange}
-                className={styles.input + (error ? ' ' + styles.inputError : '')}
+                className={`${styles.input} ${variantClass} ${error ? styles.inputError : ''}`}
             />
-            {error && <span className={styles.errorText}>{error}</span>}
+            {error && <span className={`${styles.errorText} ${variantClass}`}>{error}</span>}
         </div>
     )
 }

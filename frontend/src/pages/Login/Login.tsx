@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { FaGoogle } from 'react-icons/fa'
+import { FaGithub } from 'react-icons/fa'
+import { IoEye, IoEyeOff } from 'react-icons/io5'
 import Input from '../../components/Input/Input'
-import FormCard from '../../components/FormCard/FormCard'
-import Navigation from '../../components/Navigation/Navigation'
-import Footer from '../../components/Footer/Footer'
+import AuthLayout from '../../components/AuthLayout/AuthLayout'
 import { apiLogin } from '../../utils/api'
+import { showUnderDevelopmentDialog } from '../../utils/dialog'
 import styles from './Login.module.css'
 
 const Login = function () {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
     const [loading, setLoading] = useState(false)
 
@@ -55,47 +58,76 @@ const Login = function () {
         }
     }
 
+    const handleGoogleLogin = () => {
+        showUnderDevelopmentDialog('Google login')
+    }
+
+    const handleGithubLogin = () => {
+        showUnderDevelopmentDialog('GitHub login')
+    }
+
     return (
-        <>
-            <Navigation />
-            <div className={styles.loginContainer}>
-                <FormCard title="Welcome Back" subtitle="Login to your Claud account">
-                    <form onSubmit={handleSubmit} className={styles.form}>
-                        <Input
-                            label="Email"
-                            type="email"
-                            placeholder="your@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            error={errors.email}
-                        />
-                        <Input
-                            label="Password"
-                            type="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            error={errors.password}
-                        />
+        <AuthLayout
+            title="Welcome Back"
+            subtitle="Already have an account? Log in"
+        >
+            <form onSubmit={handleSubmit} className={styles.form}>
+                <Input
+                    label="Email"
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    error={errors.email}
+                    variant="dark"
+                />
+                <div className={styles.passwordWrapper}>
+                    <Input
+                        label="Password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        error={errors.password}
+                        variant="dark"
+                    />
+                    <button
+                        type="button"
+                        className={styles.passwordToggle}
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? <IoEyeOff /> : <IoEye />}
+                    </button>
+                </div>
 
-                        <button type="submit" className={styles.submitButton} disabled={loading}>
-                            {loading ? 'Logging in...' : 'Log In'}
-                        </button>
-                    </form>
+                <button type="submit" className={styles.submitButton} disabled={loading}>
+                    {loading ? 'Logging in...' : 'Log In'}
+                </button>
+            </form>
 
-                    <div className={styles.links}>
-                        <Link to="/forgot-password" className={styles.link}>
-                            Forgot password?
-                        </Link>
-                        <span className={styles.divider}>•</span>
-                        <Link to="/signup" className={styles.link}>
-                            Create account
-                        </Link>
-                    </div>
-                </FormCard>
+            <div className={styles.separator}>
+                <span>Or register with</span>
             </div>
-            <Footer />
-        </>
+
+            <div className={styles.socialButtons}>
+                <button
+                    type="button"
+                    className={styles.socialButton}
+                    onClick={handleGoogleLogin}
+                >
+                    <FaGoogle className={styles.socialIcon} />
+                    <span>Google</span>
+                </button>
+                <button
+                    type="button"
+                    className={styles.socialButton}
+                    onClick={handleGithubLogin}
+                >
+                    <FaGithub className={styles.socialIcon} />
+                    <span>GitHub</span>
+                </button>
+            </div>
+        </AuthLayout>
     )
 }
 
