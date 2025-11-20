@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+// Use localhost for all API calls (works from browser on host machine)
+// In Docker, the backend port is mapped to localhost:3000
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 export interface ApiResponse<T = unknown> {
   success: boolean
@@ -30,7 +32,7 @@ export async function apiRegister(
   password: string
 ): Promise<AuthResponse> {
   try {
-    const response = await fetch(`${API_URL}/api/auth/register`, {
+    const response = await fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -68,7 +70,7 @@ export async function apiRegister(
  */
 export async function apiLogin(email: string, password: string): Promise<AuthResponse> {
   try {
-    const response = await fetch(`${API_URL}/api/auth/login`, {
+    const response = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -105,7 +107,7 @@ export async function apiLogin(email: string, password: string): Promise<AuthRes
  */
 export async function apiForgotPassword(email: string): Promise<AuthResponse> {
   try {
-    const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+    const response = await fetch(`${API_BASE}/api/auth/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -132,7 +134,7 @@ export async function apiForgotPassword(email: string): Promise<AuthResponse> {
  */
 export async function apiGetCurrentUser(): Promise<{ success: boolean; user?: AuthUser }> {
   try {
-    const response = await fetch(`${API_URL}/api/auth/me`, {
+    const response = await fetch(`${API_BASE}/api/auth/me`, {
       method: 'GET',
       credentials: 'include'
     })
@@ -152,7 +154,7 @@ export async function apiGetCurrentUser(): Promise<{ success: boolean; user?: Au
  */
 export async function apiLogout(): Promise<{ success: boolean; message: string }> {
   try {
-    const response = await fetch(`${API_URL}/api/auth/logout`, {
+    const response = await fetch(`${API_BASE}/api/auth/logout`, {
       method: 'POST',
       credentials: 'include'
     })
