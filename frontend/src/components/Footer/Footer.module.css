@@ -35,11 +35,10 @@
     gap: 0.75rem;
 }
 
-.logoSquare {
-    width: 24px;
-    height: 24px;
-    background-color: var(--blue);
-    border-radius: 4px;
+.logoImage {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
 }
 
 .logoText {
@@ -50,25 +49,61 @@
 }
 
 .demoButton {
-    background-color: white !important;
-    color: var(--blue) !important;
-    border: 2px solid var(--blue) !important;
-    width: fit-content;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 220px;
+    height: 56px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform var(--transition-short), box-shadow var(--transition-short);
+    background: transparent;
 }
 
 .demoButton:hover {
-    background-color: var(--blue-light) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Style the arrow icon for the demo button */
-.demoButton svg {
-    background-color: transparent !important;
-    color: var(--blue) !important;
+.buttonIconSection {
+    width: 56px;
+    height: 100%;
+    background-color: #2d2d2d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.buttonIcon {
+    color: white;
+    font-size: 24px;
+}
+
+.buttonTextSection {
+    flex: 1;
+    height: 100%;
+    background: var(--blue-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1.5rem;
+}
+
+.buttonTextSection span {
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .columnsContainer {
     display: flex;
-    gap: 4rem;
+    gap: 6rem;
     flex: 1;
     justify-content: flex-end;
 }
@@ -77,7 +112,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    min-width: 180px;
+    min-width: 220px;
 }
 
 .columnTitle {
@@ -105,6 +140,55 @@
 
 .columnList li a:hover {
     opacity: 0.8;
+}
+
+.contactItem {
+    display: flex;
+    align-items: center;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0.75rem;
+    height: 48px;
+}
+
+.contactKey {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #2d2d2d;
+    padding: 0 1rem;
+    height: 100%;
+    min-width: 100px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.contactIcon {
+    font-size: 18px;
+}
+
+.contactValue {
+    flex: 1;
+    background: var(--blue-gradient);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+}
+
+.contactValue a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: opacity var(--transition-short);
+}
+
+.contactValue a:hover {
+    opacity: 0.9;
 }
 
 .socialLinks {
@@ -245,6 +329,28 @@
         min-width: 100%;
     }
 
+    .demoButton {
+        max-width: 100%;
+    }
+
+    .contactItem {
+        height: 44px;
+    }
+
+    .contactKey {
+        min-width: 80px;
+        padding: 0 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .contactValue {
+        padding: 0 0.75rem;
+    }
+
+    .contactValue a {
+        font-size: 0.85rem;
+    }
+
     .largeLogo {
         font-size: 8rem;
     }
@@ -269,12 +375,60 @@
         font-size: 1.25rem;
     }
 
+    .logoImage {
+        width: 28px;
+        height: 28px;
+    }
+
+    .demoButton {
+        height: 48px;
+        max-width: 100%;
+    }
+
+    .buttonIconSection {
+        width: 48px;
+    }
+
+    .buttonIcon {
+        font-size: 20px;
+    }
+
+    .buttonTextSection {
+        padding: 0 1rem;
+    }
+
+    .buttonTextSection span {
+        font-size: 0.9rem;
+    }
+
     .columnTitle {
         font-size: 0.95rem;
     }
 
     .columnList li a {
         font-size: 0.85rem;
+    }
+
+    .contactItem {
+        height: 40px;
+    }
+
+    .contactKey {
+        min-width: 70px;
+        padding: 0 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .contactIcon {
+        font-size: 16px;
+    }
+
+    .contactValue {
+        padding: 0 0.5rem;
+    }
+
+    .contactValue a {
+        font-size: 0.8rem;
     }
 
     .largeLogo {
