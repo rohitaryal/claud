@@ -11,9 +11,11 @@ import {
     IoLogoWord,
     IoLogoExcel
 } from 'react-icons/io5'
-import { IconType } from 'react-icons'
+import React from 'react'
 
-export function getFileIcon(filename: string, mimeType?: string): IconType {
+type IconComponent = React.ComponentType<{ size?: number; color?: string }>
+
+export function getFileIcon(filename: string, mimeType?: string): IconComponent {
     const ext = filename.split('.').pop()?.toLowerCase() || ''
     
     // Check if it's a folder
