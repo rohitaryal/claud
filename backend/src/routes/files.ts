@@ -6,6 +6,7 @@ import {
   listUserFiles, 
   deleteFile,
   getUserStorageUsage,
+  updateFileMetadata,
   MAX_FILE_SIZE
 } from '../services/file'
 import { getFromSession } from '../utils/db'
@@ -399,6 +400,94 @@ fileRouter.get('/:fileId', async (c) => {
     })
   } catch (error) {
     console.error('Get file metadata endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * PUT /files/:fileId
+ * Update file metadata
+ */
+fileRouter.put('/:fileId', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const fileId = c.req.param('fileId')
+    const body = await c.req.json()
+    const { original_name, parent_folder_id } = body
+
+    // Validate that at least one field is provided
+    if (original_name === undefined && parent_folder_id === undefined) {
+      return c.json(
+        {
+          success: false,
+          message: 'At least one field (original_name or parent_folder_id) must be provided',
+          code: 'INVALID_REQUEST'
+        },
+        400
+      )
+    }
+
+    // Update file metadata
+    const result = await updateFileMetadata(fileId, user.uuid, {
+      original_name,
+      parent_folder_id: parent_folder_id === null ? null : parent_folder_id
+    })
+
+    if (!result.success) {
+      return c.json(result, result.code === 'FILE_NOT_FOUND' ? 404 : 400)
+    }
+
+    return c.json({
+      success: true,
+      file: result.file
+    })
+  } catch (error) {
+    console.error('Update file metadata endpoint error:', error)
     return c.json(
       {
         success: false,

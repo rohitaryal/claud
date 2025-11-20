@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { register, login, requestPasswordReset, getCurrentUser } from '../services/auth'
+import { deleteSession } from '../utils/db'
 
 const authRouter = new Hono()
 
@@ -167,6 +168,22 @@ authRouter.get('/me', async (c) => {
  */
 authRouter.post('/logout', async (c) => {
   try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (cookies) {
+      const sessionMatch = cookies.match(/session=([^;]+)/)
+      if (sessionMatch) {
+        try {
+          const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+          // Delete session from database
+          await deleteSession(sessionId)
+        } catch (error) {
+          // If session parsing fails, continue with logout anyway
+          console.error('Error parsing session during logout:', error)
+        }
+      }
+    }
+
     // Clear session cookie
     c.header('Set-Cookie', 'session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0')
 

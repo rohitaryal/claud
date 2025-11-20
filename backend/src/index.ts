@@ -5,6 +5,7 @@ import { initDatabase } from './utils/db'
 import { initUploadDir } from './services/file'
 import authRouter from './routes/auth'
 import fileRouter from './routes/files'
+import shareRouter from './routes/share'
 
 const app = new Hono()
 
@@ -30,6 +31,9 @@ app.route('/api/auth', authRouter)
 
 // File routes
 app.route('/api/files', fileRouter)
+
+// Share routes
+app.route('/api', shareRouter)
 
 // Root endpoint
 app.get('/', (c) => {

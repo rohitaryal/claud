@@ -163,4 +163,84 @@ export async function getUserStorageUsage(userUuid: string): Promise<number> {
   return parseInt(result.rows[0]?.total_size || '0')
 }
 
+/**
+ * Update file metadata
+ */
+export async function updateFileMetadata(
+  fileId: string,
+  userUuid: string,
+  updates: { original_name?: string; parent_folder_id?: string | null }
+): Promise<{ success: boolean; file?: any; message?: string; code?: string }> {
+  try {
+    // Verify file exists and belongs to user
+    const file = await getFileMetadata(fileId, userUuid)
+    if (!file) {
+      return {
+        success: false,
+        message: 'File not found',
+        code: 'FILE_NOT_FOUND'
+      }
+    }
+
+    // Build update query dynamically
+    const updateFields: string[] = []
+    const updateValues: any[] = []
+    let paramIndex = 1
+
+    if (updates.original_name !== undefined) {
+      updateFields.push(`original_name = $${paramIndex}`)
+      updateValues.push(updates.original_name)
+      paramIndex++
+    }
+
+    if (updates.parent_folder_id !== undefined) {
+      updateFields.push(`parent_folder_id = $${paramIndex}`)
+      updateValues.push(updates.parent_folder_id)
+      paramIndex++
+    }
+
+    if (updateFields.length === 0) {
+      return {
+        success: false,
+        message: 'No fields to update',
+        code: 'NO_UPDATES'
+      }
+    }
+
+    // Always update the updated_at timestamp
+    updateFields.push(`updated_at = CURRENT_TIMESTAMP`)
+
+    // Add file_id and user_uuid for WHERE clause
+    updateValues.push(fileId, userUuid)
+
+    const result = await query(
+      `UPDATE files 
+       SET ${updateFields.join(', ')}
+       WHERE file_id = $${paramIndex} AND user_uuid = $${paramIndex + 1} AND is_deleted = FALSE
+       RETURNING file_id, filename, original_name, file_size, mime_type, parent_folder_id, created_at, updated_at`,
+      updateValues
+    )
+
+    if (result.rowCount === 0) {
+      return {
+        success: false,
+        message: 'File not found or update failed',
+        code: 'UPDATE_FAILED'
+      }
+    }
+
+    return {
+      success: true,
+      file: result.rows[0]
+    }
+  } catch (error) {
+    console.error('Error updating file metadata:', error)
+    return {
+      success: false,
+      message: 'Failed to update file metadata',
+      code: 'UPDATE_ERROR'
+    }
+  }
+}
+
 export { MAX_FILE_SIZE }
