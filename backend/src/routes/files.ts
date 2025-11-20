@@ -9,6 +9,8 @@ import {
   getUserStorageUsage,
   updateFileMetadata,
   searchFiles,
+  toggleStarFile,
+  restoreFile,
   MAX_FILE_SIZE
 } from '../services/file'
 import { getFromSession } from '../utils/db'
@@ -645,6 +647,160 @@ fileRouter.get('/search', async (c) => {
     })
   } catch (error) {
     console.error('Search endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * POST /files/:fileId/star
+ * Toggle star status of a file
+ */
+fileRouter.post('/:fileId/star', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const fileId = c.req.param('fileId')
+
+    // Toggle star status
+    const result = await toggleStarFile(fileId, user.uuid)
+    if (!result.success) {
+      return c.json(
+        {
+          success: false,
+          message: result.message || 'Failed to toggle star status',
+          code: 'STAR_ERROR'
+        },
+        400
+      )
+    }
+
+    return c.json({
+      success: true,
+      is_starred: result.is_starred
+    })
+  } catch (error) {
+    console.error('Star endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * POST /files/:fileId/restore
+ * Restore a file from trash
+ */
+fileRouter.post('/:fileId/restore', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const fileId = c.req.param('fileId')
+
+    // Restore file
+    const restored = await restoreFile(fileId, user.uuid)
+    if (!restored) {
+      return c.json(
+        {
+          success: false,
+          message: 'File not found in trash or restore failed',
+          code: 'FILE_NOT_FOUND'
+        },
+        404
+      )
+    }
+
+    return c.json({
+      success: true,
+      message: 'File restored successfully'
+    })
+  } catch (error) {
+    console.error('Restore endpoint error:', error)
     return c.json(
       {
         success: false,

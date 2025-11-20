@@ -284,3 +284,24 @@ export async function getFileShares(fileId: string, userUuid: string): Promise<a
   return result.rows
 }
 
+/**
+ * List all publicly shared files (global pool)
+ */
+export async function listPublicFiles(limit: number = 50, offset: number = 0): Promise<any[]> {
+  const result = await query(
+    `SELECT f.file_id, f.original_name, f.file_size, f.mime_type, f.created_at,
+            s.share_id, s.share_token, s.permission, s.created_at as shared_at,
+            u.username as shared_by_username
+     FROM file_shares s
+     JOIN files f ON s.file_id = f.file_id
+     JOIN users u ON s.shared_by = u.uuid
+     WHERE s.is_public = TRUE 
+       AND f.is_deleted = FALSE
+       AND (s.expires_at IS NULL OR s.expires_at > NOW())
+     ORDER BY s.created_at DESC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset]
+  )
+  return result.rows
+}
+

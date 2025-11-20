@@ -87,7 +87,7 @@ export async function saveFile(
  */
 export async function getFileMetadata(fileId: string, userUuid: string): Promise<any> {
   const result = await query(
-    `SELECT file_id, user_uuid, filename, original_name, file_path, file_size, mime_type, parent_folder_id, created_at, updated_at
+    `SELECT file_id, user_uuid, filename, original_name, file_path, file_size, mime_type, parent_folder_id, created_at, updated_at, is_starred
      FROM files
      WHERE file_id = $1 AND user_uuid = $2 AND is_deleted = FALSE`,
     [fileId, userUuid]
@@ -122,7 +122,7 @@ export async function listUserFiles(
 ): Promise<any[]> {
   const deletedCondition = includeDeleted ? 'is_deleted = TRUE' : 'is_deleted = FALSE'
   const result = await query(
-    `SELECT file_id, filename, original_name, file_size, mime_type, parent_folder_id, created_at, updated_at, is_deleted
+    `SELECT file_id, filename, original_name, file_size, mime_type, parent_folder_id, created_at, updated_at, is_deleted, is_starred
      FROM files
      WHERE user_uuid = $1 AND ${deletedCondition} AND parent_folder_id ${parentFolderId ? '= $2' : 'IS NULL'}
      ORDER BY created_at DESC
@@ -302,7 +302,7 @@ export async function searchFiles(
   const searchPattern = `%${searchQuery}%`
   const exactPattern = `${searchQuery}%`
   const result = await query(
-    `SELECT file_id, filename, original_name, file_size, mime_type, parent_folder_id, created_at, updated_at
+    `SELECT file_id, filename, original_name, file_size, mime_type, parent_folder_id, created_at, updated_at, is_starred
      FROM files
      WHERE user_uuid = $1 AND is_deleted = FALSE AND original_name ILIKE $2
      ORDER BY 
@@ -316,6 +316,74 @@ export async function searchFiles(
     [userUuid, searchPattern, exactPattern, searchPattern, limit]
   )
   return result.rows
+}
+
+/**
+ * Toggle star status of a file
+ */
+export async function toggleStarFile(fileId: string, userUuid: string): Promise<{ success: boolean; is_starred?: boolean; message?: string }> {
+  try {
+    // First get current star status
+    const fileResult = await query(
+      `SELECT is_starred FROM files
+       WHERE file_id = $1 AND user_uuid = $2 AND is_deleted = FALSE`,
+      [fileId, userUuid]
+    )
+
+    if (fileResult.rows.length === 0) {
+      return {
+        success: false,
+        message: 'File not found'
+      }
+    }
+
+    const currentStarStatus = fileResult.rows[0].is_starred
+    const newStarStatus = !currentStarStatus
+
+    // Update star status
+    const updateResult = await query(
+      `UPDATE files SET is_starred = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE file_id = $2 AND user_uuid = $3 AND is_deleted = FALSE
+       RETURNING is_starred`,
+      [newStarStatus, fileId, userUuid]
+    )
+
+    if (updateResult.rowCount === 0) {
+      return {
+        success: false,
+        message: 'Failed to update star status'
+      }
+    }
+
+    return {
+      success: true,
+      is_starred: updateResult.rows[0].is_starred
+    }
+  } catch (error) {
+    console.error('Error toggling star status:', error)
+    return {
+      success: false,
+      message: 'Failed to toggle star status'
+    }
+  }
+}
+
+/**
+ * Restore file from trash
+ */
+export async function restoreFile(fileId: string, userUuid: string): Promise<boolean> {
+  try {
+    const result = await query(
+      `UPDATE files SET is_deleted = FALSE, updated_at = CURRENT_TIMESTAMP
+       WHERE file_id = $1 AND user_uuid = $2 AND is_deleted = TRUE
+       RETURNING file_id`,
+      [fileId, userUuid]
+    )
+    return result.rowCount !== null && result.rowCount > 0
+  } catch (error) {
+    console.error('Error restoring file:', error)
+    return false
+  }
 }
 
 export { MAX_FILE_SIZE }

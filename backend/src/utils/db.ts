@@ -100,10 +100,17 @@ export async function initDatabase() {
         file_size BIGINT NOT NULL,
         mime_type VARCHAR(127),
         is_deleted BOOLEAN DEFAULT FALSE,
+        is_starred BOOLEAN DEFAULT FALSE,
         parent_folder_id UUID REFERENCES files(file_id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+    
+    // Add is_starred column if it doesn't exist (for existing databases)
+    await client.query(`
+      ALTER TABLE files 
+      ADD COLUMN IF NOT EXISTS is_starred BOOLEAN DEFAULT FALSE
     `);
 
     // Create file_shares table for sharing files

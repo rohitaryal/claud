@@ -464,3 +464,114 @@ export async function apiPermanentDeleteFile(fileId: string): Promise<{ success:
     }
   }
 }
+
+/**
+ * Toggle star status of a file
+ */
+export async function apiToggleStarFile(fileId: string): Promise<{ success: boolean; is_starred?: boolean; message?: string }> {
+  try {
+    logger.api('POST /api/files/:fileId/star', { fileId })
+    const response = await fetch(`${API_BASE}/api/files/${fileId}/star`, {
+      method: 'POST',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('File star status toggled', { fileId, is_starred: data.is_starred })
+    } else {
+      logger.warn('Failed to toggle star status', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Toggle star file error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Restore a file from trash
+ */
+export async function apiRestoreFile(fileId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    logger.api('POST /api/files/:fileId/restore', { fileId })
+    const response = await fetch(`${API_BASE}/api/files/${fileId}/restore`, {
+      method: 'POST',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('File restored', fileId)
+    } else {
+      logger.warn('Failed to restore file', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Restore file error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Share file publicly
+ */
+export async function apiShareFilePublic(fileId: string): Promise<{ success: boolean; shareToken?: string; shareUrl?: string; message?: string }> {
+  try {
+    logger.api('POST /api/files/:fileId/share/public', { fileId })
+    const response = await fetch(`${API_BASE}/api/files/${fileId}/share/public`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ permission: 'read' })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('File shared publicly', { fileId, shareToken: data.shareToken })
+    } else {
+      logger.warn('Failed to share file publicly', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Share file public error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * List all publicly shared files (global pool)
+ */
+export async function apiListPublicFiles(limit = 50, offset = 0): Promise<{ success: boolean; files?: any[]; count?: number }> {
+  try {
+    logger.api('GET /api/share/public', { limit, offset })
+    const response = await fetch(`${API_BASE}/api/share/public?limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Public files fetched', { count: data.count })
+    } else {
+      logger.warn('Failed to fetch public files', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('List public files error', error)
+    return {
+      success: false
+    }
+  }
+}

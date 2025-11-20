@@ -49,11 +49,13 @@ const Sidebar = function ({ activeSection, onSectionChange, onNewClick }: Sideba
         { id: 'recent', label: 'Recent', icon: IoTimeOutline },
         { id: 'starred', label: 'Starred', icon: IoStarOutline },
         { id: 'trash', label: 'Trash', icon: IoTrashOutline },
+        { id: 'public-pool', label: 'Public Pool', icon: IoShareSocialOutline },
     ]
 
     const handleSectionClick = (sectionId: string) => {
         if (sectionId === 'my-files') {
             navigate('/files')
+            onSectionChange('my-files')
         } else {
             onSectionChange(sectionId)
         }

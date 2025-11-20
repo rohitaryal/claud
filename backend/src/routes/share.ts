@@ -5,7 +5,8 @@ import {
   getSharedFileByToken,
   getSharedFileStream,
   deleteShare,
-  getFileShares
+  getFileShares,
+  listPublicFiles
 } from '../services/share'
 import { getFileMetadata, getFileStream } from '../services/file'
 import { getFromSession } from '../utils/db'
@@ -413,6 +414,35 @@ shareRouter.get('/files/:fileId/shares', async (c) => {
     })
   } catch (error) {
     console.error('Get file shares endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * GET /share/public
+ * List all publicly shared files (global pool)
+ */
+shareRouter.get('/share/public', async (c) => {
+  try {
+    const limit = parseInt(c.req.query('limit') || '50')
+    const offset = parseInt(c.req.query('offset') || '0')
+
+    const files = await listPublicFiles(limit, offset)
+
+    return c.json({
+      success: true,
+      files,
+      count: files.length
+    })
+  } catch (error) {
+    console.error('List public files endpoint error:', error)
     return c.json(
       {
         success: false,

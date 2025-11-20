@@ -4,8 +4,8 @@ import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import Dialog from '../../components/Dialog/Dialog'
 import styles from './MyFiles.module.css'
-import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoDocumentTextOutline, IoFolderOutline, IoEyeOutline, IoCloseOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile } from '../../utils/api'
+import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoDocumentTextOutline, IoFolderOutline, IoStarOutline, IoStar, IoEllipsisVerticalOutline, IoShareSocialOutline, IoCloseOutline, IoRefreshOutline } from 'react-icons/io5'
+import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile, apiToggleStarFile, apiRestoreFile, apiShareFilePublic, apiListPublicFiles } from '../../utils/api'
 import { logger } from '../../utils/logger'
 import { getFileIcon } from '../../utils/fileIcons'
 import { showDialog } from '../../utils/dialog'
@@ -18,6 +18,7 @@ interface FileItem {
     created_at: string
     isFolder?: boolean
     is_deleted?: boolean
+    is_starred?: boolean
 }
 
 const MyFiles = function () {
@@ -31,6 +32,8 @@ const MyFiles = function () {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [previewError, setPreviewError] = useState<string | null>(null)
     const [previewText, setPreviewText] = useState<string | null>(null)
+    const [menuOpenFileId, setMenuOpenFileId] = useState<string | null>(null)
+    const [imageThumbnails, setImageThumbnails] = useState<Record<string, string>>({})
 
     useEffect(() => {
         // Check authentication
@@ -51,10 +54,29 @@ const MyFiles = function () {
     const loadFiles = async () => {
         setLoading(true)
         try {
-            const includeDeleted = activeSection === 'trash'
-            const response = await apiListFiles(50, 0, includeDeleted)
-            if (response.success && response.files) {
-                setFiles(response.files)
+            if (activeSection === 'public-pool') {
+                const response = await apiListPublicFiles(50, 0)
+                if (response.success && response.files) {
+                    // Map public files to FileItem format
+                    const mappedFiles = response.files.map((f: any) => ({
+                        file_id: f.file_id,
+                        original_name: f.original_name,
+                        file_size: f.file_size,
+                        mime_type: f.mime_type,
+                        created_at: f.shared_at || f.created_at,
+                        is_starred: false,
+                        is_deleted: false,
+                        shared_by_username: f.shared_by_username,
+                        share_token: f.share_token
+                    }))
+                    setFiles(mappedFiles)
+                }
+            } else {
+                const includeDeleted = activeSection === 'trash'
+                const response = await apiListFiles(50, 0, includeDeleted)
+                if (response.success && response.files) {
+                    setFiles(response.files)
+                }
             }
         } catch (error) {
             logger.error('Failed to load files', error)
@@ -66,6 +88,19 @@ const MyFiles = function () {
     useEffect(() => {
         loadFiles()
     }, [activeSection])
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuOpenFileId) {
+                setMenuOpenFileId(null)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [menuOpenFileId])
 
     const handleNewClick = () => {
         navigate('/home')
@@ -97,6 +132,45 @@ const MyFiles = function () {
             logger.error('Download error', error)
             alert('Failed to download file. Please try again.')
         }
+    }
+
+    const handleFileClick = async (file: FileItem) => {
+        if (file.isFolder) return
+        
+        // For public pool files, download via share token
+        if (activeSection === 'public-pool' && (file as any).share_token) {
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+            const url = `${API_BASE}/api/share/${(file as any).share_token}/download`
+            try {
+                const response = await fetch(url, { credentials: 'include' })
+                if (!response.ok) throw new Error('Download failed')
+                const blob = await response.blob()
+                const downloadUrl = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = downloadUrl
+                a.download = file.original_name
+                document.body.appendChild(a)
+                a.click()
+                window.URL.revokeObjectURL(downloadUrl)
+                document.body.removeChild(a)
+                logger.success('File downloaded from public pool', file.original_name)
+            } catch (error) {
+                logger.error('Download error', error)
+                alert('Failed to download file. Please try again.')
+            }
+            return
+        }
+        
+        // Check if it's a binary file that should be downloaded
+        if (isBinaryFile(file.mime_type, file.original_name)) {
+            if (confirm('This file type cannot be previewed. Would you like to download it instead?')) {
+                await handleDownloadFile(file)
+            }
+            return
+        }
+
+        // Open preview
+        await handlePreviewFile(file)
     }
 
     const handlePreviewFile = async (file: FileItem) => {
@@ -139,6 +213,16 @@ const MyFiles = function () {
             logger.error('Preview error', error)
             setPreviewError('Failed to load preview. Please download the file to view it.')
         }
+    }
+
+    const isBinaryFile = (mimeType?: string, filename?: string): boolean => {
+        if (!mimeType && !filename) return false
+        
+        const ext = filename?.split('.').pop()?.toLowerCase() || ''
+        const binaryExtensions = ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'exe', 'dmg', 'pkg', 'deb', 'rpm']
+        const binaryMimeTypes = ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed', 'application/x-tar', 'application/gzip', 'application/x-bzip2']
+        
+        return binaryExtensions.includes(ext) || (mimeType && binaryMimeTypes.some(bmt => mimeType.includes(bmt)))
     }
 
     const canPreviewFile = (mimeType?: string, filename?: string): boolean => {
@@ -197,17 +281,117 @@ const MyFiles = function () {
         })
     }
 
+    const handleToggleStar = async (fileId: string, e: React.MouseEvent) => {
+        e.stopPropagation()
+        try {
+            const response = await apiToggleStarFile(fileId)
+            if (response.success) {
+                setFiles((prev) => prev.map((f) => 
+                    f.file_id === fileId ? { ...f, is_starred: response.is_starred } : f
+                ))
+                logger.success('Star status toggled', fileId)
+            } else {
+                logger.error('Toggle star failed', response.message)
+                alert(`Failed to toggle star: ${response.message}`)
+            }
+        } catch (error) {
+            logger.error('Toggle star error', error)
+            alert('Failed to toggle star. Please try again.')
+        }
+    }
+
+    const handleRestoreFile = async (id: string, name: string) => {
+        if (confirm(`Are you sure you want to restore "${name}"?`)) {
+            try {
+                const response = await apiRestoreFile(id)
+                if (response.success) {
+                    setFiles((prev) => prev.filter((f) => f.file_id !== id))
+                    logger.success('File restored', name)
+                } else {
+                    logger.error('Restore failed', response.message)
+                    alert(`Failed to restore file: ${response.message}`)
+                }
+            } catch (error) {
+                logger.error('Restore error', error)
+                alert('Failed to restore file. Please try again.')
+            }
+        }
+    }
+
+    const handleShareFile = async (fileId: string, shareType: 'public' | 'link') => {
+        setMenuOpenFileId(null)
+        try {
+            if (shareType === 'public') {
+                const response = await apiShareFilePublic(fileId)
+                if (response.success && response.shareToken) {
+                    const shareUrl = `${window.location.origin}/api/share/${response.shareToken}`
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        alert(`File shared publicly! Share link copied to clipboard: ${shareUrl}`)
+                        logger.success('File shared publicly', fileId)
+                    }).catch(() => {
+                        alert(`File shared publicly! Share link: ${shareUrl}`)
+                    })
+                } else {
+                    alert(`Failed to share file: ${response.message || 'Unknown error'}`)
+                }
+            } else {
+                // Link-only sharing - same as public for now
+                const response = await apiShareFilePublic(fileId)
+                if (response.success && response.shareToken) {
+                    const shareUrl = `${window.location.origin}/api/share/${response.shareToken}`
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        alert(`Share link copied to clipboard: ${shareUrl}`)
+                        logger.success('Share link created', fileId)
+                    }).catch(() => {
+                        alert(`Share link: ${shareUrl}`)
+                    })
+                } else {
+                    alert(`Failed to create share link: ${response.message || 'Unknown error'}`)
+                }
+            }
+        } catch (error) {
+            logger.error('Share file error', error)
+            alert('Failed to share file. Please try again.')
+        }
+    }
+
+    // Load thumbnails for images
+    useEffect(() => {
+        const loadThumbnails = async () => {
+            const imageFiles = files.filter(f => !f.isFolder && f.mime_type?.startsWith('image/') && !f.is_deleted)
+            const thumbnails: Record<string, string> = {}
+            
+            for (const file of imageFiles) {
+                try {
+                    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+                    const url = `${API_BASE}/api/files/${file.file_id}/download`
+                    thumbnails[file.file_id] = url
+                } catch (error) {
+                    console.error('Failed to load thumbnail for', file.file_id)
+                }
+            }
+            
+            setImageThumbnails(thumbnails)
+        }
+        
+        if (files.length > 0) {
+            loadThumbnails()
+        }
+    }, [files])
+
     // Filter files based on active section
     const filteredFiles = files.filter((file) => {
         switch (activeSection) {
             case 'trash':
                 return file.is_deleted === true
             case 'starred':
-                return false // TODO: Implement starred filter
+                return file.is_starred === true && !file.is_deleted
             case 'recent':
-                return true // Show all for now
+                return !file.is_deleted // Show all non-deleted files for now
             case 'shared':
                 return false // TODO: Implement shared filter
+            case 'public-pool':
+                return true // All files in public pool are already filtered by the API
             default:
                 return !file.is_deleted
         }
@@ -252,6 +436,7 @@ const MyFiles = function () {
                             {activeSection === 'recent' && 'Recent'}
                             {activeSection === 'starred' && 'Starred'}
                             {activeSection === 'trash' && 'Trash'}
+                            {activeSection === 'public-pool' && 'Public Pool'}
                         </h1>
                         <div className={styles.viewControls}>
                             <button
@@ -279,9 +464,11 @@ const MyFiles = function () {
                         <div className={styles.emptyState}>
                             <IoFolderOutline size={64} color="#ccc" />
                             <p>No files yet</p>
-                            <button className={styles.uploadButton} onClick={() => navigate('/home')}>
-                                Upload Files
-                            </button>
+                            {(activeSection === 'my-files' || activeSection === 'recent') && (
+                                <button className={styles.uploadButton} onClick={() => navigate('/home')}>
+                                    Upload Files
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className={styles.filesContainer}>
@@ -315,31 +502,78 @@ const MyFiles = function () {
                                             {folders.length > 0 && <div className={styles.sectionHeader}>Files</div>}
                                             {regularFiles.map((fileItem) => {
                                                 const IconComponent = getFileIcon(fileItem.original_name, fileItem.mime_type)
+                                                const isImage = fileItem.mime_type?.startsWith('image/')
+                                                const thumbnail = imageThumbnails[fileItem.file_id]
                                                 return (
-                                                    <div key={fileItem.file_id} className={styles.fileItem}>
+                                                    <div 
+                                                        key={fileItem.file_id} 
+                                                        className={styles.fileItem}
+                                                        onClick={() => handleFileClick(fileItem)}
+                                                        style={{ cursor: 'pointer' }}
+                                                    >
                                                         <div className={styles.fileIcon}>
-                                                            <IconComponent size={24} />
+                                                            {isImage && thumbnail ? (
+                                                                <img src={thumbnail} alt={fileItem.original_name} className={styles.fileThumbnail} />
+                                                            ) : (
+                                                                <IconComponent size={24} />
+                                                            )}
                                                         </div>
                                                         <span className={styles.fileName}>{fileItem.original_name}</span>
                                                         <span className={styles.fileSize}>{formatFileSize(fileItem.file_size)}</span>
                                                         <span className={styles.fileDate}>{formatDate(fileItem.created_at)}</span>
-                                                        <div className={styles.fileActions}>
-                                                            {canPreviewFile(fileItem.mime_type, fileItem.original_name) && (
-                                                                <button className={styles.actionButton} title="Preview" onClick={() => handlePreviewFile(fileItem)}>
-                                                                    <IoEyeOutline size={18} />
+                                                        <div className={styles.fileActions} onClick={(e) => e.stopPropagation()}>
+                                                            {activeSection !== 'trash' && (
+                                                                <button 
+                                                                    className={styles.actionButton} 
+                                                                    title={fileItem.is_starred ? "Unstar" : "Star"} 
+                                                                    onClick={(e) => handleToggleStar(fileItem.file_id, e)}
+                                                                >
+                                                                    {fileItem.is_starred ? <IoStar size={18} color="#ffc107" /> : <IoStarOutline size={18} />}
                                                                 </button>
                                                             )}
                                                             <button className={styles.actionButton} title="Download" onClick={() => handleDownloadFile(fileItem)}>
                                                                 <IoDownloadOutline size={18} />
                                                             </button>
                                                             {activeSection === 'trash' ? (
-                                                                <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(fileItem.file_id, fileItem.original_name)}>
-                                                                    <IoTrashOutline size={18} />
-                                                                </button>
+                                                                <>
+                                                                    <button className={styles.actionButton} title="Restore" onClick={() => handleRestoreFile(fileItem.file_id, fileItem.original_name)}>
+                                                                        <IoRefreshOutline size={18} />
+                                                                    </button>
+                                                                    <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(fileItem.file_id, fileItem.original_name)}>
+                                                                        <IoTrashOutline size={18} />
+                                                                    </button>
+                                                                </>
                                                             ) : (
-                                                                <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(fileItem.file_id, fileItem.original_name)}>
-                                                                    <IoTrashOutline size={18} />
-                                                                </button>
+                                                                <>
+                                                                    <div className={styles.menuContainer}>
+                                                                        <button 
+                                                                            className={styles.actionButton} 
+                                                                            title="More options"
+                                                                            onClick={() => setMenuOpenFileId(menuOpenFileId === fileItem.file_id ? null : fileItem.file_id)}
+                                                                        >
+                                                                            <IoEllipsisVerticalOutline size={18} />
+                                                                        </button>
+                                                                        {menuOpenFileId === fileItem.file_id && (
+                                                                            <div className={styles.menuDropdown}>
+                                                                                <button onClick={() => handleShareFile(fileItem.file_id, 'public')}>
+                                                                                    <IoShareSocialOutline size={16} />
+                                                                                    Share Publicly
+                                                                                </button>
+                                                                                <button onClick={() => handleShareFile(fileItem.file_id, 'link')}>
+                                                                                    <IoShareSocialOutline size={16} />
+                                                                                    Share with Link
+                                                                                </button>
+                                                                                <button onClick={() => {
+                                                                                    setMenuOpenFileId(null)
+                                                                                    handleDeleteFile(fileItem.file_id, fileItem.original_name)
+                                                                                }}>
+                                                                                    <IoTrashOutline size={16} />
+                                                                                    Delete
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </>
                                                             )}
                                                         </div>
                                                     </div>
@@ -354,16 +588,31 @@ const MyFiles = function () {
                                         const IconComponent = file.isFolder 
                                             ? IoFolderOutline 
                                             : getFileIcon(file.original_name, file.mime_type)
+                                        const isImage = !file.isFolder && file.mime_type?.startsWith('image/')
+                                        const thumbnail = imageThumbnails[file.file_id]
                                         return (
-                                            <div key={file.file_id} className={styles.fileCard}>
+                                            <div 
+                                                key={file.file_id} 
+                                                className={styles.fileCard}
+                                                onClick={() => !file.isFolder && handleFileClick(file)}
+                                                style={{ cursor: file.isFolder ? 'default' : 'pointer' }}
+                                            >
                                                 <div className={styles.fileIcon}>
-                                                    <IconComponent size={48} color="var(--blue)" />
+                                                    {isImage && thumbnail ? (
+                                                        <img src={thumbnail} alt={file.original_name} className={styles.fileThumbnail} />
+                                                    ) : (
+                                                        <IconComponent size={48} color="var(--blue)" />
+                                                    )}
                                                 </div>
                                                 <span className={styles.fileCardName}>{file.original_name}</span>
-                                                <div className={styles.fileCardActions}>
-                                                    {!file.isFolder && canPreviewFile(file.mime_type, file.original_name) && (
-                                                        <button className={styles.actionButton} title="Preview" onClick={() => handlePreviewFile(file)}>
-                                                            <IoEyeOutline size={18} />
+                                                <div className={styles.fileCardActions} onClick={(e) => e.stopPropagation()}>
+                                                    {!file.isFolder && activeSection !== 'trash' && (
+                                                        <button 
+                                                            className={styles.actionButton} 
+                                                            title={file.is_starred ? "Unstar" : "Star"} 
+                                                            onClick={(e) => handleToggleStar(file.file_id, e)}
+                                                        >
+                                                            {file.is_starred ? <IoStar size={18} color="#ffc107" /> : <IoStarOutline size={18} />}
                                                         </button>
                                                     )}
                                                     {!file.isFolder && (
@@ -372,13 +621,43 @@ const MyFiles = function () {
                                                         </button>
                                                     )}
                                                     {activeSection === 'trash' ? (
-                                                        <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(file.file_id, file.original_name)}>
-                                                            <IoTrashOutline size={18} />
-                                                        </button>
-                                                    ) : (
-                                                        <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id, file.original_name)}>
-                                                            <IoTrashOutline size={18} />
-                                                        </button>
+                                                        <>
+                                                            <button className={styles.actionButton} title="Restore" onClick={() => handleRestoreFile(file.file_id, file.original_name)}>
+                                                                <IoRefreshOutline size={18} />
+                                                            </button>
+                                                            <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(file.file_id, file.original_name)}>
+                                                                <IoTrashOutline size={18} />
+                                                            </button>
+                                                        </>
+                                                    ) : !file.isFolder && (
+                                                        <div className={styles.menuContainer}>
+                                                            <button 
+                                                                className={styles.actionButton} 
+                                                                title="More options"
+                                                                onClick={() => setMenuOpenFileId(menuOpenFileId === file.file_id ? null : file.file_id)}
+                                                            >
+                                                                <IoEllipsisVerticalOutline size={18} />
+                                                            </button>
+                                                            {menuOpenFileId === file.file_id && (
+                                                                <div className={styles.menuDropdown}>
+                                                                    <button onClick={() => handleShareFile(file.file_id, 'public')}>
+                                                                        <IoShareSocialOutline size={16} />
+                                                                        Share Publicly
+                                                                    </button>
+                                                                    <button onClick={() => handleShareFile(file.file_id, 'link')}>
+                                                                        <IoShareSocialOutline size={16} />
+                                                                        Share with Link
+                                                                    </button>
+                                                                    <button onClick={() => {
+                                                                        setMenuOpenFileId(null)
+                                                                        handleDeleteFile(file.file_id, file.original_name)
+                                                                    }}>
+                                                                        <IoTrashOutline size={16} />
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
@@ -427,7 +706,7 @@ const MyFiles = function () {
                             </div>
                         ) : previewText !== null ? (
                             <div className={styles.previewContent}>
-                                <pre className={styles.previewText}>{previewText}</pre>
+                                <code className={styles.previewText}>{previewText}</code>
                             </div>
                         ) : (
                             <div className={styles.previewLoading}>Loading preview...</div>
