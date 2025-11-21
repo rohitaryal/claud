@@ -166,6 +166,57 @@ const Settings = function () {
         alert('Search history cleared')
     }
 
+    const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setProfilePictureError('File must be an image')
+            return
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setProfilePictureError('Image must be less than 5MB')
+            return
+        }
+
+        setProfilePictureError(null)
+        setProfilePictureLoading(true)
+        setProfilePictureSuccess(false)
+
+        try {
+            const response = await apiUploadProfilePicture(file)
+            if (response.success && response.user) {
+                setUser(response.user)
+                setProfilePictureSuccess(true)
+                setTimeout(() => setProfilePictureSuccess(false), 3000)
+            } else {
+                setProfilePictureError(response.message || 'Failed to upload profile picture')
+            }
+        } catch (error) {
+            setProfilePictureError('An error occurred. Please try again.')
+        } finally {
+            setProfilePictureLoading(false)
+            // Reset input
+            if (e.target) {
+                e.target.value = ''
+            }
+        }
+    }
+
+    const handleProfilePictureClick = () => {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/*'
+        input.onchange = (e) => {
+            const event = e as unknown as React.ChangeEvent<HTMLInputElement>
+            handleProfilePictureChange(event)
+        }
+        input.click()
+    }
+
     const categories = [
         { id: 'appearance' as SettingsCategory, label: 'Appearance', icon: IoColorPaletteOutline },
         { id: 'account' as SettingsCategory, label: 'Account', icon: IoPersonOutline },
