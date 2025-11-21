@@ -5,7 +5,7 @@ import Sidebar from '../../components/Sidebar/Sidebar'
 import Dialog from '../../components/Dialog/Dialog'
 import styles from './MyFiles.module.css'
 import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoDocumentTextOutline, IoFolderOutline, IoStarOutline, IoStar, IoEllipsisVerticalOutline, IoShareSocialOutline, IoCloseOutline, IoRefreshOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile, apiToggleStarFile, apiRestoreFile, apiShareFilePublic, apiListPublicFiles } from '../../utils/api'
+import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile, apiToggleStarFile, apiRestoreFile, apiShareFilePublic, apiListPublicFiles, apiListSharedWithMe, apiRemoveFromSharedWithMe } from '../../utils/api'
 import { logger } from '../../utils/logger'
 import { getFileIcon } from '../../utils/fileIcons'
 import { showDialog } from '../../utils/dialog'
@@ -68,6 +68,24 @@ const MyFiles = function () {
                         is_deleted: false,
                         shared_by_username: f.shared_by_username,
                         share_token: f.share_token
+                    }))
+                    setFiles(mappedFiles)
+                }
+            } else if (activeSection === 'shared') {
+                const response = await apiListSharedWithMe(50, 0)
+                if (response.success && response.files) {
+                    // Map shared files to FileItem format
+                    const mappedFiles = response.files.map((f: any) => ({
+                        file_id: f.file_id,
+                        original_name: f.original_name,
+                        file_size: f.file_size,
+                        mime_type: f.mime_type,
+                        created_at: f.shared_at || f.created_at,
+                        is_starred: false,
+                        is_deleted: false,
+                        shared_by_username: f.shared_by_username,
+                        share_id: f.share_id,
+                        permission: f.permission
                     }))
                     setFiles(mappedFiles)
                 }
@@ -372,6 +390,24 @@ const MyFiles = function () {
         }
     }
 
+    const handleRemoveFromSharedWithMe = async (shareId: string, fileName: string) => {
+        if (confirm(`Remove "${fileName}" from Shared With Me?`)) {
+            try {
+                const response = await apiRemoveFromSharedWithMe(shareId)
+                if (response.success) {
+                    await loadFiles()
+                    logger.success('File removed from shared with me', fileName)
+                } else {
+                    logger.error('Remove from shared failed', response.message)
+                    alert(`Failed to remove from shared with me: ${response.message}`)
+                }
+            } catch (error) {
+                logger.error('Remove from shared error', error)
+                alert('Failed to remove from shared with me. Please try again.')
+            }
+        }
+    }
+
     // Load thumbnails for images
     useEffect(() => {
         const loadThumbnails = async () => {
@@ -406,7 +442,7 @@ const MyFiles = function () {
             case 'recent':
                 return !file.is_deleted // Show all non-deleted files for now
             case 'shared':
-                return false // TODO: Implement shared filter
+                return true // All files in shared are already filtered by the API
             case 'public-pool':
                 return true // All files in public pool are already filtered by the API
             default:
@@ -574,6 +610,16 @@ const MyFiles = function () {
                                                                         <IoTrashOutline size={18} />
                                                                     </button>
                                                                 </>
+                                                            ) : activeSection === 'shared' ? (
+                                                                <>
+                                                                    <button 
+                                                                        className={styles.actionButton} 
+                                                                        title="Remove from Shared With Me" 
+                                                                        onClick={() => handleRemoveFromSharedWithMe((fileItem as any).share_id, fileItem.original_name)}
+                                                                    >
+                                                                        <IoCloseOutline size={18} />
+                                                                    </button>
+                                                                </>
                                                             ) : (
                                                                 <>
                                                                     <div className={styles.menuContainer}>
@@ -664,7 +710,7 @@ const MyFiles = function () {
                                                 </div>
                                                 <span className={styles.fileCardName}>{file.original_name}</span>
                                                 <div className={styles.fileCardActions} onClick={(e) => e.stopPropagation()}>
-                                                    {!file.isFolder && activeSection !== 'trash' && (
+                                                    {!file.isFolder && activeSection !== 'trash' && activeSection !== 'shared' && activeSection !== 'public-pool' && (
                                                         <button 
                                                             className={styles.actionButton} 
                                                             title={file.is_starred ? "Unstar" : "Star"} 
@@ -703,6 +749,18 @@ const MyFiles = function () {
                                                                 <IoTrashOutline size={18} />
                                                             </button>
                                                         </>
+                                                    ) : activeSection === 'shared' && !file.isFolder ? (
+                                                        <button 
+                                                            className={styles.actionButton} 
+                                                            title="Remove from Shared With Me" 
+                                                            onClick={(e) => {
+                                                                e.preventDefault()
+                                                                e.stopPropagation()
+                                                                handleRemoveFromSharedWithMe((file as any).share_id, file.original_name)
+                                                            }}
+                                                        >
+                                                            <IoCloseOutline size={18} />
+                                                        </button>
                                                     ) : !file.isFolder && (
                                                         <div className={styles.menuContainer}>
                                                             <button 

@@ -338,3 +338,65 @@ export async function listPublicFiles(limit: number = 50, offset: number = 0): P
   return result.rows
 }
 
+/**
+ * List files shared with the current user (private shares)
+ */
+export async function listSharedWithMe(userUuid: string, limit: number = 50, offset: number = 0): Promise<any[]> {
+  const result = await query(
+    `SELECT f.file_id, f.original_name, f.file_size, f.mime_type, f.created_at,
+            s.share_id, s.permission, s.created_at as shared_at,
+            u.username as shared_by_username, u.uuid as shared_by_uuid
+     FROM file_shares s
+     JOIN files f ON s.file_id = f.file_id
+     JOIN users u ON s.shared_by = u.uuid
+     WHERE s.shared_with = $1 
+       AND s.is_public = FALSE
+       AND f.is_deleted = FALSE
+       AND (s.expires_at IS NULL OR s.expires_at > NOW())
+     ORDER BY s.created_at DESC
+     LIMIT $2 OFFSET $3`,
+    [userUuid, limit, offset]
+  )
+  return result.rows
+}
+
+/**
+ * Remove a file from "Shared With Me" for a specific user
+ * The recipient can remove access without deleting the share
+ */
+export async function removeFromSharedWithMe(shareId: string, userUuid: string): Promise<{
+  success: boolean
+  message?: string
+  code?: string
+}> {
+  try {
+    // Verify share exists and user is the recipient
+    const shareResult = await query(
+      `SELECT share_id FROM file_shares WHERE share_id = $1 AND shared_with = $2 AND is_public = FALSE`,
+      [shareId, userUuid]
+    )
+
+    if (!shareResult.rows[0]) {
+      return {
+        success: false,
+        message: 'Share not found or unauthorized',
+        code: 'SHARE_NOT_FOUND'
+      }
+    }
+
+    // Delete share (recipient perspective - removes it from their shared with me)
+    await query('DELETE FROM file_shares WHERE share_id = $1', [shareId])
+
+    return {
+      success: true
+    }
+  } catch (error) {
+    console.error('Error removing from shared with me:', error)
+    return {
+      success: false,
+      message: 'Failed to remove from shared with me',
+      code: 'DELETE_ERROR'
+    }
+  }
+}
+

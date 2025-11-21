@@ -595,6 +595,90 @@ export async function apiListPublicFiles(limit = 50, offset = 0): Promise<{ succ
 }
 
 /**
+ * List files shared with the current user (private shares)
+ */
+export async function apiListSharedWithMe(limit = 50, offset = 0): Promise<{ success: boolean; files?: any[]; count?: number }> {
+  try {
+    logger.api('GET /api/share/with-me', { limit, offset })
+    const response = await fetch(`${API_BASE}/api/share/with-me?limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Shared with me files fetched', { count: data.count })
+    } else {
+      logger.warn('Failed to fetch shared with me files', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('List shared with me error', error)
+    return {
+      success: false
+    }
+  }
+}
+
+/**
+ * Share file with a specific user (private share)
+ */
+export async function apiShareFileWithUser(fileId: string, userUuid: string, permission: string = 'read'): Promise<{ success: boolean; share?: any; message?: string }> {
+  try {
+    logger.api('POST /api/files/:fileId/share', { fileId, userUuid })
+    const response = await fetch(`${API_BASE}/api/files/${fileId}/share`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ shared_with: userUuid, permission })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('File shared with user', { fileId, userUuid })
+    } else {
+      logger.warn('Failed to share file with user', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Share file with user error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Remove a file from "Shared With Me" (recipient action)
+ */
+export async function apiRemoveFromSharedWithMe(shareId: string): Promise<{ success: boolean; message?: string }> {
+  try {
+    logger.api('DELETE /api/share/:shareId/remove-access', { shareId })
+    const response = await fetch(`${API_BASE}/api/share/${shareId}/remove-access`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Removed from shared with me', { shareId })
+    } else {
+      logger.warn('Failed to remove from shared with me', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Remove from shared with me error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
  * Change user password
  */
 export async function apiChangePassword(

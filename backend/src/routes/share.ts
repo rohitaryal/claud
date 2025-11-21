@@ -6,7 +6,9 @@ import {
   getSharedFileStream,
   deleteShare,
   getFileShares,
-  listPublicFiles
+  listPublicFiles,
+  listSharedWithMe,
+  removeFromSharedWithMe
 } from '../services/share'
 import { getFileMetadata, getFileStream } from '../services/file'
 import { getFromSession } from '../utils/db'
@@ -443,6 +445,144 @@ shareRouter.get('/share/public', async (c) => {
     })
   } catch (error) {
     console.error('List public files endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * GET /share/with-me
+ * List files shared with the current user (private shares)
+ */
+shareRouter.get('/share/with-me', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const limit = parseInt(c.req.query('limit') || '50')
+    const offset = parseInt(c.req.query('offset') || '0')
+
+    const files = await listSharedWithMe(user.uuid, limit, offset)
+
+    return c.json({
+      success: true,
+      files,
+      count: files.length
+    })
+  } catch (error) {
+    console.error('List shared with me endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * DELETE /share/:shareId/remove-access
+ * Remove a file from "Shared With Me" (recipient action)
+ */
+shareRouter.delete('/share/:shareId/remove-access', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const shareId = c.req.param('shareId')
+
+    const result = await removeFromSharedWithMe(shareId, user.uuid)
+
+    if (!result.success) {
+      return c.json(result, result.code === 'SHARE_NOT_FOUND' ? 404 : 400)
+    }
+
+    return c.json({
+      success: true,
+      message: 'File removed from shared with me'
+    })
+  } catch (error) {
+    console.error('Remove from shared with me endpoint error:', error)
     return c.json(
       {
         success: false,
