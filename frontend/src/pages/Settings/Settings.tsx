@@ -174,7 +174,6 @@ const Settings = function () {
                 <div className={styles.header}>
                     <button className={styles.backButton} onClick={() => navigate('/home')}>
                         <IoArrowBack size={20} />
-                        <span>Back</span>
                     </button>
                     <h1 className={styles.title}>Settings</h1>
                 </div>
