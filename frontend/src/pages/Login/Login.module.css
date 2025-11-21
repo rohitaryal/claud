@@ -108,7 +108,7 @@
     align-items: center;
     text-align: center;
     margin: 2rem 0;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-secondary);
     font-size: 0.9rem;
 }
 
@@ -116,7 +116,7 @@
 .separator::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .separator span {
@@ -135,9 +135,9 @@
     justify-content: center;
     gap: 0.75rem;
     padding: 0.875rem 1.5rem;
-    background-color: white;
-    color: var(--black);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background-color: var(--card-background);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     font-size: 1rem;
     font-weight: 600;
@@ -150,8 +150,9 @@
 .socialButton:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    background-color: var(--blue-light);
+    background-color: var(--background-secondary);
     border-color: var(--blue);
+    color: var(--text-primary);
 }
 
 .socialButton:active {
