@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import styles from './SearchResults.module.css'
-import { apiSearchFiles, apiGetCurrentUser } from '../../utils/api'
+import { apiSearchFiles, apiGetCurrentUser, type AuthUser } from '../../utils/api'
 import { getFileIcon } from '../../utils/fileIcons'
 import { logger } from '../../utils/logger'
 
@@ -21,7 +21,7 @@ const SearchResults = function () {
     const query = searchParams.get('q') || ''
     const [files, setFiles] = useState<FileItem[]>([])
     const [loading, setLoading] = useState(true)
-    const [, setUser] = useState<any>(null)
+    const [, setUser] = useState<AuthUser | null>(null)
 
     useEffect(() => {
         // Check authentication

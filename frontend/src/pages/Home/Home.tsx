@@ -4,7 +4,7 @@ import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import styles from './Home.module.css'
 import { IoAddOutline, IoCloudUploadOutline, IoCloseOutline, IoCreateOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiUploadFile, apiUpdateFile } from '../../utils/api'
+import { apiGetCurrentUser, apiUploadFile, apiUpdateFile, type AuthUser } from '../../utils/api'
 import { logger } from '../../utils/logger'
 import { getFileIcon } from '../../utils/fileIcons'
 
@@ -23,7 +23,7 @@ const Home = function () {
     const dropZoneRef = useRef<HTMLDivElement>(null)
     const [isDragging, setIsDragging] = useState(false)
     const [uploads, setUploads] = useState<UploadProgress[]>([])
-    const [, setUser] = useState<any>(null)
+    const [, setUser] = useState<AuthUser | null>(null)
     const [editingFileName, setEditingFileName] = useState<string | null>(null)
     const [editingName, setEditingName] = useState('')
 

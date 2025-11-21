@@ -16,7 +16,7 @@ const ProtectedRoute = function ({ children, requireAuth = true }: ProtectedRout
             try {
                 const response = await apiGetCurrentUser()
                 setIsAuthenticated(response.success && !!response.user)
-            } catch (error) {
+            } catch {
                 setIsAuthenticated(false)
             } finally {
                 setLoading(false)

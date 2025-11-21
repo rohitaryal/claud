@@ -44,7 +44,7 @@ const DashboardHeader = function () {
     const [showSearchResults, setShowSearchResults] = useState(false)
     const [searchHistory, setSearchHistory] = useState<string[]>([])
     const [showHistory, setShowHistory] = useState(false)
-    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const searchContainerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -143,7 +143,7 @@ const DashboardHeader = function () {
           )
         : searchHistory
 
-    const handleResultClick = (fileId: string) => {
+    const handleResultClick = () => {
         navigate(`/files`)
         setShowSearchResults(false)
         setSearchQuery('')
@@ -205,7 +205,7 @@ const DashboardHeader = function () {
                                 <div
                                     key={result.file_id}
                                     className={styles.searchResultItem}
-                                    onClick={() => handleResultClick(result.file_id)}
+                                    onClick={() => handleResultClick()}
                                 >
                                     {result.mime_type?.startsWith('application/vnd.google-apps.folder') || result.original_name.endsWith('/') ? (
                                         <IoFolderOutline className={styles.searchResultIcon} />

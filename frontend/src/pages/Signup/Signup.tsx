@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { FaGoogle } from 'react-icons/fa'
 import { FaGithub } from 'react-icons/fa'
 import { IoEye, IoEyeOff } from 'react-icons/io5'
@@ -19,7 +19,6 @@ interface SignupErrors {
 }
 
 const Signup = function () {
-    const navigate = useNavigate()
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',

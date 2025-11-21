@@ -43,7 +43,7 @@ const styles: Record<LogLevel, LogStyle> = {
   }
 }
 
-export function log(level: LogLevel, message: string, ...args: any[]) {
+export function log(level: LogLevel, message: string, ...args: unknown[]) {
   const style = styles[level]
   const timestamp = new Date().toLocaleTimeString()
   
@@ -55,11 +55,11 @@ export function log(level: LogLevel, message: string, ...args: any[]) {
 }
 
 export const logger = {
-  info: (message: string, ...args: any[]) => log('info', message, ...args),
-  success: (message: string, ...args: any[]) => log('success', message, ...args),
-  warn: (message: string, ...args: any[]) => log('warn', message, ...args),
-  error: (message: string, ...args: any[]) => log('error', message, ...args),
-  debug: (message: string, ...args: any[]) => log('debug', message, ...args),
-  api: (message: string, ...args: any[]) => log('api', message, ...args),
+  info: (message: string, ...args: unknown[]) => log('info', message, ...args),
+  success: (message: string, ...args: unknown[]) => log('success', message, ...args),
+  warn: (message: string, ...args: unknown[]) => log('warn', message, ...args),
+  error: (message: string, ...args: unknown[]) => log('error', message, ...args),
+  debug: (message: string, ...args: unknown[]) => log('debug', message, ...args),
+  api: (message: string, ...args: unknown[]) => log('api', message, ...args),
 }
 

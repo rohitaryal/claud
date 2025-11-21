@@ -13,7 +13,8 @@ import {
 } from 'react-icons/io5'
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Input from '../../components/Input/Input'
-import { useTheme, colorSchemes, type ThemeMode, type ColorScheme } from '../../contexts/ThemeContext'
+import { useTheme, type ThemeMode, type ColorScheme } from '../../contexts/ThemeContext'
+import { colorSchemes } from '../../contexts/colorSchemes'
 import { 
     apiGetCurrentUser, 
     apiChangePassword, 
@@ -117,7 +118,7 @@ const Settings = function () {
             } else {
                 setPasswordErrors({ currentPassword: response.message || 'Failed to change password' })
             }
-        } catch (error) {
+        } catch {
             setPasswordErrors({ currentPassword: 'An error occurred. Please try again.' })
         } finally {
             setPasswordLoading(false)
@@ -148,7 +149,7 @@ const Settings = function () {
             } else {
                 setNameErrors({ username: response.message || 'Failed to update username' })
             }
-        } catch (error) {
+        } catch {
             setNameErrors({ username: 'An error occurred. Please try again.' })
         } finally {
             setNameLoading(false)
@@ -183,7 +184,7 @@ const Settings = function () {
             } else {
                 setEmailErrors({ email: response.message || 'Failed to update email' })
             }
-        } catch (error) {
+        } catch {
             setEmailErrors({ email: 'An error occurred. Please try again.' })
         } finally {
             setEmailLoading(false)
@@ -209,7 +210,7 @@ const Settings = function () {
             } else {
                 setStorageLimitError(response.message || 'Failed to update storage limit')
             }
-        } catch (error) {
+        } catch {
             setStorageLimitError('An error occurred. Please try again.')
         } finally {
             setStorageLimitLoading(false)
@@ -230,7 +231,7 @@ const Settings = function () {
             } else {
                 alert(response.message || 'Failed to delete account')
             }
-        } catch (error) {
+        } catch {
             alert('An error occurred. Please try again.')
         } finally {
             setDeleteLoading(false)
@@ -271,7 +272,7 @@ const Settings = function () {
             } else {
                 setProfilePictureError(response.message || 'Failed to upload profile picture')
             }
-        } catch (error) {
+        } catch {
             setProfilePictureError('An error occurred. Please try again.')
         } finally {
             setProfilePictureLoading(false)
@@ -635,6 +636,7 @@ const Settings = function () {
                                                 Type <strong>DELETE</strong> to confirm account deletion
                                             </p>
                                             <Input
+                                                label="Confirm deletion"
                                                 type="text"
                                                 placeholder="Type DELETE to confirm"
                                                 value={deleteConfirm}

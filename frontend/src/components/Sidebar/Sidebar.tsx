@@ -8,7 +8,7 @@ import {
     IoStarOutline, 
     IoTrashOutline 
 } from 'react-icons/io5'
-import { apiGetCurrentUser, getUserStorageUsage } from '../../utils/api'
+import { getUserStorageUsage } from '../../utils/api'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
@@ -17,7 +17,7 @@ interface SidebarProps {
     onNewClick: () => void
 }
 
-const Sidebar = function ({ activeSection, onSectionChange, onNewClick }: SidebarProps) {
+const Sidebar = function ({ activeSection, onSectionChange }: SidebarProps) {
     const navigate = useNavigate()
     const location = useLocation()
     const [storageUsed, setStorageUsed] = useState(0)
