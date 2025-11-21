@@ -15,6 +15,7 @@ export type AuthUser = {
   uuid: string
   username: string
   email: string
+  profile_picture_url?: string
 }
 
 export interface AuthResponse {
@@ -672,6 +673,78 @@ export async function apiDeleteAccount(): Promise<{ success: boolean; message?: 
     return {
       success: false,
       message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Upload profile picture
+ */
+export async function apiUploadProfilePicture(
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<{ success: boolean; profile_picture_url?: string; user?: AuthUser; message?: string; code?: string }> {
+  try {
+    logger.api('POST /api/auth/upload-profile-picture', { filename: file.name, size: file.size })
+    
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const xhr = new XMLHttpRequest()
+
+    return new Promise((resolve, reject) => {
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && onProgress) {
+          const progress = (e.loaded / e.total) * 100
+          onProgress(progress)
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText)
+            if (data.success) {
+              logger.success('Profile picture uploaded', data.profile_picture_url)
+              if (data.user) {
+                localStorage.setItem('user', JSON.stringify(data.user))
+              }
+              resolve(data)
+            } else {
+              logger.error('Upload failed', data)
+              resolve(data)
+            }
+          } catch (error) {
+            logger.error('Parse response error', error)
+            reject(error)
+          }
+        } else {
+          try {
+            const data = JSON.parse(xhr.responseText)
+            logger.error('Upload failed', data)
+            resolve(data)
+          } catch (error) {
+            logger.error('Upload error', error)
+            reject(error)
+          }
+        }
+      })
+
+      xhr.addEventListener('error', () => {
+        logger.error('Upload network error')
+        reject(new Error('Network error'))
+      })
+
+      xhr.open('POST', `${API_BASE}/api/auth/upload-profile-picture`)
+      xhr.withCredentials = true
+      xhr.send(formData)
+    })
+  } catch (error) {
+    logger.error('Upload profile picture error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.',
+      code: 'NETWORK_ERROR'
     }
   }
 }

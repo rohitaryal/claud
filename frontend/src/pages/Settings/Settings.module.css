@@ -175,6 +175,70 @@
     margin-top: 0.5rem;
 }
 
+.errorMessage {
+    color: #dc2626;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+.profilePictureSection {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.profilePictureContainer {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.profilePicture {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--border-color);
+}
+
+.profilePicturePlaceholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: var(--background-secondary);
+    border: 3px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.profilePictureButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--blue-gradient);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-short);
+}
+
+.profilePictureButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(18, 51, 193, 0.3);
+}
+
+.profilePictureButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .themeOptions {
     display: flex;
     flex-direction: column;

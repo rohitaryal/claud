@@ -72,9 +72,16 @@ export async function initDatabase() {
         email VARCHAR(255) UNIQUE NOT NULL,
         hashed_password TEXT NOT NULL,
         file_bucket_id VARCHAR(255) UNIQUE NOT NULL,
+        profile_picture_url TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+    
+    // Add profile_picture_url column if it doesn't exist (for existing databases)
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS profile_picture_url TEXT
     `);
 
     // Create sessions table for authentication

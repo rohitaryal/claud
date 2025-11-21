@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
-import { register, login, requestPasswordReset, getCurrentUser, changePassword, updateUsername, deleteAccount } from '../services/auth'
+import { register, login, requestPasswordReset, getCurrentUser, changePassword, updateUsername, deleteAccount, updateProfilePicture } from '../services/auth'
 import { deleteSession, getFromSession } from '../utils/db'
+import { saveFile } from '../services/file'
+import { v4 as uuidv4 } from 'uuid'
 
 const authRouter = new Hono()
 
@@ -400,6 +402,129 @@ authRouter.delete('/delete-account', async (c) => {
     return c.json(result, 200)
   } catch (error) {
     console.error('Delete account endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * POST /auth/upload-profile-picture
+ * Upload profile picture
+ */
+authRouter.post('/upload-profile-picture', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    // Parse multipart form data
+    const formData = await c.req.formData()
+    const file = formData.get('file') as File
+
+    if (!file) {
+      return c.json(
+        {
+          success: false,
+          message: 'No file provided',
+          code: 'NO_FILE'
+        },
+        400
+      )
+    }
+
+    // Validate file type (only images)
+    if (!file.type.startsWith('image/')) {
+      return c.json(
+        {
+          success: false,
+          message: 'File must be an image',
+          code: 'INVALID_FILE_TYPE'
+        },
+        400
+      )
+    }
+
+    // Validate file size (max 5MB for profile pictures)
+    const MAX_PROFILE_PICTURE_SIZE = 5 * 1024 * 1024 // 5MB
+    if (file.size > MAX_PROFILE_PICTURE_SIZE) {
+      return c.json(
+        {
+          success: false,
+          message: 'Profile picture must be less than 5MB',
+          code: 'FILE_TOO_LARGE'
+        },
+        400
+      )
+    }
+
+    // Save file
+    const result = await saveFile(
+      user.uuid,
+      user.file_bucket_id,
+      file
+    )
+
+    if (!result.success || !result.file) {
+      return c.json(result, 400)
+    }
+
+    // Update user's profile_picture_url to point to the file download endpoint
+    const profilePictureUrl = `/api/files/${result.file.file_id}/download`
+    const updateResult = await updateProfilePicture(user.uuid, profilePictureUrl)
+
+    if (!updateResult.success) {
+      return c.json(updateResult, 400)
+    }
+
+    return c.json({
+      success: true,
+      message: 'Profile picture uploaded successfully',
+      profile_picture_url: profilePictureUrl,
+      user: updateResult.user
+    }, 200)
+  } catch (error) {
+    console.error('Upload profile picture endpoint error:', error)
     return c.json(
       {
         success: false,

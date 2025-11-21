@@ -252,7 +252,15 @@ const DashboardHeader = function () {
                         className={styles.profileButton}
                         onClick={() => setShowProfileMenu(!showProfileMenu)}
                     >
-                        <IoPersonCircleOutline size={28} />
+                        {user?.profile_picture_url ? (
+                            <img 
+                                src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${user.profile_picture_url}`}
+                                alt={user.username}
+                                className={styles.profilePicture}
+                            />
+                        ) : (
+                            <IoPersonCircleOutline size={28} />
+                        )}
                         {user && <span className={styles.username}>{user.username}</span>}
                     </button>
                     

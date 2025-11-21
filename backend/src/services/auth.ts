@@ -88,7 +88,8 @@ export async function register(
       user: {
         uuid: user.uuid,
         username: user.username,
-        email: user.email
+        email: user.email,
+        profile_picture_url: user.profile_picture_url || null
       },
       session: sessionId
     }
@@ -157,7 +158,8 @@ export async function login(
       user: {
         uuid: user.uuid,
         username: user.username,
-        email: user.email
+        email: user.email,
+        profile_picture_url: user.profile_picture_url || null
       },
       session: sessionId
     }
@@ -221,7 +223,7 @@ export async function requestPasswordReset(
 export async function getCurrentUser(sessionId: string) {
   try {
     const result = await query(
-      `SELECT u.uuid, u.username, u.email, u.created_at 
+      `SELECT u.uuid, u.username, u.email, u.profile_picture_url, u.created_at 
        FROM users u
        JOIN sessions s ON u.uuid = s.user_uuid
        WHERE s.session_id = $1 AND s.expires_at > NOW()`,
@@ -337,14 +339,19 @@ export async function updateUsername(
 
     // Get updated user
     const userResult = await query(
-      'SELECT uuid, username, email FROM users WHERE uuid = $1',
+      'SELECT uuid, username, email, profile_picture_url FROM users WHERE uuid = $1',
       [userUuid]
     )
 
     return {
       success: true,
       message: 'Username updated successfully',
-      user: userResult.rows[0]
+      user: {
+        uuid: userResult.rows[0].uuid,
+        username: userResult.rows[0].username,
+        email: userResult.rows[0].email,
+        profile_picture_url: userResult.rows[0].profile_picture_url || null
+      }
     }
   } catch (error) {
     console.error('Update username error:', error)
@@ -359,6 +366,50 @@ export async function updateUsername(
 /**
  * Delete user account and all associated data
  */
+/**
+ * Update user profile picture
+ */
+export async function updateProfilePicture(
+  userUuid: string,
+  profilePictureUrl: string
+): Promise<AuthResponse | AuthError> {
+  try {
+    const result = await query(
+      `UPDATE users 
+       SET profile_picture_url = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE uuid = $2
+       RETURNING uuid, username, email, profile_picture_url`,
+      [profilePictureUrl, userUuid]
+    )
+
+    if (!result.rows[0]) {
+      return {
+        success: false,
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Profile picture updated successfully',
+      user: {
+        uuid: result.rows[0].uuid,
+        username: result.rows[0].username,
+        email: result.rows[0].email,
+        profile_picture_url: result.rows[0].profile_picture_url
+      }
+    }
+  } catch (error) {
+    console.error('Update profile picture error:', error)
+    return {
+      success: false,
+      message: 'Failed to update profile picture',
+      code: 'UPDATE_ERROR'
+    }
+  }
+}
+
 export async function deleteAccount(userUuid: string): Promise<AuthResponse | AuthError> {
   try {
     // Get file bucket ID

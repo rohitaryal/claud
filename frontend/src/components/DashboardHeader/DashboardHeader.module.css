@@ -215,6 +215,14 @@
     background-color: var(--blue-light);
 }
 
+.profilePicture {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+}
+
 .username {
     font-size: 0.9rem;
     font-weight: 600;

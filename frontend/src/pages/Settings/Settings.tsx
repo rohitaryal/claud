@@ -8,7 +8,8 @@ import {
     IoPersonOutline, 
     IoTrashOutline,
     IoSearchOutline,
-    IoCheckmarkCircle
+    IoCheckmarkCircle,
+    IoCameraOutline
 } from 'react-icons/io5'
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Input from '../../components/Input/Input'
@@ -17,7 +18,8 @@ import {
     apiGetCurrentUser, 
     apiChangePassword, 
     apiUpdateUsername, 
-    apiDeleteAccount 
+    apiDeleteAccount,
+    apiUploadProfilePicture
 } from '../../utils/api'
 import type { AuthUser } from '../../utils/api'
 import styles from './Settings.module.css'
@@ -48,6 +50,11 @@ const Settings = function () {
     const [deleteConfirm, setDeleteConfirm] = useState('')
     const [deleteLoading, setDeleteLoading] = useState(false)
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+    // Profile picture
+    const [profilePictureLoading, setProfilePictureLoading] = useState(false)
+    const [profilePictureError, setProfilePictureError] = useState<string | null>(null)
+    const [profilePictureSuccess, setProfilePictureSuccess] = useState(false)
 
     useEffect(() => {
         const loadUser = async () => {
@@ -265,6 +272,43 @@ const Settings = function () {
                         {activeCategory === 'account' && (
                             <div className={styles.categoryContent}>
                                 <h2 className={styles.categoryTitle}>Account</h2>
+                                
+                                <div className={styles.settingGroup}>
+                                    <label className={styles.settingLabel}>Profile Picture</label>
+                                    <p className={styles.settingDescription}>
+                                        Upload a profile picture to personalize your account
+                                    </p>
+                                    <div className={styles.profilePictureSection}>
+                                        <div className={styles.profilePictureContainer}>
+                                            {user?.profile_picture_url ? (
+                                                <img 
+                                                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${user.profile_picture_url}`}
+                                                    alt="Profile"
+                                                    className={styles.profilePicture}
+                                                />
+                                            ) : (
+                                                <div className={styles.profilePicturePlaceholder}>
+                                                    <IoPersonOutline size={48} />
+                                                </div>
+                                            )}
+                                            <button
+                                                type="button"
+                                                className={styles.profilePictureButton}
+                                                onClick={handleProfilePictureClick}
+                                                disabled={profilePictureLoading}
+                                            >
+                                                <IoCameraOutline size={20} />
+                                                {profilePictureLoading ? 'Uploading...' : user?.profile_picture_url ? 'Change Picture' : 'Upload Picture'}
+                                            </button>
+                                        </div>
+                                        {profilePictureError && (
+                                            <p className={styles.errorMessage}>{profilePictureError}</p>
+                                        )}
+                                        {profilePictureSuccess && (
+                                            <p className={styles.successMessage}>Profile picture updated successfully!</p>
+                                        )}
+                                    </div>
+                                </div>
                                 
                                 <div className={styles.settingGroup}>
                                     <label className={styles.settingLabel}>Change Username</label>
