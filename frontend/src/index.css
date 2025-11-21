@@ -29,6 +29,20 @@
 
 body {
     width: 100%;
+    background-color: var(--background);
+    color: var(--black);
+    transition: background-color var(--transition-short), color var(--transition-short);
+}
+
+/* Dark theme */
+.dark {
+    --background: #111827;
+    --black: rgba(255, 255, 255, 0.9);
+}
+
+.dark body {
+    background-color: var(--background);
+    color: var(--black);
 }
 
 /* Custom Minimal Scrollbar */

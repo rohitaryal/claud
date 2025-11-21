@@ -234,3 +234,163 @@ export async function getCurrentUser(sessionId: string) {
     return null
   }
 }
+
+/**
+ * Change user password
+ */
+export async function changePassword(
+  userUuid: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<AuthResponse | AuthError> {
+  try {
+    if (!newPassword || newPassword.length < 8) {
+      return {
+        success: false,
+        message: 'Password must be at least 8 characters',
+        code: 'WEAK_PASSWORD'
+      }
+    }
+
+    // Get user with password
+    const result = await query(
+      'SELECT hashed_password FROM users WHERE uuid = $1',
+      [userUuid]
+    )
+
+    if (!result.rows[0]) {
+      return {
+        success: false,
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      }
+    }
+
+    // Verify current password
+    const passwordMatch = await bcrypt.compare(currentPassword, result.rows[0].hashed_password)
+    if (!passwordMatch) {
+      return {
+        success: false,
+        message: 'Current password is incorrect',
+        code: 'INVALID_PASSWORD'
+      }
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    // Update password
+    await query(
+      'UPDATE users SET hashed_password = $1, updated_at = CURRENT_TIMESTAMP WHERE uuid = $2',
+      [hashedPassword, userUuid]
+    )
+
+    return {
+      success: true,
+      message: 'Password changed successfully'
+    }
+  } catch (error) {
+    console.error('Change password error:', error)
+    return {
+      success: false,
+      message: 'Failed to change password',
+      code: 'PASSWORD_CHANGE_ERROR'
+    }
+  }
+}
+
+/**
+ * Update username
+ */
+export async function updateUsername(
+  userUuid: string,
+  newUsername: string
+): Promise<AuthResponse | AuthError> {
+  try {
+    if (!newUsername || newUsername.length < 3) {
+      return {
+        success: false,
+        message: 'Username must be at least 3 characters',
+        code: 'INVALID_USERNAME'
+      }
+    }
+
+    // Check if username is already taken
+    const existingResult = await query(
+      'SELECT uuid FROM users WHERE username = $1 AND uuid != $2',
+      [newUsername, userUuid]
+    )
+
+    if (existingResult.rowCount && existingResult.rowCount > 0) {
+      return {
+        success: false,
+        message: 'Username already taken',
+        code: 'USERNAME_EXISTS'
+      }
+    }
+
+    // Update username
+    await query(
+      'UPDATE users SET username = $1, updated_at = CURRENT_TIMESTAMP WHERE uuid = $2',
+      [newUsername, userUuid]
+    )
+
+    // Get updated user
+    const userResult = await query(
+      'SELECT uuid, username, email FROM users WHERE uuid = $1',
+      [userUuid]
+    )
+
+    return {
+      success: true,
+      message: 'Username updated successfully',
+      user: userResult.rows[0]
+    }
+  } catch (error) {
+    console.error('Update username error:', error)
+    return {
+      success: false,
+      message: 'Failed to update username',
+      code: 'UPDATE_USERNAME_ERROR'
+    }
+  }
+}
+
+/**
+ * Delete user account and all associated data
+ */
+export async function deleteAccount(userUuid: string): Promise<AuthResponse | AuthError> {
+  try {
+    // Get file bucket ID
+    const userResult = await query(
+      'SELECT file_bucket_id FROM users WHERE uuid = $1',
+      [userUuid]
+    )
+
+    if (!userResult.rows[0]) {
+      return {
+        success: false,
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      }
+    }
+
+    // Delete user (CASCADE will delete all related data: files, sessions, shares)
+    await query('DELETE FROM users WHERE uuid = $1', [userUuid])
+
+    // Note: File deletion from filesystem should be handled by a cleanup job
+    // For now, we rely on database CASCADE to clean up references
+
+    return {
+      success: true,
+      message: 'Account deleted successfully'
+    }
+  } catch (error) {
+    console.error('Delete account error:', error)
+    return {
+      success: false,
+      message: 'Failed to delete account',
+      code: 'DELETE_ACCOUNT_ERROR'
+    }
+  }
+}

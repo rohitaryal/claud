@@ -8,6 +8,7 @@ import Home from './pages/Home/Home'
 import MyFiles from './pages/MyFiles/MyFiles'
 import AboutUs from './pages/AboutUs/AboutUs'
 import SearchResults from './pages/SearchResults/SearchResults'
+import Settings from './pages/Settings/Settings'
 
 const App = function () {
     return (
@@ -59,6 +60,14 @@ const App = function () {
                     element={
                         <ProtectedRoute requireAuth={true}>
                             <SearchResults />
+                        </ProtectedRoute>
+                    } 
+                />
+                <Route 
+                    path="/settings" 
+                    element={
+                        <ProtectedRoute requireAuth={true}>
+                            <Settings />
                         </ProtectedRoute>
                     } 
                 />

@@ -142,6 +142,49 @@
     background-color: var(--blue-light);
 }
 
+.searchHistoryHeader {
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.searchHistoryItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color var(--transition-short);
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.searchHistoryItem:last-child {
+    border-bottom: none;
+}
+
+.searchHistoryItem:hover {
+    background-color: var(--blue-light);
+}
+
+.searchHistoryIcon {
+    color: #999;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.searchHistoryText {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--black);
+    font-size: 0.9rem;
+}
+
 .headerRight {
     display: flex;
     align-items: center;

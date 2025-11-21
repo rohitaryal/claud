@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoSearchOutline, IoPersonCircleOutline, IoLogOutOutline, IoSettingsOutline, IoDocumentTextOutline, IoFolderOutline } from 'react-icons/io5'
+import { IoSearchOutline, IoPersonCircleOutline, IoLogOutOutline, IoSettingsOutline, IoDocumentTextOutline, IoFolderOutline, IoTimeOutline } from 'react-icons/io5'
 import { apiGetCurrentUser, apiLogout, apiSearchFiles } from '../../utils/api'
 import type { AuthUser } from '../../utils/api'
 import styles from './DashboardHeader.module.css'
@@ -13,6 +13,28 @@ interface SearchResult {
     created_at: string
 }
 
+const getSearchHistory = (): string[] => {
+    try {
+        const history = localStorage.getItem('searchHistory')
+        return history ? JSON.parse(history) : []
+    } catch {
+        return []
+    }
+}
+
+const saveSearchHistory = (query: string) => {
+    try {
+        const history = getSearchHistory()
+        // Remove if already exists
+        const filtered = history.filter((q: string) => q.toLowerCase() !== query.toLowerCase())
+        // Add to beginning and limit to 10
+        const updated = [query, ...filtered].slice(0, 10)
+        localStorage.setItem('searchHistory', JSON.stringify(updated))
+    } catch {
+        // Ignore errors
+    }
+}
+
 const DashboardHeader = function () {
     const navigate = useNavigate()
     const [user, setUser] = useState<AuthUser | null>(null)
@@ -20,6 +42,8 @@ const DashboardHeader = function () {
     const [showProfileMenu, setShowProfileMenu] = useState(false)
     const [searchResults, setSearchResults] = useState<SearchResult[]>([])
     const [showSearchResults, setShowSearchResults] = useState(false)
+    const [searchHistory, setSearchHistory] = useState<string[]>([])
+    const [showHistory, setShowHistory] = useState(false)
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const searchContainerRef = useRef<HTMLDivElement>(null)
 
@@ -32,6 +56,9 @@ const DashboardHeader = function () {
             }
         }
         loadUser()
+        
+        // Load search history
+        setSearchHistory(getSearchHistory())
     }, [])
 
     // Close search results when clicking outside
@@ -39,6 +66,7 @@ const DashboardHeader = function () {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
                 setShowSearchResults(false)
+                setShowHistory(false)
             }
         }
         document.addEventListener('mousedown', handleClickOutside)
@@ -51,6 +79,10 @@ const DashboardHeader = function () {
             setShowSearchResults(false)
             return
         }
+
+        // Save to search history
+        saveSearchHistory(query.trim())
+        setSearchHistory(getSearchHistory())
 
         try {
             const response = await apiSearchFiles(query, 5)
@@ -73,23 +105,43 @@ const DashboardHeader = function () {
         }
 
         if (value.trim().length > 0) {
+            setShowHistory(false)
             searchTimeoutRef.current = setTimeout(() => {
                 handleSearch(value)
             }, 300)
         } else {
             setSearchResults([])
             setShowSearchResults(false)
+            setShowHistory(true)
         }
     }
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             if (searchQuery.trim().length > 0) {
+                saveSearchHistory(searchQuery.trim())
+                setSearchHistory(getSearchHistory())
                 navigate(`/search?q=${encodeURIComponent(searchQuery)}`)
                 setShowSearchResults(false)
+                setShowHistory(false)
             }
         }
     }
+
+    const handleHistoryClick = (historyItem: string) => {
+        setSearchQuery(historyItem)
+        saveSearchHistory(historyItem)
+        setSearchHistory(getSearchHistory())
+        navigate(`/search?q=${encodeURIComponent(historyItem)}`)
+        setShowHistory(false)
+        setShowSearchResults(false)
+    }
+
+    const filteredHistory = searchQuery.trim().length > 0
+        ? searchHistory.filter(item => 
+            item.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : searchHistory
 
     const handleResultClick = (fileId: string) => {
         navigate(`/files`)
@@ -123,9 +175,30 @@ const DashboardHeader = function () {
                         value={searchQuery}
                         onChange={handleSearchChange}
                         onKeyDown={handleSearchKeyDown}
-                        onFocus={() => searchQuery.trim().length > 0 && setShowSearchResults(true)}
+                        onFocus={() => {
+                            if (searchQuery.trim().length > 0) {
+                                setShowSearchResults(true)
+                            } else {
+                                setShowHistory(true)
+                            }
+                        }}
                         className={styles.searchInput}
                     />
+                    {showHistory && filteredHistory.length > 0 && searchQuery.trim().length === 0 && (
+                        <div className={styles.searchResults}>
+                            <div className={styles.searchHistoryHeader}>Recent Searches</div>
+                            {filteredHistory.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className={styles.searchHistoryItem}
+                                    onClick={() => handleHistoryClick(item)}
+                                >
+                                    <IoTimeOutline className={styles.searchHistoryIcon} />
+                                    <span className={styles.searchHistoryText}>{item}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     {showSearchResults && searchResults.length > 0 && (
                         <div className={styles.searchResults}>
                             {searchResults.map((result) => (
@@ -155,6 +228,21 @@ const DashboardHeader = function () {
                             )}
                         </div>
                     )}
+                    {showHistory && filteredHistory.length > 0 && searchQuery.trim().length > 0 && (
+                        <div className={styles.searchResults}>
+                            <div className={styles.searchHistoryHeader}>Suggestions</div>
+                            {filteredHistory.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className={styles.searchHistoryItem}
+                                    onClick={() => handleHistoryClick(item)}
+                                >
+                                    <IoTimeOutline className={styles.searchHistoryIcon} />
+                                    <span className={styles.searchHistoryText}>{item}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -179,7 +267,13 @@ const DashboardHeader = function () {
                                 )}
                             </div>
                             <div className={styles.profileMenuDivider}></div>
-                            <button className={styles.profileMenuItem}>
+                            <button 
+                                className={styles.profileMenuItem}
+                                onClick={() => {
+                                    setShowProfileMenu(false)
+                                    navigate('/settings')
+                                }}
+                            >
                                 <IoSettingsOutline size={18} />
                                 Settings
                             </button>
@@ -196,4 +290,5 @@ const DashboardHeader = function () {
 }
 
 export default DashboardHeader
+
 

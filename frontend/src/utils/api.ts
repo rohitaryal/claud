@@ -575,3 +575,103 @@ export async function apiListPublicFiles(limit = 50, offset = 0): Promise<{ succ
     }
   }
 }
+
+/**
+ * Change user password
+ */
+export async function apiChangePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<AuthResponse> {
+  try {
+    logger.api('POST /api/auth/change-password')
+    const response = await fetch(`${API_BASE}/api/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        currentPassword,
+        newPassword
+      })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Password changed successfully')
+    } else {
+      logger.warn('Password change failed', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Change password error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.',
+      code: 'NETWORK_ERROR'
+    }
+  }
+}
+
+/**
+ * Update username
+ */
+export async function apiUpdateUsername(username: string): Promise<{ success: boolean; user?: AuthUser; message?: string }> {
+  try {
+    logger.api('PUT /api/auth/update-username', { username })
+    const response = await fetch(`${API_BASE}/api/auth/update-username`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ username })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Username updated', data.user)
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+    } else {
+      logger.warn('Username update failed', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Update username error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Delete user account
+ */
+export async function apiDeleteAccount(): Promise<{ success: boolean; message?: string }> {
+  try {
+    logger.api('DELETE /api/auth/delete-account')
+    const response = await fetch(`${API_BASE}/api/auth/delete-account`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Account deleted')
+      localStorage.removeItem('user')
+    } else {
+      logger.warn('Account deletion failed', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Delete account error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
