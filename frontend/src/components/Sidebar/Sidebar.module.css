@@ -18,7 +18,7 @@
     background: var(--blue-gradient);
     color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: var(--border-radius-md);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -27,18 +27,20 @@
     justify-content: center;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
-    box-shadow: 0 4px 12px rgba(18, 51, 193, 0.3);
+    box-shadow: var(--elevation-3);
     transition: all var(--transition-short);
 }
 
 .newButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(18, 51, 193, 0.4);
+    transform: scale(0.98);
+    box-shadow: var(--elevation-4);
+    transition: all var(--transition-spring);
 }
 
 .newButton:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(18, 51, 193, 0.3);
+    transform: scale(0.96);
+    box-shadow: var(--elevation-2);
+    transition: all var(--transition-quick);
 }
 
 .nav {
@@ -56,7 +58,7 @@
     gap: 0.75rem;
     background-color: transparent;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: all var(--transition-short);
     color: var(--text-secondary);
@@ -67,6 +69,13 @@
 .navItem:hover {
     background-color: var(--blue-light);
     color: var(--blue);
+    transform: translateX(4px);
+    transition: all var(--transition-spring);
+}
+
+.navItem:active {
+    transform: translateX(2px);
+    transition: all var(--transition-quick);
 }
 
 .navItemActive {
