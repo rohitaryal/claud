@@ -4,11 +4,10 @@ import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import Dialog from '../../components/Dialog/Dialog'
 import styles from './MyFiles.module.css'
-import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoDocumentTextOutline, IoFolderOutline, IoStarOutline, IoStar, IoEllipsisVerticalOutline, IoShareSocialOutline, IoCloseOutline, IoRefreshOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile, apiToggleStarFile, apiRestoreFile, apiShareFilePublic, apiListPublicFiles, apiListSharedWithMe, apiRemoveFromSharedWithMe } from '../../utils/api'
+import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoFolderOutline, IoStarOutline, IoStar, IoEllipsisVerticalOutline, IoShareSocialOutline, IoCloseOutline, IoRefreshOutline } from 'react-icons/io5'
+import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile, apiToggleStarFile, apiRestoreFile, apiShareFilePublic, apiListPublicFiles, apiListSharedWithMe, apiRemoveFromSharedWithMe, type AuthUser } from '../../utils/api'
 import { logger } from '../../utils/logger'
 import { getFileIcon } from '../../utils/fileIcons'
-import { showDialog } from '../../utils/dialog'
 
 interface FileItem {
     file_id: string
@@ -19,6 +18,8 @@ interface FileItem {
     isFolder?: boolean
     is_deleted?: boolean
     is_starred?: boolean
+    share_token?: string
+    share_id?: string
 }
 
 const MyFiles = function () {
@@ -27,7 +28,7 @@ const MyFiles = function () {
     const [loading, setLoading] = useState(true)
     const [activeSection, setActiveSection] = useState('my-files')
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
-    const [, setUser] = useState<any>(null)
+    const [, setUser] = useState<AuthUser | null>(null)
     const [previewFile, setPreviewFile] = useState<FileItem | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [previewError, setPreviewError] = useState<string | null>(null)
@@ -59,7 +60,7 @@ const MyFiles = function () {
                 const response = await apiListPublicFiles(50, 0)
                 if (response.success && response.files && response.files.length > 0) {
                     // Map public files to FileItem format
-                    const mappedFiles = response.files.map((f: any) => ({
+                    const mappedFiles = response.files.map((f) => ({
                         file_id: f.file_id,
                         original_name: f.original_name,
                         file_size: f.file_size,
@@ -78,7 +79,7 @@ const MyFiles = function () {
                 const response = await apiListSharedWithMe(50, 0)
                 if (response.success && response.files && response.files.length > 0) {
                     // Map shared files to FileItem format
-                    const mappedFiles = response.files.map((f: any) => ({
+                    const mappedFiles = response.files.map((f) => ({
                         file_id: f.file_id,
                         original_name: f.original_name,
                         file_size: f.file_size,
@@ -170,9 +171,9 @@ const MyFiles = function () {
         if (file.isFolder) return
         
         // For public pool files, download via share token
-        if (activeSection === 'public-pool' && (file as any).share_token) {
+        if (activeSection === 'public-pool' && file.share_token) {
             const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
-            const url = `${API_BASE}/api/share/${(file as any).share_token}/download`
+            const url = `${API_BASE}/api/share/${file.share_token}/download`
             try {
                 const response = await fetch(url, { credentials: 'include' })
                 if (!response.ok) throw new Error('Download failed')
@@ -254,7 +255,7 @@ const MyFiles = function () {
         const binaryExtensions = ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'exe', 'dmg', 'pkg', 'deb', 'rpm']
         const binaryMimeTypes = ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed', 'application/x-tar', 'application/gzip', 'application/x-bzip2']
         
-        return binaryExtensions.includes(ext) || (mimeType && binaryMimeTypes.some(bmt => mimeType.includes(bmt)))
+        return binaryExtensions.includes(ext) || Boolean(mimeType && binaryMimeTypes.some(bmt => mimeType.includes(bmt)))
     }
 
     const canPreviewFile = (mimeType?: string, filename?: string): boolean => {
@@ -427,7 +428,7 @@ const MyFiles = function () {
                     const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
                     const url = `${API_BASE}/api/files/${file.file_id}/download`
                     thumbnails[file.file_id] = url
-                } catch (error) {
+                } catch {
                     console.error('Failed to load thumbnail for', file.file_id)
                 }
             }
@@ -623,7 +624,11 @@ const MyFiles = function () {
                                                                     <button 
                                                                         className={styles.actionButton} 
                                                                         title="Remove from Shared With Me" 
-                                                                        onClick={() => handleRemoveFromSharedWithMe((fileItem as any).share_id, fileItem.original_name)}
+                                                                        onClick={() => {
+                                                                            if (fileItem.share_id) {
+                                                                                handleRemoveFromSharedWithMe(fileItem.share_id, fileItem.original_name)
+                                                                            }
+                                                                        }}
                                                                     >
                                                                         <IoCloseOutline size={18} />
                                                                     </button>
@@ -764,7 +769,9 @@ const MyFiles = function () {
                                                             onClick={(e) => {
                                                                 e.preventDefault()
                                                                 e.stopPropagation()
-                                                                handleRemoveFromSharedWithMe((file as any).share_id, file.original_name)
+                                                                if (file.share_id) {
+                                                                    handleRemoveFromSharedWithMe(file.share_id, file.original_name)
+                                                                }
                                                             }}
                                                         >
                                                             <IoCloseOutline size={18} />

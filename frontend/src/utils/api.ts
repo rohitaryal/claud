@@ -18,6 +18,21 @@ export type AuthUser = {
   profile_picture_url?: string
 }
 
+export interface FileData {
+  file_id: string
+  original_name: string
+  file_size: number
+  mime_type: string
+  created_at: string
+  is_starred?: boolean
+  is_deleted?: boolean
+  shared_at?: string
+  shared_by_username?: string
+  share_token?: string
+  share_id?: string
+  permission?: string
+}
+
 export interface AuthResponse {
   success: boolean
   message: string
@@ -234,7 +249,7 @@ export async function getUserStorageUsage(): Promise<{ success: boolean; storage
 export async function apiUploadFile(
   file: File,
   onProgress?: (progress: number) => void
-): Promise<{ success: boolean; file?: any; message?: string; code?: string }> {
+): Promise<{ success: boolean; file?: FileData; message?: string; code?: string }> {
   try {
     logger.api('POST /api/files/upload', { filename: file.name, size: file.size })
     
@@ -317,7 +332,7 @@ export async function apiUploadFile(
 /**
  * List user files
  */
-export async function apiListFiles(limit = 50, offset = 0, includeDeleted = false): Promise<{ success: boolean; files?: any[]; count?: number }> {
+export async function apiListFiles(limit = 50, offset = 0, includeDeleted = false): Promise<{ success: boolean; files?: FileData[]; count?: number }> {
   try {
     logger.api('GET /api/files', { limit, offset, includeDeleted })
     const url = `${API_BASE}/api/files?limit=${limit}&offset=${offset}${includeDeleted ? '&includeDeleted=true' : ''}`
@@ -344,7 +359,7 @@ export async function apiListFiles(limit = 50, offset = 0, includeDeleted = fals
 /**
  * Search files
  */
-export async function apiSearchFiles(query: string, limit = 20): Promise<{ success: boolean; files?: any[]; count?: number }> {
+export async function apiSearchFiles(query: string, limit = 20): Promise<{ success: boolean; files?: FileData[]; count?: number }> {
   try {
     logger.api('GET /api/files/search', { query, limit })
     const response = await fetch(`${API_BASE}/api/files/search?q=${encodeURIComponent(query)}&limit=${limit}`, {
@@ -428,7 +443,7 @@ export async function apiDownloadFile(fileId: string, filename: string): Promise
 /**
  * Update file metadata (e.g., rename file)
  */
-export async function apiUpdateFile(fileId: string, originalName: string): Promise<{ success: boolean; file?: any; message?: string }> {
+export async function apiUpdateFile(fileId: string, originalName: string): Promise<{ success: boolean; file?: FileData; message?: string }> {
   try {
     logger.api('PUT /api/files/:fileId', { fileId, originalName })
     const response = await fetch(`${API_BASE}/api/files/${fileId}`, {
@@ -571,7 +586,7 @@ export async function apiShareFilePublic(fileId: string): Promise<{ success: boo
 /**
  * List all publicly shared files (global pool)
  */
-export async function apiListPublicFiles(limit = 50, offset = 0): Promise<{ success: boolean; files?: any[]; count?: number }> {
+export async function apiListPublicFiles(limit = 50, offset = 0): Promise<{ success: boolean; files?: FileData[]; count?: number }> {
   try {
     logger.api('GET /api/share/public', { limit, offset })
     const response = await fetch(`${API_BASE}/api/share/public?limit=${limit}&offset=${offset}`, {
@@ -597,7 +612,7 @@ export async function apiListPublicFiles(limit = 50, offset = 0): Promise<{ succ
 /**
  * List files shared with the current user (private shares)
  */
-export async function apiListSharedWithMe(limit = 50, offset = 0): Promise<{ success: boolean; files?: any[]; count?: number }> {
+export async function apiListSharedWithMe(limit = 50, offset = 0): Promise<{ success: boolean; files?: FileData[]; count?: number }> {
   try {
     logger.api('GET /api/share/with-me', { limit, offset })
     const response = await fetch(`${API_BASE}/api/share/with-me?limit=${limit}&offset=${offset}`, {
@@ -623,7 +638,7 @@ export async function apiListSharedWithMe(limit = 50, offset = 0): Promise<{ suc
 /**
  * Share file with a specific user (private share)
  */
-export async function apiShareFileWithUser(fileId: string, userUuid: string, permission: string = 'read'): Promise<{ success: boolean; share?: any; message?: string }> {
+export async function apiShareFileWithUser(fileId: string, userUuid: string, permission: string = 'read'): Promise<{ success: boolean; share?: { share_id: string; file_id: string; shared_with_uuid: string; permission: string }; message?: string }> {
   try {
     logger.api('POST /api/files/:fileId/share', { fileId, userUuid })
     const response = await fetch(`${API_BASE}/api/files/${fileId}/share`, {

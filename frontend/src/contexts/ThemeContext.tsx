@@ -1,17 +1,8 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { colorSchemes, type ColorScheme } from './colorSchemes'
 
 export type ThemeMode = 'system' | 'light' | 'dark'
-export type ColorScheme = 
-  | 'blue' 
-  | 'purple' 
-  | 'green' 
-  | 'red' 
-  | 'orange' 
-  | 'pink' 
-  | 'teal' 
-  | 'indigo' 
-  | 'amber' 
-  | 'cyan'
+export type { ColorScheme }
 
 interface ThemeContextType {
   theme: ThemeMode
@@ -22,70 +13,6 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
-
-// Monet color schemes - Android Material You inspired
-const colorSchemes: Record<ColorScheme, { primary: string; secondary: string; accent: string; name: string }> = {
-  blue: {
-    primary: '#1233c1',
-    secondary: '#1cd9f1',
-    accent: '#0b102b',
-    name: 'Ocean Blue'
-  },
-  purple: {
-    primary: '#7c3aed',
-    secondary: '#a78bfa',
-    accent: '#4c1d95',
-    name: 'Royal Purple'
-  },
-  green: {
-    primary: '#059669',
-    secondary: '#34d399',
-    accent: '#064e3b',
-    name: 'Emerald Green'
-  },
-  red: {
-    primary: '#dc2626',
-    secondary: '#f87171',
-    accent: '#991b1b',
-    name: 'Crimson Red'
-  },
-  orange: {
-    primary: '#ea580c',
-    secondary: '#fb923c',
-    accent: '#9a3412',
-    name: 'Sunset Orange'
-  },
-  pink: {
-    primary: '#db2777',
-    secondary: '#f472b6',
-    accent: '#9f1239',
-    name: 'Rose Pink'
-  },
-  teal: {
-    primary: '#0d9488',
-    secondary: '#5eead4',
-    accent: '#134e4a',
-    name: 'Aqua Teal'
-  },
-  indigo: {
-    primary: '#4f46e5',
-    secondary: '#818cf8',
-    accent: '#312e81',
-    name: 'Deep Indigo'
-  },
-  amber: {
-    primary: '#d97706',
-    secondary: '#fbbf24',
-    accent: '#78350f',
-    name: 'Golden Amber'
-  },
-  cyan: {
-    primary: '#0891b2',
-    secondary: '#67e8f9',
-    accent: '#164e63',
-    name: 'Sky Cyan'
-  }
-}
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
@@ -119,7 +46,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem('theme', theme)
-    localStorage.setItem('colorScheme', colorScheme)
 
     // Update effective theme
     if (theme === 'system') {
@@ -136,21 +62,27 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme])
 
   useEffect(() => {
+    localStorage.setItem('colorScheme', colorScheme)
+  }, [colorScheme])
+
+  useEffect(() => {
     // Apply color scheme CSS variables
     const scheme = colorSchemes[colorScheme]
     document.documentElement.style.setProperty('--color-primary', scheme.primary)
     document.documentElement.style.setProperty('--color-secondary', scheme.secondary)
+    document.documentElement.style.setProperty('--color-tertiary', scheme.tertiary)
+    document.documentElement.style.setProperty('--color-neutral', scheme.neutral)
     document.documentElement.style.setProperty('--color-accent', scheme.accent)
     
     // Update existing CSS variables that use the color
     document.documentElement.style.setProperty('--blue', scheme.primary)
-    document.documentElement.style.setProperty('--blue-dark', scheme.accent)
-    document.documentElement.style.setProperty('--blue-light', `${scheme.secondary}20`)
+    document.documentElement.style.setProperty('--blue-dark', scheme.tertiary)
+    document.documentElement.style.setProperty('--blue-light', `${scheme.secondary}40`)
     
     // Update gradient
     document.documentElement.style.setProperty(
       '--blue-gradient',
-      `linear-gradient(to right, ${scheme.primary}, ${scheme.secondary})`
+      `linear-gradient(135deg, ${scheme.primary}, ${scheme.secondary})`
     )
   }, [colorScheme])
 
@@ -182,6 +114,4 @@ export function useTheme() {
   }
   return context
 }
-
-export { colorSchemes }
 

@@ -1,16 +1,23 @@
 .header {
     height: 64px;
     width: 100%;
-    background-color: var(--card-background);
-    border-bottom: 1px solid var(--border-color);
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--elevation-2);
     position: sticky;
     top: 0;
     z-index: 100;
+}
+
+:global(.dark) .header {
+    background-color: rgba(18, 18, 18, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .headerLeft {

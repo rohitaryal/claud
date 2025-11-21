@@ -1,4 +1,4 @@
-import { createRoot, Root } from 'react-dom/client'
+import { createRoot, type Root } from 'react-dom/client'
 import Dialog from '../components/Dialog/Dialog'
 import React from 'react'
 
