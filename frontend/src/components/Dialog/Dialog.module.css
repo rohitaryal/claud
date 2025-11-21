@@ -10,6 +10,7 @@
     justify-content: center;
     z-index: 1000;
     animation: fadeIn 0.2s ease-out;
+    padding: 1rem;
 }
 
 @keyframes fadeIn {
@@ -22,21 +23,24 @@
 }
 
 .dialog {
-    background-color: white;
+    background-color: var(--card-background);
     border-radius: 16px;
     padding: 2rem;
     max-width: 500px;
-    width: 90%;
+    width: fit-content;
+    min-width: 300px;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: slideUp 0.3s ease-out;
+    border: 1px solid var(--border-color);
 }
 
 .dialogLarge {
     max-width: 90vw;
-    width: 90%;
+    width: fit-content;
+    min-width: 300px;
 }
 
 @keyframes slideUp {
@@ -57,7 +61,7 @@
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: #666;
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 0.5rem;
     display: flex;
@@ -70,8 +74,8 @@
 }
 
 .closeButton:hover {
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: var(--background-secondary);
+    color: var(--text-primary);
 }
 
 .content {
@@ -81,13 +85,13 @@
 .title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--black);
+    color: var(--text-primary);
     margin-bottom: 1rem;
 }
 
 .message {
     font-size: 1rem;
-    color: #666;
+    color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
 }

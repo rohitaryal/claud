@@ -1,6 +1,6 @@
 .dashboard {
     min-height: 100vh;
-    background-color: #f8f9fa;
+    background-color: var(--background);
     display: flex;
     flex-direction: column;
 }
@@ -16,7 +16,7 @@
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
-    background-color: white;
+    background-color: var(--card-background);
     margin: 1rem;
     border-radius: var(--border-radius);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -75,7 +75,7 @@
     justify-content: center;
     padding: 4rem 2rem;
     text-align: center;
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .emptyState p {
@@ -117,7 +117,7 @@
 .sectionHeader {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #666;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin: 1rem 0 0.5rem;
@@ -150,7 +150,7 @@
 
 .fileName {
     font-weight: 500;
-    color: var(--black);
+    color: var(--text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -158,12 +158,12 @@
 
 .fileSize {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .fileDate {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .fileActions {
@@ -183,7 +183,7 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    color: #666;
+    color: var(--text-secondary);
     transition: all var(--transition-short);
     display: flex;
     align-items: center;
@@ -207,11 +207,11 @@
     align-items: center;
     padding: 1.5rem 1rem;
     border-radius: 12px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-color);
     transition: all var(--transition-short);
     cursor: pointer;
     position: relative;
-    background-color: white;
+    background-color: var(--card-background);
 }
 
 .fileCard:hover {
@@ -354,7 +354,7 @@
 }
 
 .previewText {
-    background-color: #f8f9fa;
+    background-color: var(--background-secondary);
     padding: 1.5rem;
     border-radius: 8px;
     max-width: 100%;
@@ -367,6 +367,7 @@
     max-height: 70vh;
     overflow-y: auto;
     display: block;
+    color: var(--text-primary);
 }
 
 .fileThumbnail {
@@ -395,8 +396,8 @@
     top: 100%;
     right: 0;
     margin-top: 0.25rem;
-    background-color: white;
-    border: 1px solid #e5e5e5;
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
@@ -414,7 +415,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: var(--black);
+    color: var(--text-primary);
     font-size: 0.9rem;
     transition: background-color var(--transition-short);
 }

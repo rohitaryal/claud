@@ -277,12 +277,15 @@ const Settings = function () {
                                             <button
                                                 key={mode}
                                                 className={`${styles.themeOption} ${theme === mode ? styles.active : ''}`}
-                                                onClick={() => setTheme(mode)}
+                                                onClick={() => {
+                                                    setTheme(mode)
+                                                    localStorage.setItem('theme', mode)
+                                                }}
                                             >
                                                 <span className={styles.themeOptionName}>
                                                     {mode.charAt(0).toUpperCase() + mode.slice(1)}
                                                 </span>
-                                                {theme === mode && <IoCheckmarkCircle size={20} />}
+                                                {theme === mode && <IoCheckmarkCircle size={18} />}
                                             </button>
                                         ))}
                                     </div>
@@ -299,22 +302,26 @@ const Settings = function () {
                                     </p>
                                     <div className={styles.colorSchemeGrid}>
                                         {Object.entries(colorSchemes).map(([key, scheme]) => (
-                                            <button
-                                                key={key}
-                                                className={`${styles.colorSchemeOption} ${colorScheme === key ? styles.active : ''}`}
-                                                onClick={() => setColorScheme(key as ColorScheme)}
-                                                style={{
-                                                    background: `linear-gradient(135deg, ${scheme.primary}, ${scheme.secondary})`
-                                                }}
-                                                title={scheme.name}
-                                            >
-                                                {colorScheme === key && <IoCheckmarkCircle size={20} />}
-                                            </button>
+                                            <div key={key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                <button
+                                                    className={`${styles.colorSchemeOption} ${colorScheme === key ? styles.active : ''}`}
+                                                    onClick={() => {
+                                                        setColorScheme(key as ColorScheme)
+                                                        localStorage.setItem('colorScheme', key)
+                                                    }}
+                                                    style={{
+                                                        background: `linear-gradient(135deg, ${scheme.primary}, ${scheme.secondary})`
+                                                    }}
+                                                    title={scheme.name}
+                                                >
+                                                    {colorScheme === key && <IoCheckmarkCircle size={16} color="white" />}
+                                                </button>
+                                                <span className={styles.colorSchemeName}>
+                                                    {scheme.name}
+                                                </span>
+                                            </div>
                                         ))}
                                     </div>
-                                    <p className={styles.colorSchemeName}>
-                                        {colorSchemes[colorScheme].name}
-                                    </p>
                                 </div>
                             </div>
                         )}

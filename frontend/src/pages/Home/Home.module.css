@@ -161,7 +161,7 @@
 
 .uploadCardSuccess {
     border-color: #10b981;
-    background-color: #f0fdf4;
+    background-color: rgba(16, 185, 129, 0.1);
 }
 
 .uploadCardHeader {
@@ -192,7 +192,7 @@
 }
 
 .uploadCardRemove:hover {
-    background-color: #fee2e2;
+    background-color: rgba(239, 68, 68, 0.1);
     color: #ef4444;
 }
 
@@ -276,7 +276,7 @@
 .uploadCardError {
     margin-top: 0.5rem;
     padding: 0.25rem 0.5rem;
-    background-color: #fee2e2;
+    background-color: rgba(239, 68, 68, 0.1);
     color: #ef4444;
     border-radius: 4px;
     font-size: 0.75rem;
