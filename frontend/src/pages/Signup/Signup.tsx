@@ -6,7 +6,7 @@ import { IoEye, IoEyeOff } from 'react-icons/io5'
 import Input from '../../components/Input/Input'
 import AuthLayout from '../../components/AuthLayout/AuthLayout'
 import { apiRegister } from '../../utils/api'
-import { showUnderDevelopmentDialog } from '../../utils/dialog'
+import { showUnderDevelopmentDialog, showDialog } from '../../utils/dialog'
 import styles from './Signup.module.css'
 
 interface SignupErrors {
@@ -95,31 +95,56 @@ const Signup = function () {
         setErrors(newErrors)
         
         if (!termsAccepted) {
-            // Show alert if terms not accepted
-            alert('You must agree to the Terms & Conditions to create an account')
+            // Show dialog if terms not accepted
+            showDialog({
+                title: 'Terms & Conditions Required',
+                message: 'You must agree to the Terms & Conditions to create an account.'
+            })
             return false
         }
 
-        return Object.keys(newErrors).length === 0
+        if (Object.keys(newErrors).length > 0) {
+            // Show dialog with validation errors
+            const errorMessages = Object.values(newErrors).filter(Boolean)
+            showDialog({
+                title: 'Please fix the following errors',
+                message: errorMessages.join('\n')
+            })
+            return false
+        }
+
+        return true
     }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
 
-        if (!validateForm()) return
+        if (!validateForm()) {
+            return
+        }
 
         setLoading(true)
         try {
             const response = await apiRegister(formData.username, formData.email, formData.password)
 
             if (response.success) {
-                navigate('/home')
+                // Force a full page reload to ensure all components re-check auth state
+                window.location.href = '/home'
             } else {
-                setErrors({ email: response.message })
+                setErrors({ email: response.message || 'Registration failed' })
+                showDialog({
+                    title: 'Registration Failed',
+                    message: response.message || 'An error occurred during registration. Please try again.'
+                })
             }
         } catch (error) {
             console.error(error)
-            setErrors({ email: 'Signup failed. Please try again.' })
+            const errorMessage = 'Signup failed. Please try again.'
+            setErrors({ email: errorMessage })
+            showDialog({
+                title: 'Registration Error',
+                message: errorMessage
+            })
         } finally {
             setLoading(false)
         }
@@ -190,6 +215,26 @@ const Signup = function () {
                         onClick={() => setShowPassword(!showPassword)}
                     >
                         {showPassword ? <IoEyeOff /> : <IoEye />}
+                    </button>
+                </div>
+
+                <div className={styles.passwordWrapper}>
+                    <Input
+                        label="Confirm Password"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        name="confirmPassword"
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        error={errors.confirmPassword}
+                        variant="dark"
+                    />
+                    <button
+                        type="button"
+                        className={styles.passwordToggle}
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                        {showConfirmPassword ? <IoEyeOff /> : <IoEye />}
                     </button>
                 </div>
 

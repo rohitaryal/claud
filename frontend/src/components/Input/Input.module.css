@@ -4,6 +4,8 @@
     gap: 0.5rem;
     margin-bottom: 1.5rem;
     width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 .label {
@@ -21,6 +23,9 @@
     transition: all var(--transition-short);
     background-color: white;
     color: var(--black);
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
 }
 
 .input::placeholder {
