@@ -93,7 +93,12 @@ const MyFiles = function () {
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuOpenFileId) {
-                setMenuOpenFileId(null)
+                const target = event.target as HTMLElement
+                // Check if click is outside the menu container
+                const menuContainer = target.closest(`.${styles.menuContainer}`)
+                if (!menuContainer) {
+                    setMenuOpenFileId(null)
+                }
             }
         }
         document.addEventListener('mousedown', handleClickOutside)
@@ -575,17 +580,40 @@ const MyFiles = function () {
                                                                         <button 
                                                                             className={styles.actionButton} 
                                                                             title="More options"
-                                                                            onClick={() => setMenuOpenFileId(menuOpenFileId === fileItem.file_id ? null : fileItem.file_id)}
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault()
+                                                                                e.stopPropagation()
+                                                                                setMenuOpenFileId(menuOpenFileId === fileItem.file_id ? null : fileItem.file_id)
+                                                                            }}
                                                                         >
                                                                             <IoEllipsisVerticalOutline size={18} />
                                                                         </button>
                                                                         {menuOpenFileId === fileItem.file_id && (
-                                                                            <div className={styles.menuDropdown}>
-                                                                                <button onClick={() => handleShareFile(fileItem.file_id, 'public')}>
+                                                                            <div 
+                                                                                className={styles.menuDropdown}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation()
+                                                                                }}
+                                                                            >
+                                                                                <button 
+                                                                                    onClick={(e) => {
+                                                                                        e.preventDefault()
+                                                                                        e.stopPropagation()
+                                                                                        setMenuOpenFileId(null)
+                                                                                        handleShareFile(fileItem.file_id, 'public')
+                                                                                    }}
+                                                                                >
                                                                                     <IoShareSocialOutline size={16} />
                                                                                     Share Publicly
                                                                                 </button>
-                                                                                <button onClick={() => handleShareFile(fileItem.file_id, 'link')}>
+                                                                                <button 
+                                                                                    onClick={(e) => {
+                                                                                        e.preventDefault()
+                                                                                        e.stopPropagation()
+                                                                                        setMenuOpenFileId(null)
+                                                                                        handleShareFile(fileItem.file_id, 'link')
+                                                                                    }}
+                                                                                >
                                                                                     <IoShareSocialOutline size={16} />
                                                                                     Share with Link
                                                                                 </button>
@@ -685,12 +713,31 @@ const MyFiles = function () {
                                                                 <IoEllipsisVerticalOutline size={18} />
                                                             </button>
                                                             {menuOpenFileId === file.file_id && (
-                                                                <div className={styles.menuDropdown}>
-                                                                    <button onClick={() => handleShareFile(file.file_id, 'public')}>
+                                                                <div 
+                                                                    className={styles.menuDropdown}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                    }}
+                                                                >
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleShareFile(file.file_id, 'public')
+                                                                        }}
+                                                                    >
                                                                         <IoShareSocialOutline size={16} />
                                                                         Share Publicly
                                                                     </button>
-                                                                    <button onClick={() => handleShareFile(file.file_id, 'link')}>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleShareFile(file.file_id, 'link')
+                                                                        }}
+                                                                    >
                                                                         <IoShareSocialOutline size={16} />
                                                                         Share with Link
                                                                     </button>
