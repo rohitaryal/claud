@@ -4,7 +4,7 @@ import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')
-const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '104857600') // 100MB default
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '1073741824') // 1GB default (was 100MB)
 
 /**
  * Initialize upload directory
@@ -55,23 +55,54 @@ export async function saveFile(
     const userDir = getUserUploadDir(fileBucketId)
     const filePath = path.join(userDir, filename)
     
-    // Save file to disk
+    // Save file to disk using streaming for large files
+    const stream = fs.createWriteStream(filePath)
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
-    fs.writeFileSync(filePath, buffer)
     
-    // Save file metadata to database
-    const result = await query(
-      `INSERT INTO files (file_id, user_uuid, filename, original_name, file_path, file_size, mime_type, parent_folder_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING file_id, filename, original_name, file_size, mime_type, created_at`,
-      [fileId, userUuid, filename, file.name, filePath, file.size, file.type || 'application/octet-stream', parentFolderId || null]
-    )
-    
-    return {
-      success: true,
-      file: result.rows[0]
-    }
+    return new Promise((resolve, reject) => {
+      stream.on('error', (error) => {
+        console.error('Error writing file stream:', error)
+        resolve({
+          success: false,
+          message: 'Failed to save file',
+          code: 'SAVE_ERROR'
+        })
+      })
+      
+      stream.on('finish', async () => {
+        try {
+          // Save file metadata to database
+          const result = await query(
+            `INSERT INTO files (file_id, user_uuid, filename, original_name, file_path, file_size, mime_type, parent_folder_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             RETURNING file_id, filename, original_name, file_size, mime_type, created_at`,
+            [fileId, userUuid, filename, file.name, filePath, file.size, file.type || 'application/octet-stream', parentFolderId || null]
+          )
+          
+          resolve({
+            success: true,
+            file: result.rows[0]
+          })
+        } catch (error) {
+          console.error('Error saving file metadata:', error)
+          // Clean up file if database insert fails
+          try {
+            fs.unlinkSync(filePath)
+          } catch (unlinkError) {
+            console.error('Error cleaning up file:', unlinkError)
+          }
+          resolve({
+            success: false,
+            message: 'Failed to save file metadata',
+            code: 'SAVE_ERROR'
+          })
+        }
+      })
+      
+      stream.write(buffer)
+      stream.end()
+    })
   } catch (error) {
     console.error('Error saving file:', error)
     return {

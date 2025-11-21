@@ -96,10 +96,11 @@ const Home = function () {
                 logger.error('Upload failed', response.message)
             }
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Network error. Please try again.'
             setUploads((prev) =>
                 prev.map((upload) =>
                     upload.file === file
-                        ? { ...upload, status: 'error', error: 'Network error' }
+                        ? { ...upload, status: 'error', error: errorMessage }
                         : upload
                 )
             )

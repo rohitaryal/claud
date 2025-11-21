@@ -244,6 +244,13 @@ export async function apiUploadFile(
     const xhr = new XMLHttpRequest()
 
     return new Promise((resolve, reject) => {
+      // Calculate timeout based on file size (15 minutes for 1GB, scales linearly)
+      // Minimum 5 minutes, maximum 30 minutes
+      const fileSizeMB = file.size / (1024 * 1024)
+      const timeoutMs = Math.max(5 * 60 * 1000, Math.min(30 * 60 * 1000, (fileSizeMB / 100) * 15 * 60 * 1000))
+      
+      xhr.timeout = timeoutMs
+
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable && onProgress) {
           const progress = (e.loaded / e.total) * 100
@@ -280,7 +287,17 @@ export async function apiUploadFile(
 
       xhr.addEventListener('error', () => {
         logger.error('Upload network error')
-        reject(new Error('Network error'))
+        reject(new Error('Network error. Please check your connection and try again.'))
+      })
+
+      xhr.addEventListener('timeout', () => {
+        logger.error('Upload timeout', { timeout: timeoutMs, fileSize: file.size })
+        reject(new Error(`Upload timeout. The file is too large or your connection is too slow. Please try again or upload a smaller file.`))
+      })
+
+      xhr.addEventListener('abort', () => {
+        logger.warn('Upload aborted')
+        reject(new Error('Upload was cancelled'))
       })
 
       xhr.open('POST', `${API_BASE}/api/files/upload`)
@@ -291,7 +308,7 @@ export async function apiUploadFile(
     logger.error('Upload error', error)
     return {
       success: false,
-      message: 'Network error. Please try again.',
+      message: error instanceof Error ? error.message : 'Network error. Please try again.',
       code: 'NETWORK_ERROR'
     }
   }
