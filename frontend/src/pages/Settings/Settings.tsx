@@ -457,7 +457,7 @@ const Settings = function () {
                                             value={newUsername}
                                             onChange={(e) => setNewUsername(e.target.value)}
                                             error={nameErrors.username}
-                                            variant={theme === 'dark' ? 'dark' : undefined}
+                                            variant={undefined}
                                         />
                                         <button 
                                             type="submit" 
@@ -485,7 +485,7 @@ const Settings = function () {
                                             value={newEmail}
                                             onChange={(e) => setNewEmail(e.target.value)}
                                             error={emailErrors.email}
-                                            variant={theme === 'dark' ? 'dark' : undefined}
+                                            variant={undefined}
                                         />
                                         <button 
                                             type="submit" 
@@ -555,7 +555,7 @@ const Settings = function () {
                                             value={currentPassword}
                                             onChange={(e) => setCurrentPassword(e.target.value)}
                                             error={passwordErrors.currentPassword}
-                                            variant={theme === 'dark' ? 'dark' : undefined}
+                                            variant={undefined}
                                         />
                                         <Input
                                             label="New Password"
@@ -564,7 +564,7 @@ const Settings = function () {
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                             error={passwordErrors.newPassword}
-                                            variant={theme === 'dark' ? 'dark' : undefined}
+                                            variant={undefined}
                                         />
                                         <Input
                                             label="Confirm New Password"
@@ -573,7 +573,7 @@ const Settings = function () {
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             error={passwordErrors.confirmPassword}
-                                            variant={theme === 'dark' ? 'dark' : undefined}
+                                            variant={undefined}
                                         />
                                         <button 
                                             type="submit" 
@@ -639,7 +639,7 @@ const Settings = function () {
                                                 placeholder="Type DELETE to confirm"
                                                 value={deleteConfirm}
                                                 onChange={(e) => setDeleteConfirm(e.target.value)}
-                                                variant={theme === 'dark' ? 'dark' : undefined}
+                                                variant={undefined}
                                             />
                                             <div className={styles.deleteActions}>
                                                 <button 

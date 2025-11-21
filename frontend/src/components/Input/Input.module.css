@@ -52,7 +52,7 @@
     font-weight: 500;
 }
 
-/* Dark variant */
+/* Dark variant - for auth pages with dark backgrounds */
 .dark.label {
     color: rgba(255, 255, 255, 0.9);
 }
@@ -81,5 +81,29 @@
 }
 
 .dark.errorText {
+    color: #fca5a5;
+}
+
+/* Dark theme support for regular inputs (not dark variant) */
+:global(.dark) .inputGroup:not(.dark) .input {
+    background-color: var(--card-background);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+:global(.dark) .inputGroup:not(.dark) .input::placeholder {
+    color: var(--text-secondary);
+}
+
+:global(.dark) .inputGroup:not(.dark) .input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(18, 51, 193, 0.2);
+}
+
+:global(.dark) .inputGroup:not(.dark) .label {
+    color: var(--text-primary);
+}
+
+:global(.dark) .inputGroup:not(.dark) .errorText {
     color: #fca5a5;
 }
