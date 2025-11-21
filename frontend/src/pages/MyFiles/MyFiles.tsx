@@ -497,11 +497,24 @@ const MyFiles = function () {
                                                     <span className={styles.fileDate}>{formatDate(file.created_at)}</span>
                                                     <div className={styles.fileActions}>
                                                         {activeSection === 'trash' ? (
-                                                            <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(file.file_id, file.original_name)}>
-                                                                <IoTrashOutline size={18} />
-                                                            </button>
+                                                            <>
+                                                                <button className={styles.actionButton} title="Restore" onClick={() => handleRestoreFile(file.file_id, file.original_name)}>
+                                                                    <IoRefreshOutline size={18} />
+                                                                </button>
+                                                                <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(file.file_id, file.original_name)}>
+                                                                    <IoTrashOutline size={18} />
+                                                                </button>
+                                                            </>
                                                         ) : (
-                                                            <button className={styles.actionButton} title="Delete" onClick={() => handleDeleteFile(file.file_id, file.original_name)}>
+                                                            <button 
+                                                                className={styles.actionButton} 
+                                                                title="Delete" 
+                                                                onClick={(e) => {
+                                                                    e.preventDefault()
+                                                                    e.stopPropagation()
+                                                                    handleDeleteFile(file.file_id, file.original_name)
+                                                                }}
+                                                            >
                                                                 <IoTrashOutline size={18} />
                                                             </button>
                                                         )}
@@ -576,10 +589,14 @@ const MyFiles = function () {
                                                                                     <IoShareSocialOutline size={16} />
                                                                                     Share with Link
                                                                                 </button>
-                                                                                <button onClick={() => {
-                                                                                    setMenuOpenFileId(null)
-                                                                                    handleDeleteFile(fileItem.file_id, fileItem.original_name)
-                                                                                }}>
+                                                                                <button 
+                                                                                    onClick={(e) => {
+                                                                                        e.preventDefault()
+                                                                                        e.stopPropagation()
+                                                                                        setMenuOpenFileId(null)
+                                                                                        handleDeleteFile(fileItem.file_id, fileItem.original_name)
+                                                                                    }}
+                                                                                >
                                                                                     <IoTrashOutline size={16} />
                                                                                     Delete
                                                                                 </button>
@@ -635,10 +652,26 @@ const MyFiles = function () {
                                                     )}
                                                     {activeSection === 'trash' ? (
                                                         <>
-                                                            <button className={styles.actionButton} title="Restore" onClick={() => handleRestoreFile(file.file_id, file.original_name)}>
+                                                            <button 
+                                                                className={styles.actionButton} 
+                                                                title="Restore" 
+                                                                onClick={(e) => {
+                                                                    e.preventDefault()
+                                                                    e.stopPropagation()
+                                                                    handleRestoreFile(file.file_id, file.original_name)
+                                                                }}
+                                                            >
                                                                 <IoRefreshOutline size={18} />
                                                             </button>
-                                                            <button className={styles.actionButton} title="Permanently Delete" onClick={() => handlePermanentDelete(file.file_id, file.original_name)}>
+                                                            <button 
+                                                                className={styles.actionButton} 
+                                                                title="Permanently Delete" 
+                                                                onClick={(e) => {
+                                                                    e.preventDefault()
+                                                                    e.stopPropagation()
+                                                                    handlePermanentDelete(file.file_id, file.original_name)
+                                                                }}
+                                                            >
                                                                 <IoTrashOutline size={18} />
                                                             </button>
                                                         </>
@@ -661,10 +694,14 @@ const MyFiles = function () {
                                                                         <IoShareSocialOutline size={16} />
                                                                         Share with Link
                                                                     </button>
-                                                                    <button onClick={() => {
-                                                                        setMenuOpenFileId(null)
-                                                                        handleDeleteFile(file.file_id, file.original_name)
-                                                                    }}>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleDeleteFile(file.file_id, file.original_name)
+                                                                        }}
+                                                                    >
                                                                         <IoTrashOutline size={16} />
                                                                         Delete
                                                                     </button>
