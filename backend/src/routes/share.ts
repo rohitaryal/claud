@@ -191,11 +191,28 @@ shareRouter.post('/files/:fileId/share/public', async (c) => {
 shareRouter.get('/share/:token', async (c) => {
   try {
     const token = c.req.param('token')
+    // Try to get session user (optional)
+    const cookies = c.req.header('Cookie')
+    let user: any | undefined
+    if (cookies) {
+      const sessionMatch = cookies.match(/session=([^;]+)/)
+      if (sessionMatch) {
+        try {
+          const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+          user = await getFromSession(sessionId)
+        } catch (e) {
+          // ignore and treat as unauthenticated
+        }
+      }
+    }
 
-    const result = await getSharedFileByToken(token)
+    const result = await getSharedFileByToken(token, user?.uuid)
 
     if (!result.success) {
-      return c.json(result, result.code === 'SHARE_NOT_FOUND' ? 404 : 400)
+      if (result.code === 'SHARE_NOT_FOUND') return c.json(result, 404)
+      if (result.code === 'NOT_AUTHENTICATED') return c.json(result, 401)
+      if (result.code === 'UNAUTHORIZED') return c.json(result, 403)
+      return c.json(result, 400)
     }
 
     return c.json({
@@ -223,27 +240,32 @@ shareRouter.get('/share/:token', async (c) => {
 shareRouter.get('/share/:token/download', async (c) => {
   try {
     const token = c.req.param('token')
+    // Try to get session user (optional)
+    const cookies = c.req.header('Cookie')
+    let user: any | undefined
+    if (cookies) {
+      const sessionMatch = cookies.match(/session=([^;]+)/)
+      if (sessionMatch) {
+        try {
+          const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+          user = await getFromSession(sessionId)
+        } catch (e) {
+          // ignore and treat as unauthenticated
+        }
+      }
+    }
 
-    const result = await getSharedFileByToken(token)
+    const result = await getSharedFileByToken(token, user?.uuid)
 
     if (!result.success) {
-      return c.json(result, result.code === 'SHARE_NOT_FOUND' ? 404 : 400)
+      if (result.code === 'SHARE_NOT_FOUND') return c.json(result, 404)
+      if (result.code === 'NOT_AUTHENTICATED') return c.json(result, 401)
+      if (result.code === 'UNAUTHORIZED') return c.json(result, 403)
+      return c.json(result, 400)
     }
 
     // Get file metadata including path
-    const shareResult = await getSharedFileByToken(token)
-    if (!shareResult.success || !shareResult.file) {
-      return c.json(
-        {
-          success: false,
-          message: 'File not found',
-          code: 'FILE_NOT_FOUND'
-        },
-        404
-      )
-    }
-
-    const file = shareResult.file
+    const file = result.file
 
     // Get file stream
     const fileStream = getSharedFileStream(file.file_path)

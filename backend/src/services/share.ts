@@ -7,6 +7,11 @@ export interface ShareFileParams {
   sharedBy: string
   sharedWith?: string
   permission: 'read' | 'write' | 'admin'
+  /**
+   * If true, generate a share token for this private share so it can be
+   * accessed via a link. Defaults to false.
+   */
+  createLink?: boolean
 }
 
 export interface PublicShareParams {
@@ -26,7 +31,7 @@ export async function shareFileWithUser(params: ShareFileParams): Promise<{
   code?: string
 }> {
   try {
-    const { fileId, sharedBy, sharedWith, permission } = params
+    const { fileId, sharedBy, sharedWith, permission, createLink } = params
 
     // Validate permission
     if (!['read', 'write', 'admin'].includes(permission)) {
@@ -100,8 +105,23 @@ export async function shareFileWithUser(params: ShareFileParams): Promise<{
       }
     }
 
-    // Create new share
+    // Create new share. If createLink is true, generate a share_token
     const shareId = uuidv4()
+    if (createLink) {
+      const shareToken = uuidv4()
+      const result = await query(
+        `INSERT INTO file_shares (share_id, file_id, shared_by, shared_with, share_token, permission, is_public)
+         VALUES ($1, $2, $3, $4, $5, $6, FALSE)
+         RETURNING share_id, file_id, shared_by, shared_with, share_token, permission, created_at`,
+        [shareId, fileId, sharedBy, sharedWith || null, shareToken, permission]
+      )
+
+      return {
+        success: true,
+        share: result.rows[0]
+      }
+    }
+
     const result = await query(
       `INSERT INTO file_shares (share_id, file_id, shared_by, shared_with, permission, is_public)
        VALUES ($1, $2, $3, $4, $5, FALSE)
@@ -200,7 +220,7 @@ export async function createPublicShare(params: PublicShareParams): Promise<{
 /**
  * Access shared file by token
  */
-export async function getSharedFileByToken(token: string): Promise<{
+export async function getSharedFileByToken(token: string, userUuid?: string): Promise<{
   success: boolean
   file?: any
   share?: any
@@ -213,8 +233,7 @@ export async function getSharedFileByToken(token: string): Promise<{
       `SELECT s.*, f.file_id, f.filename, f.original_name, f.file_path, f.file_size, f.mime_type, f.created_at
        FROM file_shares s
        JOIN files f ON s.file_id = f.file_id
-       WHERE s.share_token = $1 
-         AND s.is_public = TRUE 
+       WHERE s.share_token = $1
          AND f.is_deleted = FALSE
          AND (s.expires_at IS NULL OR s.expires_at > NOW())`,
       [token]
@@ -230,6 +249,31 @@ export async function getSharedFileByToken(token: string): Promise<{
 
     const share = shareResult.rows[0]
 
+    // If the share is private (is_public = FALSE) and tied to a specific recipient
+    // enforce that the requester (if present) matches the recipient.
+    // If the share has no `shared_with` (link-only private share), allow access
+    // without authentication. If the share is public, allow access without auth.
+    if (!share.is_public) {
+      if (share.shared_with) {
+        if (!userUuid) {
+          return {
+            success: false,
+            message: 'Authentication required to access this share',
+            code: 'NOT_AUTHENTICATED'
+          }
+        }
+
+        if (userUuid !== share.shared_with) {
+          return {
+            success: false,
+            message: 'Unauthorized to access this share',
+            code: 'UNAUTHORIZED'
+          }
+        }
+      }
+      // else: private link without shared_with => anyone with token can access
+    }
+
     return {
       success: true,
       file: {
@@ -242,7 +286,9 @@ export async function getSharedFileByToken(token: string): Promise<{
       },
       share: {
         permission: share.permission,
-        expires_at: share.expires_at
+        expires_at: share.expires_at,
+        is_public: share.is_public,
+        shared_with: share.shared_with || null
       }
     }
   } catch (error) {
