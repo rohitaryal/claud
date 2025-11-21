@@ -372,30 +372,56 @@ const Settings = function () {
                                 <div className={styles.settingGroup}>
                                     <label className={styles.settingLabel}>
                                         <IoColorPaletteOutline size={20} />
-                                        <span>Color Scheme</span>
+                                        <span>Color Scheme - Material You</span>
                                     </label>
                                     <p className={styles.settingDescription}>
-                                        Choose a color scheme for your interface
+                                        Choose a dynamic color palette inspired by Material Design 3
                                     </p>
                                     <div className={styles.colorSchemeGrid}>
                                         {Object.entries(colorSchemes).map(([key, scheme]) => (
-                                            <div key={key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                            <div 
+                                                key={key} 
+                                                className={`${styles.colorSchemeCard} ${colorScheme === key ? styles.activeCard : ''}`}
+                                            >
                                                 <button
                                                     className={`${styles.colorSchemeOption} ${colorScheme === key ? styles.active : ''}`}
                                                     onClick={() => {
                                                         setColorScheme(key as ColorScheme)
                                                         localStorage.setItem('colorScheme', key)
                                                     }}
-                                                    style={{
-                                                        background: `linear-gradient(135deg, ${scheme.primary}, ${scheme.secondary})`
-                                                    }}
-                                                    title={scheme.name}
+                                                    title={scheme.description}
                                                 >
-                                                    {colorScheme === key && <IoCheckmarkCircle size={16} color="white" />}
+                                                    <div className={styles.colorPreview}>
+                                                        <div 
+                                                            className={styles.colorSwatch} 
+                                                            style={{ backgroundColor: scheme.primary }}
+                                                            title="Primary"
+                                                        />
+                                                        <div 
+                                                            className={styles.colorSwatch} 
+                                                            style={{ backgroundColor: scheme.secondary }}
+                                                            title="Secondary"
+                                                        />
+                                                        <div 
+                                                            className={styles.colorSwatch} 
+                                                            style={{ backgroundColor: scheme.accent }}
+                                                            title="Accent"
+                                                        />
+                                                    </div>
+                                                    {colorScheme === key && (
+                                                        <div className={styles.selectedBadge}>
+                                                            <IoCheckmarkCircle size={18} />
+                                                        </div>
+                                                    )}
                                                 </button>
-                                                <span className={styles.colorSchemeName}>
-                                                    {scheme.name}
-                                                </span>
+                                                <div className={styles.colorSchemeInfo}>
+                                                    <span className={styles.colorSchemeName}>
+                                                        {scheme.name}
+                                                    </span>
+                                                    <span className={styles.colorSchemeDescription}>
+                                                        {scheme.description}
+                                                    </span>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>

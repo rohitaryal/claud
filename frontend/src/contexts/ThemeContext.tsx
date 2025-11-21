@@ -70,17 +70,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const scheme = colorSchemes[colorScheme]
     document.documentElement.style.setProperty('--color-primary', scheme.primary)
     document.documentElement.style.setProperty('--color-secondary', scheme.secondary)
+    document.documentElement.style.setProperty('--color-tertiary', scheme.tertiary)
+    document.documentElement.style.setProperty('--color-neutral', scheme.neutral)
     document.documentElement.style.setProperty('--color-accent', scheme.accent)
     
     // Update existing CSS variables that use the color
     document.documentElement.style.setProperty('--blue', scheme.primary)
-    document.documentElement.style.setProperty('--blue-dark', scheme.accent)
-    document.documentElement.style.setProperty('--blue-light', `${scheme.secondary}20`)
+    document.documentElement.style.setProperty('--blue-dark', scheme.tertiary)
+    document.documentElement.style.setProperty('--blue-light', `${scheme.secondary}40`)
     
     // Update gradient
     document.documentElement.style.setProperty(
       '--blue-gradient',
-      `linear-gradient(to right, ${scheme.primary}, ${scheme.secondary})`
+      `linear-gradient(135deg, ${scheme.primary}, ${scheme.secondary})`
     )
   }, [colorScheme])
 

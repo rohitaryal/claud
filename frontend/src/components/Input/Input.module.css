@@ -17,9 +17,9 @@
 .input {
     padding: 0.75rem 1rem;
     border: 2px solid var(--blue-light);
-    border-radius: 12px;
+    border-radius: var(--border-radius-md);
     font-size: 1rem;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Roboto Flex', 'Poppins', sans-serif;
     transition: all var(--transition-short);
     background-color: white;
     color: var(--black);
@@ -35,7 +35,9 @@
 .input:focus {
     outline: none;
     border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba(18, 51, 193, 0.1);
+    box-shadow: 0 0 0 4px rgba(18, 51, 193, 0.12);
+    transform: scale(1.005);
+    transition: all var(--transition-spring);
 }
 
 .inputError {

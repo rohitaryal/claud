@@ -338,42 +338,106 @@
 
 .colorSchemeGrid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1rem 0.5rem;
-    margin-bottom: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.colorSchemeCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: var(--background-secondary);
+    border-radius: 16px;
+    border: 2px solid transparent;
+    transition: all var(--transition-short);
+}
+
+.colorSchemeCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.colorSchemeCard.activeCard {
+    border-color: var(--blue);
+    background-color: var(--blue-light);
 }
 
 .colorSchemeOption {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 3px solid transparent;
+    width: 100%;
+    height: 80px;
+    border-radius: 12px;
+    border: none;
     cursor: pointer;
     transition: all var(--transition-short);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    overflow: hidden;
+    background-color: var(--card-background);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin: 0 auto;
 }
 
 .colorSchemeOption:hover {
-    transform: scale(1.1);
+    transform: scale(1.02);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .colorSchemeOption.active {
-    border-color: var(--text-primary);
-    box-shadow: 0 0 0 3px var(--blue);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.colorPreview {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+}
+
+.colorSwatch {
+    flex: 1;
+    border-radius: 8px;
+    transition: transform var(--transition-short);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.colorSwatch:hover {
+    transform: scale(1.05);
+}
+
+.selectedBadge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: white;
+    border-radius: 50%;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.colorSchemeInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .colorSchemeName {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.colorSchemeDescription {
     font-size: 0.75rem;
     color: var(--text-secondary);
-    text-align: center;
-    font-weight: 400;
-    margin-top: 0.25rem;
+    line-height: 1.4;
 }
 
 .dangerButton {
