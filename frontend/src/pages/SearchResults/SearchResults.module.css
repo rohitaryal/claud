@@ -1,6 +1,6 @@
 .dashboard {
     min-height: 100vh;
-    background-color: #f8f9fa;
+    background-color: var(--background-secondary);
     display: flex;
     flex-direction: column;
 }
@@ -16,7 +16,7 @@
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
-    background-color: white;
+    background-color: var(--card-background);
     margin: 1rem;
     border-radius: var(--border-radius);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -28,7 +28,7 @@
     align-items: center;
     margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .contentTitle {
@@ -45,7 +45,7 @@
     justify-content: center;
     padding: 4rem 2rem;
     text-align: center;
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .emptyState p {
@@ -97,12 +97,12 @@
 
 .fileSize {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .fileDate {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 /* Responsive */

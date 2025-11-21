@@ -27,7 +27,7 @@ const Navigation = function () {
             <img src="/cloud-original.png" className={styles.logo} onClick={() => navigate('/')} />
             <div className={styles.navLinksContainer}>
                 <a href="#">Join Claud</a>
-                <a href="#">Documentation</a>
+                <a href="https://github.com/rohitaryal/claud/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
                 <Link to="/about-us">About Us</Link>
                 <a href="#">Terms & Conditions</a>
             </div>
