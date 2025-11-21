@@ -22,11 +22,13 @@ import {
 import type { AuthUser } from '../../utils/api'
 import styles from './Settings.module.css'
 
+type SettingsCategory = 'appearance' | 'account' | 'security' | 'search' | 'danger'
+
 const Settings = function () {
     const navigate = useNavigate()
     const { theme, colorScheme, setTheme, setColorScheme } = useTheme()
     const [user, setUser] = useState<AuthUser | null>(null)
-    const [activeSection, setActiveSection] = useState<string | null>(null)
+    const [activeCategory, setActiveCategory] = useState<SettingsCategory>('appearance')
 
     // Password change
     const [currentPassword, setCurrentPassword] = useState('')
@@ -157,6 +159,14 @@ const Settings = function () {
         alert('Search history cleared')
     }
 
+    const categories = [
+        { id: 'appearance' as SettingsCategory, label: 'Appearance', icon: IoColorPaletteOutline },
+        { id: 'account' as SettingsCategory, label: 'Account', icon: IoPersonOutline },
+        { id: 'security' as SettingsCategory, label: 'Security', icon: IoLockClosedOutline },
+        { id: 'search' as SettingsCategory, label: 'Search', icon: IoSearchOutline },
+        { id: 'danger' as SettingsCategory, label: 'Danger Zone', icon: IoTrashOutline },
+    ]
+
     return (
         <div className={styles.settingsPage}>
             <DashboardHeader />
@@ -170,28 +180,41 @@ const Settings = function () {
                 </div>
 
                 <div className={styles.content}>
-                    {/* Appearance Section */}
-                    <div className={styles.section}>
-                        <div 
-                            className={styles.sectionHeader}
-                            onClick={() => setActiveSection(activeSection === 'appearance' ? null : 'appearance')}
-                        >
-                            <div className={styles.sectionTitle}>
-                                <IoColorPaletteOutline size={24} />
-                                <span>Appearance</span>
-                            </div>
-                            <span className={styles.sectionToggle}>
-                                {activeSection === 'appearance' ? '−' : '+'}
-                            </span>
-                        </div>
-                        {activeSection === 'appearance' && (
-                            <div className={styles.sectionContent}>
+                    {/* Left Sidebar */}
+                    <div className={styles.sidebar}>
+                        <nav className={styles.categoryNav}>
+                            {categories.map((category) => {
+                                const Icon = category.icon
+                                return (
+                                    <button
+                                        key={category.id}
+                                        className={`${styles.categoryItem} ${activeCategory === category.id ? styles.active : ''}`}
+                                        onClick={() => setActiveCategory(category.id)}
+                                    >
+                                        <Icon size={20} />
+                                        <span>{category.label}</span>
+                                    </button>
+                                )
+                            })}
+                        </nav>
+                    </div>
+
+                    {/* Right Content */}
+                    <div className={styles.mainContent}>
+                        {/* Appearance */}
+                        {activeCategory === 'appearance' && (
+                            <div className={styles.categoryContent}>
+                                <h2 className={styles.categoryTitle}>Appearance</h2>
+                                
                                 {/* Theme Selection */}
                                 <div className={styles.settingGroup}>
                                     <label className={styles.settingLabel}>
                                         <IoMoonOutline size={20} />
                                         <span>Theme</span>
                                     </label>
+                                    <p className={styles.settingDescription}>
+                                        Choose your preferred theme mode
+                                    </p>
                                     <div className={styles.themeOptions}>
                                         {(['system', 'light', 'dark'] as ThemeMode[]).map((mode) => (
                                             <button
@@ -214,6 +237,9 @@ const Settings = function () {
                                         <IoColorPaletteOutline size={20} />
                                         <span>Color Scheme</span>
                                     </label>
+                                    <p className={styles.settingDescription}>
+                                        Choose a color scheme for your interface
+                                    </p>
                                     <div className={styles.colorSchemeGrid}>
                                         {Object.entries(colorSchemes).map(([key, scheme]) => (
                                             <button
@@ -235,27 +261,17 @@ const Settings = function () {
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Account Section */}
-                    <div className={styles.section}>
-                        <div 
-                            className={styles.sectionHeader}
-                            onClick={() => setActiveSection(activeSection === 'account' ? null : 'account')}
-                        >
-                            <div className={styles.sectionTitle}>
-                                <IoPersonOutline size={24} />
-                                <span>Account</span>
-                            </div>
-                            <span className={styles.sectionToggle}>
-                                {activeSection === 'account' ? '−' : '+'}
-                            </span>
-                        </div>
-                        {activeSection === 'account' && (
-                            <div className={styles.sectionContent}>
-                                {/* Name Change */}
+                        {/* Account */}
+                        {activeCategory === 'account' && (
+                            <div className={styles.categoryContent}>
+                                <h2 className={styles.categoryTitle}>Account</h2>
+                                
                                 <div className={styles.settingGroup}>
                                     <label className={styles.settingLabel}>Change Username</label>
+                                    <p className={styles.settingDescription}>
+                                        Update your display name
+                                    </p>
                                     <form onSubmit={handleNameChange} className={styles.form}>
                                         <Input
                                             label="New Username"
@@ -280,27 +296,17 @@ const Settings = function () {
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Security Section */}
-                    <div className={styles.section}>
-                        <div 
-                            className={styles.sectionHeader}
-                            onClick={() => setActiveSection(activeSection === 'security' ? null : 'security')}
-                        >
-                            <div className={styles.sectionTitle}>
-                                <IoLockClosedOutline size={24} />
-                                <span>Security</span>
-                            </div>
-                            <span className={styles.sectionToggle}>
-                                {activeSection === 'security' ? '−' : '+'}
-                            </span>
-                        </div>
-                        {activeSection === 'security' && (
-                            <div className={styles.sectionContent}>
-                                {/* Password Change */}
+                        {/* Security */}
+                        {activeCategory === 'security' && (
+                            <div className={styles.categoryContent}>
+                                <h2 className={styles.categoryTitle}>Security</h2>
+                                
                                 <div className={styles.settingGroup}>
                                     <label className={styles.settingLabel}>Change Password</label>
+                                    <p className={styles.settingDescription}>
+                                        Update your password to keep your account secure
+                                    </p>
                                     <form onSubmit={handlePasswordChange} className={styles.form}>
                                         <Input
                                             label="Current Password"
@@ -343,24 +349,12 @@ const Settings = function () {
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Search Section */}
-                    <div className={styles.section}>
-                        <div 
-                            className={styles.sectionHeader}
-                            onClick={() => setActiveSection(activeSection === 'search' ? null : 'search')}
-                        >
-                            <div className={styles.sectionTitle}>
-                                <IoSearchOutline size={24} />
-                                <span>Search</span>
-                            </div>
-                            <span className={styles.sectionToggle}>
-                                {activeSection === 'search' ? '−' : '+'}
-                            </span>
-                        </div>
-                        {activeSection === 'search' && (
-                            <div className={styles.sectionContent}>
+                        {/* Search */}
+                        {activeCategory === 'search' && (
+                            <div className={styles.categoryContent}>
+                                <h2 className={styles.categoryTitle}>Search</h2>
+                                
                                 <div className={styles.settingGroup}>
                                     <label className={styles.settingLabel}>Search History</label>
                                     <p className={styles.settingDescription}>
@@ -376,24 +370,12 @@ const Settings = function () {
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Danger Zone */}
-                    <div className={styles.section}>
-                        <div 
-                            className={styles.sectionHeader}
-                            onClick={() => setActiveSection(activeSection === 'danger' ? null : 'danger')}
-                        >
-                            <div className={styles.sectionTitle}>
-                                <IoTrashOutline size={24} />
-                                <span>Danger Zone</span>
-                            </div>
-                            <span className={styles.sectionToggle}>
-                                {activeSection === 'danger' ? '−' : '+'}
-                            </span>
-                        </div>
-                        {activeSection === 'danger' && (
-                            <div className={styles.sectionContent}>
+                        {/* Danger Zone */}
+                        {activeCategory === 'danger' && (
+                            <div className={styles.categoryContent}>
+                                <h2 className={styles.categoryTitle}>Danger Zone</h2>
+                                
                                 <div className={styles.settingGroup}>
                                     <label className={styles.settingLabel}>Delete Account</label>
                                     <p className={styles.settingDescription}>
@@ -450,4 +432,3 @@ const Settings = function () {
 }
 
 export default Settings
-

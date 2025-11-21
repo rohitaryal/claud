@@ -1,8 +1,8 @@
 .header {
     height: 64px;
     width: 100%;
-    background-color: white;
-    border-bottom: 1px solid rgba(18, 51, 193, 0.1);
+    background-color: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -47,7 +47,7 @@
 .searchIcon {
     position: absolute;
     left: 1rem;
-    color: #999;
+    color: var(--text-secondary);
     font-size: 1.25rem;
     pointer-events: none;
 }
@@ -55,10 +55,11 @@
 .searchInput {
     width: 100%;
     padding: 0.625rem 1rem 0.625rem 3rem;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-color);
     border-radius: 24px;
     font-size: 0.95rem;
-    background-color: #f8f9fa;
+    background-color: var(--background-secondary);
+    color: var(--text-primary);
     transition: all var(--transition-short);
     outline: none;
 }
@@ -74,7 +75,8 @@
     top: calc(100% + 0.5rem);
     left: 0;
     right: 0;
-    background-color: white;
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
     max-height: 400px;
@@ -101,7 +103,7 @@
     padding: 0.75rem 1rem;
     cursor: pointer;
     transition: background-color var(--transition-short);
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .searchResultItem:last-child {
@@ -123,7 +125,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--black);
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 
@@ -135,7 +137,7 @@
     font-size: 0.9rem;
     cursor: pointer;
     transition: background-color var(--transition-short);
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--border-color);
 }
 
 .searchResultViewAll:hover {
@@ -146,10 +148,10 @@
     padding: 0.75rem 1rem;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #666;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .searchHistoryItem {
@@ -159,7 +161,7 @@
     padding: 0.75rem 1rem;
     cursor: pointer;
     transition: background-color var(--transition-short);
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .searchHistoryItem:last-child {
@@ -181,7 +183,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--black);
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 
@@ -216,14 +218,15 @@
 .username {
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .profileMenu {
     position: absolute;
     top: calc(100% + 0.5rem);
     right: 0;
-    background-color: white;
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
     min-width: 200px;
@@ -237,18 +240,18 @@
 
 .profileName {
     font-weight: 600;
-    color: var(--black);
+    color: var(--text-primary);
     margin-bottom: 0.25rem;
 }
 
 .profileEmail {
     font-size: 0.85rem;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .profileMenuDivider {
     height: 1px;
-    background-color: #e5e5e5;
+    background-color: var(--border-color);
     margin: 0.5rem 0;
 }
 
@@ -263,7 +266,7 @@
     text-align: left;
     cursor: pointer;
     transition: background-color var(--transition-short);
-    color: var(--black);
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 

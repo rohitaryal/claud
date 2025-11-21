@@ -1,19 +1,24 @@
 .settingsPage {
     min-height: 100vh;
     background-color: var(--background);
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 64px;
 }
 
 .header {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 2rem;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--card-background);
 }
 
 .backButton {
@@ -25,7 +30,7 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    color: var(--black);
+    color: var(--text-primary);
     font-size: 0.95rem;
     transition: all var(--transition-short);
 }
@@ -36,87 +41,104 @@
 }
 
 .title {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
-    color: var(--black);
+    color: var(--text-primary);
     margin: 0;
 }
 
 .content {
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    flex: 1;
+    min-height: calc(100vh - 64px - 80px);
 }
 
-.section {
-    background-color: white;
-    border-radius: 12px;
-    border: 1px solid rgba(18, 51, 193, 0.1);
-    overflow: hidden;
-    transition: all var(--transition-short);
+/* Left Sidebar */
+.sidebar {
+    width: 240px;
+    background-color: var(--card-background);
+    border-right: 1px solid var(--border-color);
+    padding: 1.5rem 0;
 }
 
-.section:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.sectionHeader {
+.categoryNav {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    cursor: pointer;
-    transition: background-color var(--transition-short);
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0 0.5rem;
 }
 
-.sectionHeader:hover {
-    background-color: var(--blue-light);
-}
-
-.sectionTitle {
+.categoryItem {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--black);
+    padding: 0.75rem 1rem;
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition-short);
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    text-align: left;
+    width: 100%;
 }
 
-.sectionToggle {
-    font-size: 1.5rem;
-    font-weight: 300;
+.categoryItem:hover {
+    background-color: var(--blue-light);
     color: var(--blue);
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.sectionContent {
-    padding: 0 1.5rem 1.5rem;
-    border-top: 1px solid rgba(18, 51, 193, 0.1);
+.categoryItem.active {
+    background-color: var(--blue-light);
+    color: var(--blue);
+    font-weight: 600;
+}
+
+/* Right Content */
+.mainContent {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background-color: var(--background);
+}
+
+.categoryContent {
+    max-width: 800px;
+}
+
+.categoryTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 2rem 0;
 }
 
 .settingGroup {
-    padding-top: 1.5rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settingGroup:last-child {
+    border-bottom: none;
 }
 
 .settingLabel {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    color: var(--black);
-    margin-bottom: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
 }
 
 .settingDescription {
     font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 1rem;
-    line-height: 1.5;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
 }
 
 .form {
@@ -166,29 +188,25 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.75rem 1rem;
-    background-color: var(--blue-light);
-    border: 2px solid transparent;
+    background-color: var(--card-background);
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     cursor: pointer;
     transition: all var(--transition-short);
     font-size: 0.95rem;
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 .themeOption:hover {
-    background-color: rgba(18, 51, 193, 0.15);
+    border-color: var(--blue);
+    background-color: var(--blue-light);
 }
 
 .themeOption.active {
     border-color: var(--blue);
-    background-color: rgba(18, 51, 193, 0.1);
+    background-color: var(--blue-light);
     color: var(--blue);
     font-weight: 600;
-}
-
-.themeOptionName {
-    flex: 1;
-    text-align: left;
 }
 
 .colorSchemeGrid {
@@ -217,13 +235,13 @@
 }
 
 .colorSchemeOption.active {
-    border-color: var(--black);
-    box-shadow: 0 0 0 3px rgba(18, 51, 193, 0.3);
+    border-color: var(--text-primary);
+    box-shadow: 0 0 0 3px var(--blue);
 }
 
 .colorSchemeName {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-secondary);
     text-align: center;
     font-weight: 500;
 }
@@ -260,14 +278,14 @@
     flex-direction: column;
     gap: 1rem;
     padding: 1.5rem;
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
+    background-color: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.3);
     border-radius: 8px;
 }
 
 .deleteWarning {
     font-size: 0.95rem;
-    color: #991b1b;
+    color: #dc2626;
     font-weight: 500;
 }
 
@@ -279,9 +297,9 @@
 
 .cancelButton {
     padding: 0.75rem 1.5rem;
-    background-color: white;
-    color: var(--black);
-    border: 2px solid #e5e5e5;
+    background-color: var(--card-background);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     font-size: 0.95rem;
     font-weight: 600;
@@ -290,86 +308,37 @@
 }
 
 .cancelButton:hover {
-    background-color: #f8f9fa;
-    border-color: #d1d5db;
-}
-
-/* Dark theme support */
-:global(.dark) .section {
-    background-color: #1f2937;
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-:global(.dark) .sectionHeader:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-:global(.dark) .title,
-:global(.dark) .sectionTitle,
-:global(.dark) .settingLabel,
-:global(.dark) .backButton {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-:global(.dark) .backButton:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-:global(.dark) .settingDescription {
-    color: rgba(255, 255, 255, 0.6);
-}
-
-:global(.dark) .themeOption {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.9);
-}
-
-:global(.dark) .themeOption:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
-:global(.dark) .themeOption.active {
-    background-color: rgba(18, 51, 193, 0.3);
-    border-color: var(--blue);
-    color: white;
-}
-
-:global(.dark) .colorSchemeName {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-:global(.dark) .deleteConfirm {
-    background-color: rgba(220, 38, 38, 0.1);
-    border-color: rgba(220, 38, 38, 0.3);
-}
-
-:global(.dark) .deleteWarning {
-    color: #fca5a5;
-}
-
-:global(.dark) .cancelButton {
-    background-color: #374151;
-    color: rgba(255, 255, 255, 0.9);
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-:global(.dark) .cancelButton:hover {
-    background-color: #4b5563;
-    border-color: rgba(255, 255, 255, 0.3);
+    background-color: var(--background-secondary);
+    border-color: var(--text-secondary);
 }
 
 @media (max-width: 768px) {
-    .container {
-        padding: 1rem;
+    .content {
+        flex-direction: column;
     }
 
-    .title {
-        font-size: 1.5rem;
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .categoryNav {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0.5rem;
+    }
+
+    .categoryItem {
+        white-space: nowrap;
+        min-width: fit-content;
+    }
+
+    .mainContent {
+        padding: 1rem;
     }
 
     .colorSchemeGrid {
         grid-template-columns: repeat(3, 1fr);
     }
 }
-

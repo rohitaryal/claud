@@ -11,11 +11,27 @@
     --blue-gradient: linear-gradient(to right, var(--blue), #1cd9f1);
 
     --background: var(--white);
+    --background-secondary: #f8f9fa;
+    --text-primary: var(--black);
+    --text-secondary: #666;
+    --border-color: #e5e5e5;
+    --card-background: var(--white);
     --border-radius: 18px;
     --max-width: 1440px;
 
     --transition-short: 0.2s ease-in-out;
     --transition-long: 0.5s ease-in-out;
+}
+
+/* Dark theme - React default style */
+.dark {
+    --background: #121212;
+    --background-secondary: #1e1e1e;
+    --text-primary: rgba(255, 255, 255, 0.87);
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --card-background: #1e1e1e;
+    --black: rgba(255, 255, 255, 0.87);
 }
 
 * {
@@ -30,19 +46,13 @@
 body {
     width: 100%;
     background-color: var(--background);
-    color: var(--black);
+    color: var(--text-primary);
     transition: background-color var(--transition-short), color var(--transition-short);
-}
-
-/* Dark theme */
-.dark {
-    --background: #111827;
-    --black: rgba(255, 255, 255, 0.9);
 }
 
 .dark body {
     background-color: var(--background);
-    color: var(--black);
+    color: var(--text-primary);
 }
 
 /* Custom Minimal Scrollbar */
