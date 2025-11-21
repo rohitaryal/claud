@@ -53,10 +53,11 @@ const MyFiles = function () {
 
     const loadFiles = async () => {
         setLoading(true)
+        setFiles([]) // Clear files immediately when loading
         try {
             if (activeSection === 'public-pool') {
                 const response = await apiListPublicFiles(50, 0)
-                if (response.success && response.files) {
+                if (response.success && response.files && response.files.length > 0) {
                     // Map public files to FileItem format
                     const mappedFiles = response.files.map((f: any) => ({
                         file_id: f.file_id,
@@ -70,10 +71,12 @@ const MyFiles = function () {
                         share_token: f.share_token
                     }))
                     setFiles(mappedFiles)
+                } else {
+                    setFiles([])
                 }
             } else if (activeSection === 'shared') {
                 const response = await apiListSharedWithMe(50, 0)
-                if (response.success && response.files) {
+                if (response.success && response.files && response.files.length > 0) {
                     // Map shared files to FileItem format
                     const mappedFiles = response.files.map((f: any) => ({
                         file_id: f.file_id,
@@ -88,16 +91,21 @@ const MyFiles = function () {
                         permission: f.permission
                     }))
                     setFiles(mappedFiles)
+                } else {
+                    setFiles([])
                 }
             } else {
                 const includeDeleted = activeSection === 'trash'
                 const response = await apiListFiles(50, 0, includeDeleted)
                 if (response.success && response.files) {
                     setFiles(response.files)
+                } else {
+                    setFiles([])
                 }
             }
         } catch (error) {
             logger.error('Failed to load files', error)
+            setFiles([])
         } finally {
             setLoading(false)
         }

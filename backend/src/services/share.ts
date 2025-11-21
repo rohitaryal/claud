@@ -176,8 +176,8 @@ export async function createPublicShare(params: PublicShareParams): Promise<{
     // Create public share
     const shareId = uuidv4()
     const result = await query(
-      `INSERT INTO file_shares (share_id, file_id, shared_by, share_token, permission, is_public, expires_at)
-       VALUES ($1, $2, $3, $4, $5, TRUE, $6)
+      `INSERT INTO file_shares (share_id, file_id, shared_by, shared_with, share_token, permission, is_public, expires_at)
+       VALUES ($1, $2, $3, NULL, $4, $5, TRUE, $6)
        RETURNING share_id, file_id, share_token, permission, is_public, expires_at, created_at`,
       [shareId, fileId, sharedBy, shareToken, permission, expiresAt || null]
     )
@@ -319,6 +319,7 @@ export async function getFileShares(fileId: string, userUuid: string): Promise<a
 
 /**
  * List all publicly shared files (global pool)
+ * Only returns files where is_public = TRUE and shared_with IS NULL
  */
 export async function listPublicFiles(limit: number = 50, offset: number = 0): Promise<any[]> {
   const result = await query(
@@ -328,7 +329,8 @@ export async function listPublicFiles(limit: number = 50, offset: number = 0): P
      FROM file_shares s
      JOIN files f ON s.file_id = f.file_id
      JOIN users u ON s.shared_by = u.uuid
-     WHERE s.is_public = TRUE 
+     WHERE s.is_public = TRUE
+       AND s.shared_with IS NULL
        AND f.is_deleted = FALSE
        AND (s.expires_at IS NULL OR s.expires_at > NOW())
      ORDER BY s.created_at DESC
