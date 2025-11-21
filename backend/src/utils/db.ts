@@ -73,6 +73,7 @@ export async function initDatabase() {
         hashed_password TEXT NOT NULL,
         file_bucket_id VARCHAR(255) UNIQUE NOT NULL,
         profile_picture_url TEXT,
+        storage_limit BIGINT DEFAULT 4294967296,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -82,6 +83,19 @@ export async function initDatabase() {
     await client.query(`
       ALTER TABLE users 
       ADD COLUMN IF NOT EXISTS profile_picture_url TEXT
+    `);
+    
+    // Add storage_limit column if it doesn't exist (default 4GB = 4294967296 bytes)
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS storage_limit BIGINT DEFAULT 4294967296
+    `);
+    
+    // Update existing users without storage_limit to have 4GB default
+    await client.query(`
+      UPDATE users 
+      SET storage_limit = 4294967296 
+      WHERE storage_limit IS NULL
     `);
 
     // Create sessions table for authentication
@@ -208,11 +222,12 @@ export async function createUser(
   hashedPassword: string,
   fileBucketID: string
 ) {
+  const defaultStorageLimit = 4 * 1024 * 1024 * 1024; // 4GB in bytes
   const result = await query(
-    `INSERT INTO users (username, email, hashed_password, file_bucket_id)
-     VALUES ($1, $2, $3, $4)
-     RETURNING uuid, username, email, file_bucket_id, created_at`,
-    [username, email, hashedPassword, fileBucketID]
+    `INSERT INTO users (username, email, hashed_password, file_bucket_id, storage_limit)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING uuid, username, email, file_bucket_id, storage_limit, created_at`,
+    [username, email, hashedPassword, fileBucketID, defaultStorageLimit]
   );
   return result.rows[0];
 }

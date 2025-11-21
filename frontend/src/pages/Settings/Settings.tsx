@@ -19,7 +19,9 @@ import {
     apiChangePassword, 
     apiUpdateUsername, 
     apiDeleteAccount,
-    apiUploadProfilePicture
+    apiUploadProfilePicture,
+    apiUpdateEmail,
+    apiUpdateStorageLimit
 } from '../../utils/api'
 import type { AuthUser } from '../../utils/api'
 import styles from './Settings.module.css'
@@ -46,6 +48,18 @@ const Settings = function () {
     const [nameLoading, setNameLoading] = useState(false)
     const [nameSuccess, setNameSuccess] = useState(false)
 
+    // Email change
+    const [newEmail, setNewEmail] = useState('')
+    const [emailErrors, setEmailErrors] = useState<{ email?: string }>({})
+    const [emailLoading, setEmailLoading] = useState(false)
+    const [emailSuccess, setEmailSuccess] = useState(false)
+
+    // Storage limit
+    const [storageLimitGB, setStorageLimitGB] = useState(4)
+    const [storageLimitLoading, setStorageLimitLoading] = useState(false)
+    const [storageLimitSuccess, setStorageLimitSuccess] = useState(false)
+    const [storageLimitError, setStorageLimitError] = useState<string | null>(null)
+
     // Delete account
     const [deleteConfirm, setDeleteConfirm] = useState('')
     const [deleteLoading, setDeleteLoading] = useState(false)
@@ -62,6 +76,7 @@ const Settings = function () {
             if (response.success && response.user) {
                 setUser(response.user)
                 setNewUsername(response.user.username)
+                setNewEmail(response.user.email)
             }
         }
         loadUser()
@@ -137,6 +152,67 @@ const Settings = function () {
             setNameErrors({ username: 'An error occurred. Please try again.' })
         } finally {
             setNameLoading(false)
+        }
+    }
+
+    const handleEmailChange = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setEmailErrors({})
+        setEmailSuccess(false)
+
+        if (!newEmail.trim()) {
+            setEmailErrors({ email: 'Email is required' })
+            return
+        }
+        if (!/\S+@\S+\.\S+/.test(newEmail.trim())) {
+            setEmailErrors({ email: 'Please enter a valid email' })
+            return
+        }
+        if (newEmail.trim() === user?.email) {
+            setEmailErrors({ email: 'Please enter a different email' })
+            return
+        }
+
+        setEmailLoading(true)
+        try {
+            const response = await apiUpdateEmail(newEmail.trim())
+            if (response.success && response.user) {
+                setUser(response.user)
+                setEmailSuccess(true)
+                setTimeout(() => setEmailSuccess(false), 3000)
+            } else {
+                setEmailErrors({ email: response.message || 'Failed to update email' })
+            }
+        } catch (error) {
+            setEmailErrors({ email: 'An error occurred. Please try again.' })
+        } finally {
+            setEmailLoading(false)
+        }
+    }
+
+    const handleStorageLimitChange = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setStorageLimitError(null)
+        setStorageLimitSuccess(false)
+
+        if (storageLimitGB < 4 || storageLimitGB > 20) {
+            setStorageLimitError('Storage limit must be between 4GB and 20GB')
+            return
+        }
+
+        setStorageLimitLoading(true)
+        try {
+            const response = await apiUpdateStorageLimit(storageLimitGB)
+            if (response.success) {
+                setStorageLimitSuccess(true)
+                setTimeout(() => setStorageLimitSuccess(false), 3000)
+            } else {
+                setStorageLimitError(response.message || 'Failed to update storage limit')
+            }
+        } catch (error) {
+            setStorageLimitError('An error occurred. Please try again.')
+        } finally {
+            setStorageLimitLoading(false)
         }
     }
 
@@ -392,6 +468,69 @@ const Settings = function () {
                                         </button>
                                         {nameSuccess && (
                                             <p className={styles.successMessage}>Username updated successfully!</p>
+                                        )}
+                                    </form>
+                                </div>
+
+                                <div className={styles.settingGroup}>
+                                    <label className={styles.settingLabel}>Change Email</label>
+                                    <p className={styles.settingDescription}>
+                                        Update your email address
+                                    </p>
+                                    <form onSubmit={handleEmailChange} className={styles.form}>
+                                        <Input
+                                            label="New Email"
+                                            type="email"
+                                            placeholder="Enter new email"
+                                            value={newEmail}
+                                            onChange={(e) => setNewEmail(e.target.value)}
+                                            error={emailErrors.email}
+                                            variant={theme === 'dark' ? 'dark' : undefined}
+                                        />
+                                        <button 
+                                            type="submit" 
+                                            className={styles.submitButton}
+                                            disabled={emailLoading}
+                                        >
+                                            {emailLoading ? 'Updating...' : 'Update Email'}
+                                        </button>
+                                        {emailSuccess && (
+                                            <p className={styles.successMessage}>Email updated successfully!</p>
+                                        )}
+                                    </form>
+                                </div>
+
+                                <div className={styles.settingGroup}>
+                                    <label className={styles.settingLabel}>Storage Limit</label>
+                                    <p className={styles.settingDescription}>
+                                        Set your storage limit (4GB - 20GB)
+                                    </p>
+                                    <form onSubmit={handleStorageLimitChange} className={styles.form}>
+                                        <div className={styles.storageLimitInput}>
+                                            <input
+                                                type="range"
+                                                min="4"
+                                                max="20"
+                                                value={storageLimitGB}
+                                                onChange={(e) => setStorageLimitGB(parseInt(e.target.value))}
+                                                className={styles.rangeInput}
+                                            />
+                                            <div className={styles.storageLimitValue}>
+                                                <span>{storageLimitGB} GB</span>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="submit" 
+                                            className={styles.submitButton}
+                                            disabled={storageLimitLoading}
+                                        >
+                                            {storageLimitLoading ? 'Updating...' : 'Update Storage Limit'}
+                                        </button>
+                                        {storageLimitError && (
+                                            <p className={styles.errorMessage}>{storageLimitError}</p>
+                                        )}
+                                        {storageLimitSuccess && (
+                                            <p className={styles.successMessage}>Storage limit updated successfully!</p>
                                         )}
                                     </form>
                                 </div>

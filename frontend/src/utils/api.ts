@@ -650,6 +650,74 @@ export async function apiUpdateUsername(username: string): Promise<{ success: bo
 }
 
 /**
+ * Update user email
+ */
+export async function apiUpdateEmail(email: string): Promise<{ success: boolean; user?: AuthUser; message?: string }> {
+  try {
+    logger.api('PUT /api/auth/update-email', { email })
+    const response = await fetch(`${API_BASE}/api/auth/update-email`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ email })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Email updated', data.user)
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+    } else {
+      logger.warn('Email update failed', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Update email error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Update user storage limit
+ */
+export async function apiUpdateStorageLimit(storageLimitGB: number): Promise<{ success: boolean; user?: AuthUser; message?: string }> {
+  try {
+    logger.api('PUT /api/auth/update-storage-limit', { storageLimitGB })
+    const response = await fetch(`${API_BASE}/api/auth/update-storage-limit`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ storageLimitGB })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Storage limit updated', data.user)
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+    } else {
+      logger.warn('Storage limit update failed', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Update storage limit error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
  * Delete user account
  */
 export async function apiDeleteAccount(): Promise<{ success: boolean; message?: string }> {

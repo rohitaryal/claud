@@ -316,14 +316,17 @@ fileRouter.get('/storage/usage', async (c) => {
 
     // Get storage usage
     const totalSize = await getUserStorageUsage(user.uuid)
+    
+    // Get user's storage limit (default to 4GB if not set)
+    const userStorageLimit = user.storage_limit || (4 * 1024 * 1024 * 1024)
 
     return c.json({
       success: true,
       storage: {
         used: totalSize,
-        max: MAX_FILE_SIZE,
+        max: userStorageLimit,
         usedFormatted: `${(totalSize / 1024 / 1024).toFixed(2)} MB`,
-        maxFormatted: `${(MAX_FILE_SIZE / 1024 / 1024).toFixed(2)} MB`
+        maxFormatted: `${(userStorageLimit / 1024 / 1024 / 1024).toFixed(2)} GB`
       }
     })
   } catch (error) {

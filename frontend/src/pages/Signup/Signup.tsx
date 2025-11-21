@@ -92,12 +92,14 @@ const Signup = function () {
             newErrors.confirmPassword = 'Passwords do not match'
         }
 
+        setErrors(newErrors)
+        
         if (!termsAccepted) {
-            newErrors.password = 'You must agree to the Terms & Conditions'
+            // Show alert if terms not accepted
+            alert('You must agree to the Terms & Conditions to create an account')
             return false
         }
 
-        setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 

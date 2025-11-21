@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { register, login, requestPasswordReset, getCurrentUser, changePassword, updateUsername, deleteAccount, updateProfilePicture } from '../services/auth'
+import { register, login, requestPasswordReset, getCurrentUser, changePassword, updateUsername, deleteAccount, updateProfilePicture, updateStorageLimit, updateEmail } from '../services/auth'
 import { deleteSession, getFromSession } from '../utils/db'
 import { saveFile } from '../services/file'
 import { v4 as uuidv4 } from 'uuid'
@@ -525,6 +525,142 @@ authRouter.post('/upload-profile-picture', async (c) => {
     }, 200)
   } catch (error) {
     console.error('Upload profile picture endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * PUT /auth/update-email
+ * Update user email
+ */
+authRouter.put('/update-email', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const body = await c.req.json()
+    const { email } = body
+
+    const result = await updateEmail(user.uuid, email)
+
+    if (!result.success) {
+      return c.json(result, 400)
+    }
+
+    return c.json(result, 200)
+  } catch (error) {
+    console.error('Update email endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * PUT /auth/update-storage-limit
+ * Update user storage limit
+ */
+authRouter.put('/update-storage-limit', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const body = await c.req.json()
+    const { storageLimitGB } = body
+
+    const result = await updateStorageLimit(user.uuid, storageLimitGB)
+
+    if (!result.success) {
+      return c.json(result, 400)
+    }
+
+    return c.json(result, 200)
+  } catch (error) {
+    console.error('Update storage limit endpoint error:', error)
     return c.json(
       {
         success: false,

@@ -45,7 +45,7 @@
 
 .heroSubtitle {
     font-size: 1.5rem;
-    color: var(--blue-dark);
+    color: var(--text-primary);
     font-weight: 500;
     opacity: 0.9;
 }
@@ -60,30 +60,26 @@
 }
 
 .descriptionCard {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--card-background);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     padding: 3rem;
     border-radius: var(--border-radius);
-    box-shadow: 0 8px 32px rgba(18, 51, 193, 0.1);
-    border: 1px solid rgba(18, 51, 193, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
 }
 
 .sectionTitle {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--blue-dark);
+    color: var(--text-primary);
     margin-bottom: 1.5rem;
-    background: var(--blue-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
 .description {
     font-size: 1.1rem;
     line-height: 1.8;
-    color: var(--black);
+    color: var(--text-primary);
     margin-bottom: 1.5rem;
     opacity: 0.9;
 }
@@ -98,7 +94,7 @@
 }
 
 .description em {
-    color: var(--blue-dark);
+    color: var(--text-secondary);
     font-style: italic;
 }
 
@@ -108,7 +104,7 @@
 
 .teamIntro {
     font-size: 1.1rem;
-    color: var(--black);
+    color: var(--text-primary);
     opacity: 0.8;
     margin-bottom: 2.5rem;
     max-width: 600px;
@@ -124,13 +120,13 @@
 }
 
 .developerCard {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--card-background);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     padding: 2rem;
     border-radius: var(--border-radius);
-    box-shadow: 0 4px 20px rgba(18, 51, 193, 0.1);
-    border: 1px solid rgba(18, 51, 193, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
     transition: all var(--transition-short);
     cursor: pointer;
 }
@@ -159,7 +155,7 @@
 .developerName {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--blue-dark);
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -175,13 +171,13 @@
 }
 
 .featureCard {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--card-background);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     padding: 2.5rem;
     border-radius: var(--border-radius);
-    box-shadow: 0 4px 20px rgba(18, 51, 193, 0.1);
-    border: 1px solid rgba(18, 51, 193, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
     transition: all var(--transition-short);
     text-align: center;
 }
@@ -204,39 +200,39 @@
 .featureTitle {
     font-size: 1.3rem;
     font-weight: 600;
-    color: var(--blue-dark);
+    color: var(--text-primary);
     margin-bottom: 0.75rem;
 }
 
 .featureDescription {
     font-size: 1rem;
     line-height: 1.6;
-    color: var(--black);
+    color: var(--text-primary);
     opacity: 0.8;
 }
 
 .ctaSection {
     text-align: center;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--card-background);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     padding: 4rem 2rem;
     border-radius: var(--border-radius);
-    box-shadow: 0 8px 32px rgba(18, 51, 193, 0.1);
-    border: 1px solid rgba(18, 51, 193, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
     margin-top: 2rem;
 }
 
 .ctaTitle {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--blue-dark);
+    color: var(--text-primary);
     margin-bottom: 1rem;
 }
 
 .ctaText {
     font-size: 1.2rem;
-    color: var(--black);
+    color: var(--text-primary);
     opacity: 0.8;
     margin-bottom: 2rem;
 }
@@ -268,7 +264,7 @@
 
 .ctaButtonSecondary {
     padding: 1rem 2.5rem;
-    background: white;
+    background: var(--card-background);
     color: var(--blue);
     border: 2px solid var(--blue);
     border-radius: 12px;

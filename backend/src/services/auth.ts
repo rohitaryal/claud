@@ -223,7 +223,7 @@ export async function requestPasswordReset(
 export async function getCurrentUser(sessionId: string) {
   try {
     const result = await query(
-      `SELECT u.uuid, u.username, u.email, u.profile_picture_url, u.created_at 
+      `SELECT u.uuid, u.username, u.email, u.profile_picture_url, u.storage_limit, u.created_at 
        FROM users u
        JOIN sessions s ON u.uuid = s.user_uuid
        WHERE s.session_id = $1 AND s.expires_at > NOW()`,
@@ -366,6 +366,127 @@ export async function updateUsername(
 /**
  * Delete user account and all associated data
  */
+/**
+ * Update user storage limit
+ */
+export async function updateStorageLimit(
+  userUuid: string,
+  storageLimitGB: number
+): Promise<AuthResponse | AuthError> {
+  try {
+    // Validate storage limit (4-20GB)
+    if (storageLimitGB < 4 || storageLimitGB > 20) {
+      return {
+        success: false,
+        message: 'Storage limit must be between 4GB and 20GB',
+        code: 'INVALID_STORAGE_LIMIT'
+      }
+    }
+
+    const storageLimitBytes = storageLimitGB * 1024 * 1024 * 1024
+
+    const result = await query(
+      `UPDATE users 
+       SET storage_limit = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE uuid = $2
+       RETURNING uuid, username, email, storage_limit`,
+      [storageLimitBytes, userUuid]
+    )
+
+    if (!result.rows[0]) {
+      return {
+        success: false,
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Storage limit updated successfully',
+      user: {
+        uuid: result.rows[0].uuid,
+        username: result.rows[0].username,
+        email: result.rows[0].email,
+        profile_picture_url: result.rows[0].profile_picture_url || null
+      }
+    }
+  } catch (error) {
+    console.error('Update storage limit error:', error)
+    return {
+      success: false,
+      message: 'Failed to update storage limit',
+      code: 'UPDATE_ERROR'
+    }
+  }
+}
+
+/**
+ * Update user email
+ */
+export async function updateEmail(
+  userUuid: string,
+  newEmail: string
+): Promise<AuthResponse | AuthError> {
+  try {
+    if (!newEmail || !newEmail.includes('@')) {
+      return {
+        success: false,
+        message: 'Invalid email address',
+        code: 'INVALID_EMAIL'
+      }
+    }
+
+    // Check if email is already taken
+    const existingResult = await query(
+      'SELECT uuid FROM users WHERE email = $1 AND uuid != $2',
+      [newEmail, userUuid]
+    )
+
+    if (existingResult.rowCount && existingResult.rowCount > 0) {
+      return {
+        success: false,
+        message: 'Email already in use',
+        code: 'EMAIL_EXISTS'
+      }
+    }
+
+    const result = await query(
+      `UPDATE users 
+       SET email = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE uuid = $2
+       RETURNING uuid, username, email, profile_picture_url`,
+      [newEmail, userUuid]
+    )
+
+    if (!result.rows[0]) {
+      return {
+        success: false,
+        message: 'User not found',
+        code: 'USER_NOT_FOUND'
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Email updated successfully',
+      user: {
+        uuid: result.rows[0].uuid,
+        username: result.rows[0].username,
+        email: result.rows[0].email,
+        profile_picture_url: result.rows[0].profile_picture_url || null
+      }
+    }
+  } catch (error) {
+    console.error('Update email error:', error)
+    return {
+      success: false,
+      message: 'Failed to update email',
+      code: 'UPDATE_ERROR'
+    }
+  }
+}
+
 /**
  * Update user profile picture
  */
