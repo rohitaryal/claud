@@ -195,6 +195,7 @@ export async function createPublicShare(params: PublicShareParams): Promise<{
 
     // Create public share
     const shareId = uuidv4()
+    console.log('[createPublicShare] Creating public share:', { shareId, fileId, sharedBy, shareToken, permission, isPublic: true })
     const result = await query(
       `INSERT INTO file_shares (share_id, file_id, shared_by, shared_with, share_token, permission, is_public, expires_at)
        VALUES ($1, $2, $3, NULL, $4, $5, TRUE, $6)
@@ -202,6 +203,7 @@ export async function createPublicShare(params: PublicShareParams): Promise<{
       [shareId, fileId, sharedBy, shareToken, permission, expiresAt || null]
     )
 
+    console.log('[createPublicShare] Insert result:', result.rows[0])
     return {
       success: true,
       share: result.rows[0],
@@ -368,6 +370,7 @@ export async function getFileShares(fileId: string, userUuid: string): Promise<a
  * Only returns files where is_public = TRUE and shared_with IS NULL
  */
 export async function listPublicFiles(limit: number = 50, offset: number = 0): Promise<any[]> {
+  console.log('[listPublicFiles] Fetching public files with limit:', limit, 'offset:', offset)
   const result = await query(
     `SELECT f.file_id, f.original_name, f.file_size, f.mime_type, f.created_at,
             s.share_id, s.share_token, s.permission, s.created_at as shared_at,
@@ -383,6 +386,7 @@ export async function listPublicFiles(limit: number = 50, offset: number = 0): P
      LIMIT $1 OFFSET $2`,
     [limit, offset]
   )
+  console.log('[listPublicFiles] Query returned', result.rows.length, 'rows')
   return result.rows
 }
 
