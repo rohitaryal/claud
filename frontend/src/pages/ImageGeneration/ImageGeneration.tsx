@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import styles from './ImageGeneration.module.css'
-import { IoSparklesOutline, IoDownloadOutline, IoSettingsOutline, IoCloseOutline } from 'react-icons/io5'
+import { IoSparklesOutline, IoDownloadOutline, IoSettingsOutline } from 'react-icons/io5'
 import { apiGetCurrentUser, apiGenerateImage, type AuthUser, type ImageGenerationSettings } from '../../utils/api'
 import { logger } from '../../utils/logger'
 
@@ -304,7 +304,7 @@ const ImageGeneration = function () {
                                                 {result.settings.generationModel === 'IMAGEN_3_5' ? 'Imagen 3.5' : 'Imagen 3'}
                                             </span>
                                             <span className={styles.resultSettingTag}>
-                                                {result.settings.aspectRatio.replace('IMAGE_ASPECT_RATIO_', '')}
+                                                {result.settings.aspectRatio?.replace('IMAGE_ASPECT_RATIO_', '') || 'SQUARE'}
                                             </span>
                                         </div>
                                     </div>
