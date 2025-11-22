@@ -6,7 +6,8 @@ import {
     IoShareSocialOutline, 
     IoTimeOutline, 
     IoStarOutline, 
-    IoTrashOutline 
+    IoTrashOutline,
+    IoSparklesOutline
 } from 'react-icons/io5'
 import { getUserStorageUsage } from '../../utils/api'
 import styles from './Sidebar.module.css'
@@ -45,6 +46,7 @@ const Sidebar = function ({ activeSection, onSectionChange }: SidebarProps) {
 
     const sections = [
         { id: 'my-files', label: 'My Files', icon: IoFolderOutline },
+        { id: 'image-generation', label: 'Image Generation', icon: IoSparklesOutline, badge: 'BETA' },
         { id: 'shared', label: 'Shared With Me', icon: IoShareSocialOutline },
         { id: 'recent', label: 'Recent', icon: IoTimeOutline },
         { id: 'starred', label: 'Starred', icon: IoStarOutline },
@@ -56,6 +58,9 @@ const Sidebar = function ({ activeSection, onSectionChange }: SidebarProps) {
         if (sectionId === 'my-files') {
             navigate('/files')
             onSectionChange('my-files')
+        } else if (sectionId === 'image-generation') {
+            navigate('/image-generation')
+            onSectionChange('image-generation')
         } else {
             onSectionChange(sectionId)
         }
@@ -66,7 +71,10 @@ const Sidebar = function ({ activeSection, onSectionChange }: SidebarProps) {
     }
 
     // Determine active section based on current route
-    const currentActiveSection = location.pathname === '/files' ? 'my-files' : activeSection
+    const currentActiveSection = 
+        location.pathname === '/files' ? 'my-files' : 
+        location.pathname === '/image-generation' ? 'image-generation' :
+        activeSection
 
     return (
         <aside className={styles.sidebar}>
@@ -86,6 +94,9 @@ const Sidebar = function ({ activeSection, onSectionChange }: SidebarProps) {
                         >
                             <Icon size={20} />
                             <span>{section.label}</span>
+                            {section.badge && (
+                                <span className={styles.navItemBadge}>{section.badge}</span>
+                            )}
                         </button>
                     )
                 })}

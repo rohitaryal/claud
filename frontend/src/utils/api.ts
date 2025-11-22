@@ -932,3 +932,101 @@ export async function apiUploadProfilePicture(
     }
   }
 }
+
+// Image Generation Types and Functions
+export interface ImageGenerationSettings {
+  prompt: string
+  seed?: number
+  numberOfImages?: number
+  aspectRatio?: string
+  generationModel?: string
+  googleCookie: string
+}
+
+export interface GeneratedImage {
+  imageId: string
+  url: string
+  mediaId: string
+}
+
+export interface ImageGenerationResponse {
+  success: boolean
+  message: string
+  images?: GeneratedImage[]
+  prompt?: string
+  settings?: ImageGenerationSettings
+  code?: string
+  error?: string
+}
+
+/**
+ * Generate images using ImageFX API
+ */
+export async function apiGenerateImage(
+  settings: ImageGenerationSettings
+): Promise<ImageGenerationResponse> {
+  try {
+    logger.api('POST /api/image/generate', { prompt: settings.prompt })
+    const response = await fetch(`${API_BASE}/api/image/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify(settings)
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      logger.success('Images generated successfully', { count: data.images?.length || 0 })
+    } else {
+      logger.error('Image generation failed', data)
+    }
+
+    return data
+  } catch (error) {
+    logger.error('Image generation error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.',
+      code: 'NETWORK_ERROR'
+    }
+  }
+}
+
+/**
+ * Validate Google cookie for ImageFX
+ */
+export async function apiValidateGoogleCookie(
+  googleCookie: string
+): Promise<{ success: boolean; message: string; valid?: boolean; code?: string }> {
+  try {
+    logger.api('POST /api/image/validate-cookie')
+    const response = await fetch(`${API_BASE}/api/image/validate-cookie`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ googleCookie })
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      logger.success('Cookie validation successful')
+    } else {
+      logger.error('Cookie validation failed', data)
+    }
+
+    return data
+  } catch (error) {
+    logger.error('Cookie validation error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.',
+      code: 'NETWORK_ERROR'
+    }
+  }
+}
