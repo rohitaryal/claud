@@ -7,6 +7,7 @@ import { logger } from './utils/logger'
 import authRouter from './routes/auth'
 import fileRouter from './routes/files'
 import shareRouter from './routes/share'
+import imageRouter from './routes/image'
 
 const app = new Hono()
 
@@ -53,6 +54,9 @@ app.route('/api/files', fileRouter)
 // Share routes
 app.route('/api', shareRouter)
 
+// Image generation routes
+app.route('/api/image', imageRouter)
+
 // Root endpoint
 app.get('/', (c) => {
   return c.text('Claud API Server')
@@ -63,7 +67,8 @@ logger.success(`Server is running on port ${port}`)
 logger.info('API endpoints registered', {
   auth: '/api/auth',
   files: '/api/files',
-  shares: '/api/share'
+  shares: '/api/share',
+  image: '/api/image'
 })
 
 export default {

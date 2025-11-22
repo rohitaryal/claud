@@ -9,6 +9,7 @@ import MyFiles from './pages/MyFiles/MyFiles'
 import AboutUs from './pages/AboutUs/AboutUs'
 import SearchResults from './pages/SearchResults/SearchResults'
 import Settings from './pages/Settings/Settings'
+import ImageGeneration from './pages/ImageGeneration/ImageGeneration'
 
 const App = function () {
     return (
@@ -52,6 +53,14 @@ const App = function () {
                     element={
                         <ProtectedRoute requireAuth={true}>
                             <MyFiles />
+                        </ProtectedRoute>
+                    } 
+                />
+                <Route 
+                    path="/image-generation" 
+                    element={
+                        <ProtectedRoute requireAuth={true}>
+                            <ImageGeneration />
                         </ProtectedRoute>
                     } 
                 />
