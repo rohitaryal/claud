@@ -126,26 +126,32 @@ imageRouter.post('/generate', async (c) => {
         // Read the file as buffer
         const imageBuffer = fs.readFileSync(tempPath)
         
-        // Create a File-like object for saveFile
-        const imageId = uuidv4()
-        const fileName = `generated-${Date.now()}-${imageId.slice(0, 8)}.png`
+        // Create a File-like object compatible with saveFile
+        const fileName = `generated-${Date.now()}-${uuidv4().slice(0, 8)}.png`
+        
+        // Create a File object from the buffer
+        const blob = new Blob([imageBuffer], { type: 'image/png' })
+        const imageFile = new File([blob], fileName, { type: 'image/png' })
         
         // Save to our file storage system
-        await saveFile(
+        const saveResult = await saveFile(
           sessionData.user_uuid,
-          imageBuffer,
-          fileName,
-          'image/png'
+          sessionData.file_bucket_id,
+          imageFile
         )
 
         // Clean up temp file
         fs.unlinkSync(tempPath)
 
-        savedImages.push({
-          imageId,
-          url: `/api/files/${imageId}`,
-          mediaId: image.mediaId || ''
-        })
+        if (saveResult.success && saveResult.file) {
+          savedImages.push({
+            imageId: saveResult.file.file_id,
+            url: `/api/files/${saveResult.file.file_id}`,
+            mediaId: image.mediaId || ''
+          })
+        } else {
+          logger.error('Failed to save generated image', saveResult.message)
+        }
       }
 
       // Clean up temp directory if empty

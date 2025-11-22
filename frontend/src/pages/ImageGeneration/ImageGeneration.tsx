@@ -4,7 +4,7 @@ import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import styles from './ImageGeneration.module.css'
 import { IoSparklesOutline, IoDownloadOutline, IoSettingsOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiGenerateImage, type AuthUser, type ImageGenerationSettings } from '../../utils/api'
+import { apiGetCurrentUser, apiGenerateImage, type ImageGenerationSettings } from '../../utils/api'
 import { logger } from '../../utils/logger'
 
 interface GeneratedImage {
@@ -21,7 +21,6 @@ interface GenerationResult {
 
 const ImageGeneration = function () {
     const navigate = useNavigate()
-    const [, setUser] = useState<AuthUser | null>(null)
     const [prompt, setPrompt] = useState('')
     const [googleCookie, setGoogleCookie] = useState('')
     const [isGenerating, setIsGenerating] = useState(false)
@@ -42,7 +41,6 @@ const ImageGeneration = function () {
                 navigate('/login')
                 return
             }
-            setUser(response.user)
         }
         checkAuth()
 
