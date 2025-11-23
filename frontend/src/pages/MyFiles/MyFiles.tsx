@@ -287,10 +287,8 @@ const MyFiles = function () {
             // Use appropriate URL based on section
             if (activeSection === 'public-pool' && file.share_token) {
                 url = `${API_BASE}/api/share/${file.share_token}/download`
-            } else if (activeSection === 'shared' && file.share_id) {
-                // For shared files, we use the regular file download endpoint as the user has permission
-                url = `${API_BASE}/api/files/${file.file_id}/download`
             } else {
+                // For shared files and owned files, use the regular endpoint
                 url = `${API_BASE}/api/files/${file.file_id}/download`
             }
             
@@ -520,7 +518,9 @@ const MyFiles = function () {
 
     const handleAddEmailChip = () => {
         const email = emailInput.trim()
-        if (email && email.includes('@')) {
+        // Basic email validation - checks for @ and at least one character on each side
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (email && emailRegex.test(email)) {
             if (!emailChips.includes(email)) {
                 setEmailChips([...emailChips, email])
                 setEmailInput('')
@@ -540,7 +540,7 @@ const MyFiles = function () {
             handleAddEmailChip()
         } else if (e.key === 'Backspace' && emailInput === '' && emailChips.length > 0) {
             // Remove the last chip if backspace is pressed with empty input
-            setEmailChips(emailChips.slice(0, -1))
+            setEmailChips(prev => prev.slice(0, -1))
         }
     }
 
@@ -682,13 +682,13 @@ const MyFiles = function () {
                     const API_BASE = getApiBase()
                     let url: string
                     
-                    // Use appropriate URL based on section
-                    if (activeSection === 'public-pool' && file.share_token) {
+                    // Use appropriate URL based on file properties
+                    // Public pool files have share_token, shared files have share_id
+                    if (file.share_token) {
+                        // Public pool file
                         url = `${API_BASE}/api/share/${file.share_token}/download`
-                    } else if (activeSection === 'shared' && file.share_id) {
-                        // For shared files, use regular endpoint as user has permission
-                        url = `${API_BASE}/api/files/${file.file_id}/download`
                     } else {
+                        // Owned or shared files (both use regular endpoint)
                         url = `${API_BASE}/api/files/${file.file_id}/download`
                     }
                     
@@ -704,7 +704,7 @@ const MyFiles = function () {
         if (files.length > 0) {
             loadThumbnails()
         }
-    }, [files, activeSection])
+    }, [files])
 
     // Filter files based on active section
     const filteredFiles = files.filter((file) => {
@@ -1378,7 +1378,6 @@ const MyFiles = function () {
                             value={emailInput}
                             onChange={(e) => setEmailInput(e.target.value)}
                             onKeyDown={handleEmailInputKeyDown}
-                            onBlur={handleAddEmailChip}
                             placeholder={emailChips.length === 0 ? "user@example.com" : ""}
                         />
                     </div>
