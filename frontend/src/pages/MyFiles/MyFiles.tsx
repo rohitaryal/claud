@@ -20,6 +20,9 @@ interface FileItem {
     is_starred?: boolean
     share_token?: string
     share_id?: string
+    shared_by_username?: string
+    permission?: string
+    is_shared?: boolean
 }
 
 // Constants
@@ -42,6 +45,8 @@ const MyFiles = function () {
     const [showShareDialog, setShowShareDialog] = useState(false)
     const [shareFileId, setShareFileId] = useState<string | null>(null)
     const [shareEmails, setShareEmails] = useState('')
+    const [emailChips, setEmailChips] = useState<string[]>([])
+    const [emailInput, setEmailInput] = useState('')
     const [showRenameDialog, setShowRenameDialog] = useState(false)
     const [renameFileId, setRenameFileId] = useState<string | null>(null)
     const [renameFileName, setRenameFileName] = useState('')
@@ -170,7 +175,25 @@ const MyFiles = function () {
 
     const handleDownloadFile = async (file: FileItem) => {
         try {
-            await apiDownloadFile(file.file_id, file.original_name)
+            // For public pool files, download via share token
+            if (activeSection === 'public-pool' && file.share_token) {
+                const API_BASE = getApiBase()
+                const url = `${API_BASE}/api/share/${file.share_token}/download`
+                const response = await fetch(url, { credentials: 'include' })
+                if (!response.ok) throw new Error('Download failed')
+                const blob = await response.blob()
+                const downloadUrl = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = downloadUrl
+                a.download = file.original_name
+                document.body.appendChild(a)
+                a.click()
+                window.URL.revokeObjectURL(downloadUrl)
+                document.body.removeChild(a)
+            } else {
+                // For owned files and shared with me, use normal download
+                await apiDownloadFile(file.file_id, file.original_name)
+            }
             logger.success('File downloaded', file.original_name)
         } catch (error) {
             logger.error('Download error', error)
@@ -188,8 +211,15 @@ const MyFiles = function () {
             setPreviewIndex(index)
         }
         
-        // For public pool files, download via share token
+        // For public pool files, handle via share token
         if (activeSection === 'public-pool' && file.share_token) {
+            // If file can be previewed, open preview instead of downloading
+            if (canPreviewFile(file.mime_type, file.original_name)) {
+                await handlePreviewFile(file)
+                return
+            }
+            
+            // Otherwise download it
             const API_BASE = getApiBase()
             const url = `${API_BASE}/api/share/${file.share_token}/download`
             try {
@@ -209,6 +239,19 @@ const MyFiles = function () {
                 logger.error('Download error', error)
                 alert('Failed to download file. Please try again.')
             }
+            return
+        }
+        
+        // For shared with me files, handle via share_id
+        if (activeSection === 'shared' && file.share_id) {
+            // If file can be previewed, open preview
+            if (canPreviewFile(file.mime_type, file.original_name)) {
+                await handlePreviewFile(file)
+                return
+            }
+            
+            // Otherwise download it
+            await handleDownloadFile(file)
             return
         }
         
@@ -240,7 +283,17 @@ const MyFiles = function () {
 
         try {
             const API_BASE = getApiBase()
-            const url = `${API_BASE}/api/files/${file.file_id}/download`
+            let url: string
+            
+            // Use appropriate URL based on section
+            if (activeSection === 'public-pool' && file.share_token) {
+                url = `${API_BASE}/api/share/${file.share_token}/download`
+            } else if (activeSection === 'shared' && file.share_id) {
+                // For shared files, we use the regular file download endpoint as the user has permission
+                url = `${API_BASE}/api/files/${file.file_id}/download`
+            } else {
+                url = `${API_BASE}/api/files/${file.file_id}/download`
+            }
             
             // For images, videos, and PDFs, we can create a preview URL
             if (file.mime_type?.startsWith('image/')) {
@@ -383,10 +436,12 @@ const MyFiles = function () {
                     }).catch(() => {
                         alert(`File shared publicly! Share link: ${shareUrl}`)
                     })
+                    // Reload files to update share status
+                    await loadFiles()
                 } else {
                     const errorMsg = response.message || 'Unknown error'
                     if (errorMsg.includes('already shared')) {
-                        alert('This file is already shared publicly or privately. You cannot share it again.')
+                        alert('This file is already shared publicly or privately.')
                     } else {
                         alert(`Failed to share file: ${errorMsg}`)
                     }
@@ -402,10 +457,12 @@ const MyFiles = function () {
                     }).catch(() => {
                         alert(`Share link: ${shareUrl}`)
                     })
+                    // Reload files to update share status
+                    await loadFiles()
                 } else {
                     const errorMsg = response.message || 'Unknown error'
                     if (errorMsg.includes('already shared')) {
-                        alert('This file is already shared publicly or privately. You cannot share it again.')
+                        alert('This file is already shared publicly or privately.')
                     } else {
                         alert(`Failed to create share link: ${errorMsg}`)
                     }
@@ -456,25 +513,46 @@ const MyFiles = function () {
 
     const handleSharePrivately = (fileId: string) => {
         setShareFileId(fileId)
-        setShareEmails('')
+        setEmailChips([])
+        setEmailInput('')
         setShowShareDialog(true)
         setMenuOpenFileId(null)
     }
 
+    const handleAddEmailChip = () => {
+        const email = emailInput.trim()
+        if (email && email.includes('@')) {
+            if (!emailChips.includes(email)) {
+                setEmailChips([...emailChips, email])
+                setEmailInput('')
+            }
+        } else if (email) {
+            alert('Please enter a valid email address.')
+        }
+    }
+
+    const handleRemoveEmailChip = (emailToRemove: string) => {
+        setEmailChips(emailChips.filter(e => e !== emailToRemove))
+    }
+
+    const handleEmailInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            handleAddEmailChip()
+        } else if (e.key === 'Backspace' && emailInput === '' && emailChips.length > 0) {
+            // Remove the last chip if backspace is pressed with empty input
+            setEmailChips(emailChips.slice(0, -1))
+        }
+    }
+
     const handleSharePrivatelySubmit = async () => {
-        if (!shareFileId || !shareEmails.trim()) {
+        if (!shareFileId || emailChips.length === 0) {
             alert('Please enter at least one email address.')
             return
         }
 
-        const emails = shareEmails.split(',').map(e => e.trim()).filter(e => e.length > 0)
-        if (emails.length === 0) {
-            alert('Please enter at least one valid email address.')
-            return
-        }
-
         try {
-            const response = await apiShareFilePrivately(shareFileId, emails)
+            const response = await apiShareFilePrivately(shareFileId, emailChips)
             if (response.success) {
                 const message = response.failedEmails && response.failedEmails.length > 0
                     ? `File shared successfully with ${response.shares?.length || 0} user(s).\nFailed to share with: ${response.failedEmails.join(', ')}`
@@ -482,7 +560,8 @@ const MyFiles = function () {
                 alert(message)
                 setShowShareDialog(false)
                 setShareFileId(null)
-                setShareEmails('')
+                setEmailChips([])
+                setEmailInput('')
             } else {
                 alert(`Failed to share file: ${response.message}`)
             }
@@ -602,7 +681,18 @@ const MyFiles = function () {
             for (const file of imageFiles) {
                 try {
                     const API_BASE = getApiBase()
-                    const url = `${API_BASE}/api/files/${file.file_id}/download`
+                    let url: string
+                    
+                    // Use appropriate URL based on section
+                    if (activeSection === 'public-pool' && file.share_token) {
+                        url = `${API_BASE}/api/share/${file.share_token}/download`
+                    } else if (activeSection === 'shared' && file.share_id) {
+                        // For shared files, use regular endpoint as user has permission
+                        url = `${API_BASE}/api/files/${file.file_id}/download`
+                    } else {
+                        url = `${API_BASE}/api/files/${file.file_id}/download`
+                    }
+                    
                     thumbnails[file.file_id] = url
                 } catch {
                     console.error('Failed to load thumbnail for', file.file_id)
@@ -615,7 +705,7 @@ const MyFiles = function () {
         if (files.length > 0) {
             loadThumbnails()
         }
-    }, [files])
+    }, [files, activeSection])
 
     // Filter files based on active section
     const filteredFiles = files.filter((file) => {
@@ -779,7 +869,7 @@ const MyFiles = function () {
                                                 return (
                                                     <div 
                                                         key={fileItem.file_id} 
-                                                        className={`${styles.fileItem} ${isSelected ? styles.fileItemSelected : ''}`}
+                                                        className={`${styles.fileItem} ${activeSection === 'public-pool' ? styles.fileItemPublicPool : ''} ${isSelected ? styles.fileItemSelected : ''}`}
                                                         onClick={() => handleFileClick(fileItem)}
                                                         style={{ cursor: 'pointer' }}
                                                     >
@@ -803,6 +893,9 @@ const MyFiles = function () {
                                                             )}
                                                         </div>
                                                         <span className={styles.fileName}>{fileItem.original_name}</span>
+                                                        {activeSection === 'public-pool' && fileItem.shared_by_username && (
+                                                            <span className={styles.fileOwner}>{fileItem.shared_by_username}</span>
+                                                        )}
                                                         <span className={styles.fileSize}>{formatFileSize(fileItem.file_size)}</span>
                                                         <span className={styles.fileDate}>{formatDate(fileItem.created_at)}</span>
                                                         <div className={styles.fileActions} onClick={(e) => e.stopPropagation()}>
@@ -937,13 +1030,26 @@ const MyFiles = function () {
                                             : getFileIcon(file.original_name, file.mime_type)
                                         const isImage = !file.isFolder && file.mime_type?.startsWith('image/')
                                         const thumbnail = imageThumbnails[file.file_id]
+                                        const isSelected = selectedFiles.has(file.file_id)
                                         return (
                                             <div 
                                                 key={file.file_id} 
-                                                className={styles.fileCard}
+                                                className={`${styles.fileCard} ${isSelected ? styles.fileCardSelected : ''}`}
                                                 onClick={() => !file.isFolder && handleFileClick(file)}
                                                 style={{ cursor: file.isFolder ? 'default' : 'pointer' }}
                                             >
+                                                {(activeSection === 'my-files' || activeSection === 'recent' || activeSection === 'starred') && !file.isFolder && (
+                                                    <button
+                                                        className={styles.gridCheckboxButton}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleToggleSelectFile(file.file_id)
+                                                        }}
+                                                        title={isSelected ? "Deselect" : "Select"}
+                                                    >
+                                                        {isSelected ? <IoCheckboxOutline size={20} /> : <IoSquareOutline size={20} />}
+                                                    </button>
+                                                )}
                                                 <div className={styles.fileIcon}>
                                                     {isImage && thumbnail ? (
                                                         <img src={thumbnail} alt={file.original_name} className={styles.fileThumbnail} />
@@ -953,59 +1059,120 @@ const MyFiles = function () {
                                                 </div>
                                                 <span className={styles.fileCardName}>{file.original_name}</span>
                                                 <div className={styles.fileCardActions} onClick={(e) => e.stopPropagation()}>
-                                                    {!file.isFolder && activeSection !== 'trash' && activeSection !== 'shared' && activeSection !== 'public-pool' && (
-                                                        <button 
-                                                            className={styles.actionButton} 
-                                                            title={file.is_starred ? "Unstar" : "Star"} 
-                                                            onClick={(e) => handleToggleStar(file.file_id, e)}
-                                                        >
-                                                            {file.is_starred ? <IoStar size={18} color="#ffc107" /> : <IoStarOutline size={18} />}
-                                                        </button>
-                                                    )}
-                                                    {!file.isFolder && (
-                                                        <button className={styles.actionButton} title="Download" onClick={() => handleDownloadFile(file)}>
-                                                            <IoDownloadOutline size={18} />
-                                                        </button>
-                                                    )}
                                                     {activeSection === 'trash' ? (
-                                                        <>
+                                                        <div className={styles.menuContainer}>
                                                             <button 
                                                                 className={styles.actionButton} 
-                                                                title="Restore" 
-                                                                onClick={(e) => {
-                                                                    e.preventDefault()
-                                                                    e.stopPropagation()
-                                                                    handleRestoreFile(file.file_id, file.original_name)
-                                                                }}
+                                                                title="More options"
+                                                                onClick={() => setMenuOpenFileId(menuOpenFileId === file.file_id ? null : file.file_id)}
                                                             >
-                                                                <IoRefreshOutline size={18} />
+                                                                <IoEllipsisVerticalOutline size={18} />
                                                             </button>
-                                                            <button 
-                                                                className={styles.actionButton} 
-                                                                title="Permanently Delete" 
-                                                                onClick={(e) => {
-                                                                    e.preventDefault()
-                                                                    e.stopPropagation()
-                                                                    handlePermanentDelete(file.file_id, file.original_name)
-                                                                }}
-                                                            >
-                                                                <IoTrashOutline size={18} />
-                                                            </button>
-                                                        </>
+                                                            {menuOpenFileId === file.file_id && (
+                                                                <div 
+                                                                    className={styles.menuDropdown}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                    }}
+                                                                >
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleRestoreFile(file.file_id, file.original_name)
+                                                                        }}
+                                                                    >
+                                                                        <IoRefreshOutline size={16} />
+                                                                        Restore
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handlePermanentDelete(file.file_id, file.original_name)
+                                                                        }}
+                                                                    >
+                                                                        <IoTrashOutline size={16} />
+                                                                        Permanently Delete
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     ) : activeSection === 'shared' && !file.isFolder ? (
-                                                        <button 
-                                                            className={styles.actionButton} 
-                                                            title="Remove from Shared With Me" 
-                                                            onClick={(e) => {
-                                                                e.preventDefault()
-                                                                e.stopPropagation()
-                                                                if (file.share_id) {
-                                                                    handleRemoveFromSharedWithMe(file.share_id, file.original_name)
-                                                                }
-                                                            }}
-                                                        >
-                                                            <IoCloseOutline size={18} />
-                                                        </button>
+                                                        <div className={styles.menuContainer}>
+                                                            <button 
+                                                                className={styles.actionButton} 
+                                                                title="More options"
+                                                                onClick={() => setMenuOpenFileId(menuOpenFileId === file.file_id ? null : file.file_id)}
+                                                            >
+                                                                <IoEllipsisVerticalOutline size={18} />
+                                                            </button>
+                                                            {menuOpenFileId === file.file_id && (
+                                                                <div 
+                                                                    className={styles.menuDropdown}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                    }}
+                                                                >
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleDownloadFile(file)
+                                                                        }}
+                                                                    >
+                                                                        <IoDownloadOutline size={16} />
+                                                                        Download
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            if (file.share_id) {
+                                                                                handleRemoveFromSharedWithMe(file.share_id, file.original_name)
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <IoCloseOutline size={16} />
+                                                                        Remove from Shared
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : activeSection === 'public-pool' && !file.isFolder ? (
+                                                        <div className={styles.menuContainer}>
+                                                            <button 
+                                                                className={styles.actionButton} 
+                                                                title="More options"
+                                                                onClick={() => setMenuOpenFileId(menuOpenFileId === file.file_id ? null : file.file_id)}
+                                                            >
+                                                                <IoEllipsisVerticalOutline size={18} />
+                                                            </button>
+                                                            {menuOpenFileId === file.file_id && (
+                                                                <div 
+                                                                    className={styles.menuDropdown}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                    }}
+                                                                >
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleDownloadFile(file)
+                                                                        }}
+                                                                    >
+                                                                        <IoDownloadOutline size={16} />
+                                                                        Download
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     ) : !file.isFolder && (
                                                         <div className={styles.menuContainer}>
                                                             <button 
@@ -1027,6 +1194,39 @@ const MyFiles = function () {
                                                                             e.preventDefault()
                                                                             e.stopPropagation()
                                                                             setMenuOpenFileId(null)
+                                                                            handleToggleStar(file.file_id, e)
+                                                                        }}
+                                                                    >
+                                                                        {file.is_starred ? <IoStar size={16} color="#ffc107" /> : <IoStarOutline size={16} />}
+                                                                        {file.is_starred ? "Unstar" : "Star"}
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleDownloadFile(file)
+                                                                        }}
+                                                                    >
+                                                                        <IoDownloadOutline size={16} />
+                                                                        Download
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleRenameFile(file.file_id, file.original_name)
+                                                                        }}
+                                                                    >
+                                                                        <IoPencilOutline size={16} />
+                                                                        Rename
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
                                                                             handleShareFile(file.file_id, 'public')
                                                                         }}
                                                                     >
@@ -1043,17 +1243,6 @@ const MyFiles = function () {
                                                                     >
                                                                         <IoShareSocialOutline size={16} />
                                                                         Share Privately
-                                                                    </button>
-                                                                    <button 
-                                                                        onClick={(e) => {
-                                                                            e.preventDefault()
-                                                                            e.stopPropagation()
-                                                                            setMenuOpenFileId(null)
-                                                                            handleRenameFile(file.file_id, file.original_name)
-                                                                        }}
-                                                                    >
-                                                                        <IoPencilOutline size={16} />
-                                                                        Rename
                                                                     </button>
                                                                     <button 
                                                                         onClick={(e) => {
@@ -1164,19 +1353,36 @@ const MyFiles = function () {
                 onClose={() => {
                     setShowShareDialog(false)
                     setShareFileId(null)
-                    setShareEmails('')
+                    setEmailChips([])
+                    setEmailInput('')
                 }}
                 title="Share File Privately"
             >
                 <div className={styles.dialogContent}>
-                    <p>Enter email addresses separated by commas:</p>
-                    <textarea
-                        className={styles.emailTextarea}
-                        value={shareEmails}
-                        onChange={(e) => setShareEmails(e.target.value)}
-                        placeholder="user1@example.com, user2@example.com"
-                        rows={4}
-                    />
+                    <p>Enter email addresses (press Enter after each email):</p>
+                    <div className={styles.emailChipsContainer}>
+                        {emailChips.map((email) => (
+                            <div key={email} className={styles.emailChip}>
+                                <span>{email}</span>
+                                <button
+                                    className={styles.chipRemoveButton}
+                                    onClick={() => handleRemoveEmailChip(email)}
+                                    type="button"
+                                >
+                                    <IoCloseOutline size={16} />
+                                </button>
+                            </div>
+                        ))}
+                        <input
+                            type="email"
+                            className={styles.emailChipInput}
+                            value={emailInput}
+                            onChange={(e) => setEmailInput(e.target.value)}
+                            onKeyDown={handleEmailInputKeyDown}
+                            onBlur={handleAddEmailChip}
+                            placeholder={emailChips.length === 0 ? "user@example.com" : ""}
+                        />
+                    </div>
                     <div className={styles.dialogActions}>
                         <button
                             className={styles.primaryButton}
@@ -1189,7 +1395,8 @@ const MyFiles = function () {
                             onClick={() => {
                                 setShowShareDialog(false)
                                 setShareFileId(null)
-                                setShareEmails('')
+                                setEmailChips([])
+                                setEmailInput('')
                             }}
                         >
                             Cancel
