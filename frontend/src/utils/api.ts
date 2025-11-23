@@ -5,9 +5,10 @@ import { logger } from './logger'
 // Get the API base URL dynamically based on window.location.hostname
 // This allows the app to work on localhost, 0.0.0.0, or any other hostname
 export const getApiBase = (): string => {
-  // If VITE_API_URL is explicitly set, use it
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
+  // If VITE_API_URL is explicitly set and is a non-empty string, use it
+  const apiUrl = import.meta.env.VITE_API_URL
+  if (apiUrl && typeof apiUrl === 'string' && apiUrl.trim() !== '') {
+    return apiUrl
   }
   
   // Otherwise, use the current hostname with port 3000
