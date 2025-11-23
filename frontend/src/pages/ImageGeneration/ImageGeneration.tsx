@@ -31,7 +31,6 @@ const ImageGeneration = function () {
     const [input, setInput] = useState('')
     const [messages, setMessages] = useState<Message[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
-    const [streamingText, setStreamingText] = useState('')
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
     
@@ -56,7 +55,7 @@ const ImageGeneration = function () {
     useEffect(() => {
         // Auto-scroll to bottom when new messages arrive
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [messages, streamingText])
+    }, [messages])
 
     useEffect(() => {
         // Focus input on mount
@@ -141,12 +140,11 @@ const ImageGeneration = function () {
         }
 
         setIsGenerating(true)
-        setStreamingText('')
 
         try {
-            // Use Gemini API with streaming
+            // Use Gemini API without streaming
             const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:streamGenerateContent?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
                 {
                     method: 'POST',
                     headers: {
@@ -167,95 +165,14 @@ const ImageGeneration = function () {
                 throw new Error(errorData.error?.message || `HTTP ${response.status}: Failed to generate text`)
             }
 
-            const reader = response.body?.getReader()
-            const decoder = new TextDecoder()
+            const data = await response.json()
+            
+            // Extract text from the response
             let fullText = ''
-            let buffer = ''
-
-            if (reader) {
-                while (true) {
-                    const { done, value } = await reader.read()
-                    if (done) break
-
-                    buffer += decoder.decode(value, { stream: true })
-                    
-                    // Try to parse complete JSON objects from the buffer
-                    // The response might come as multiple JSON objects separated by newlines
-                    const lines = buffer.split('\n')
-                    buffer = lines.pop() || ''
-
-                    for (const line of lines) {
-                        const trimmed = line.trim()
-                        if (!trimmed) continue
-                        
-                        // Handle both "data: {...}" format and direct JSON
-                        let jsonStr = trimmed
-                        if (trimmed.startsWith('data: ')) {
-                            jsonStr = trimmed.slice(6).trim()
-                        }
-                        
-                        if (jsonStr === '[DONE]' || jsonStr === '') continue
-                        
-                        try {
-                            let data = JSON.parse(jsonStr)
-                            
-                            // Handle array of responses (the actual format from Gemini)
-                            if (Array.isArray(data)) {
-                                for (const item of data) {
-                                    if (item.candidates?.[0]?.content?.parts) {
-                                        for (const part of item.candidates[0].content.parts) {
-                                            if (part.text) {
-                                                fullText += part.text
-                                                setStreamingText(fullText)
-                                            }
-                                        }
-                                    }
-                                }
-                            } 
-                            // Handle single response object
-                            else if (data.candidates?.[0]?.content?.parts) {
-                                for (const part of data.candidates[0].content.parts) {
-                                    if (part.text) {
-                                        fullText += part.text
-                                        setStreamingText(fullText)
-                                    }
-                                }
-                            }
-                        } catch (e) {
-                            // Skip invalid JSON - might be partial data
-                            // Try to see if it's a partial array
-                            try {
-                                // Sometimes the response might be a partial JSON array
-                                if (jsonStr.startsWith('[') && !jsonStr.endsWith(']')) {
-                                    // Partial array, wait for more data
-                                    continue
-                                }
-                            } catch {
-                                // Ignore
-                            }
-                        }
-                    }
-                }
-                
-                // Process any remaining buffer
-                if (buffer.trim()) {
-                    try {
-                        const trimmed = buffer.trim()
-                        let jsonStr = trimmed
-                        if (trimmed.startsWith('data: ')) {
-                            jsonStr = trimmed.slice(6).trim()
-                        }
-                        const data = JSON.parse(jsonStr)
-                        if (data.candidates?.[0]?.content?.parts) {
-                            for (const part of data.candidates[0].content.parts) {
-                                if (part.text) {
-                                    fullText += part.text
-                                    setStreamingText(fullText)
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        // Ignore parsing errors for remaining buffer
+            if (data.candidates?.[0]?.content?.parts) {
+                for (const part of data.candidates[0].content.parts) {
+                    if (part.text) {
+                        fullText += part.text
                     }
                 }
             }
@@ -269,8 +186,9 @@ const ImageGeneration = function () {
                     type: 'text',
                     timestamp: new Date()
                 }])
+            } else {
+                throw new Error('Failed to generate text: No content received from AI service')
             }
-            setStreamingText('')
         } catch (error) {
             logger.error('Error generating text', error)
             setMessages(prev => [...prev, {
@@ -280,7 +198,6 @@ const ImageGeneration = function () {
                 type: 'text',
                 timestamp: new Date()
             }])
-            setStreamingText('')
         } finally {
             setIsGenerating(false)
         }
@@ -442,15 +359,7 @@ const ImageGeneration = function () {
                             </div>
                         ))}
 
-                        {streamingText && (
-                            <div className={`${styles.message} ${styles.messageAssistant}`}>
-                                <div className={styles.messageContent}>
-                                    <p className={styles.messageText}>{streamingText}</p>
-                                </div>
-                            </div>
-                        )}
-
-                        {isGenerating && !streamingText && (
+                        {isGenerating && (
                             <div className={`${styles.message} ${styles.messageAssistant}`}>
                                 <div className={styles.messageContent}>
                                     <div className={styles.typingIndicator}>
