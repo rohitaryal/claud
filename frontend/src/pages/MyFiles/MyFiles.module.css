@@ -292,7 +292,7 @@
 }
 
 .fileCardSelected {
-    background-color: rgba(18, 51, 193, 0.08) !important;
+    background-color: var(--blue-selection) !important;
     box-shadow: inset 0 0 0 2px var(--blue);
 }
 
@@ -510,7 +510,7 @@
 }
 
 .fileItemSelected {
-    background-color: rgba(18, 51, 193, 0.08) !important;
+    background-color: var(--blue-selection) !important;
     box-shadow: inset 0 0 0 2px var(--blue);
     border-radius: 8px;
 }

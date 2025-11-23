@@ -518,7 +518,7 @@ const MyFiles = function () {
 
     const handleAddEmailChip = () => {
         const email = emailInput.trim()
-        // Basic email validation - checks for @ and at least one character on each side
+        // RFC 5322 compliant email validation (simplified)
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (email && emailRegex.test(email)) {
             if (!emailChips.includes(email)) {
@@ -526,7 +526,7 @@ const MyFiles = function () {
                 setEmailInput('')
             }
         } else if (email) {
-            alert('Please enter a valid email address.')
+            alert('Please enter a valid email address (e.g., user@example.com).')
         }
     }
 

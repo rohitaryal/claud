@@ -8,6 +8,7 @@
     --blue: #1233c1;
     --blue-dark: #0b102b;
     --blue-light: #e1effd;
+    --blue-selection: rgba(18, 51, 193, 0.08);
 
     --blue-gradient: linear-gradient(135deg, var(--blue), #1cd9f1);
 
