@@ -2,6 +2,40 @@ import bcrypt from 'bcryptjs'
 import { v4 as uuidv4 } from 'uuid'
 import { createUser, createSession, query, getUserDetails } from '../utils/db'
 
+/**
+ * Get user by email
+ */
+export async function getUserByEmail(email: string): Promise<{
+  success: boolean
+  user?: { uuid: string; username: string; email: string }
+  message?: string
+}> {
+  try {
+    const result = await query(
+      'SELECT uuid, username, email FROM users WHERE email = $1',
+      [email]
+    )
+    
+    if (result.rows[0]) {
+      return {
+        success: true,
+        user: result.rows[0]
+      }
+    }
+    
+    return {
+      success: false,
+      message: 'User not found'
+    }
+  } catch (error) {
+    console.error('Get user by email error:', error)
+    return {
+      success: false,
+      message: 'Failed to fetch user'
+    }
+  }
+}
+
 export interface AuthResponse {
   success: boolean
   message: string

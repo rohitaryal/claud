@@ -11,7 +11,7 @@ import {
   removeFromSharedWithMe
 } from '../services/share'
 import { getFileMetadata, getFileStream } from '../services/file'
-import { getFromSession } from '../utils/db'
+import { getFromSession, query } from '../utils/db'
 
 const shareRouter = new Hono()
 
@@ -535,6 +535,160 @@ shareRouter.get('/files/:fileId/shares', async (c) => {
     })
   } catch (error) {
     console.error('Get file shares endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * DELETE /share/file/:fileId
+ * Remove all shares for a file (owner action to unshare)
+ */
+shareRouter.delete('/share/file/:fileId', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const fileId = c.req.param('fileId')
+
+    // Verify file belongs to user
+    const file = await getFileMetadata(fileId, user.uuid)
+    if (!file) {
+      return c.json(
+        {
+          success: false,
+          message: 'File not found',
+          code: 'FILE_NOT_FOUND'
+        },
+        404
+      )
+    }
+
+    // Delete all shares for this file
+    const result = await query(
+      'DELETE FROM file_shares WHERE file_id = $1 AND shared_by = $2',
+      [fileId, user.uuid]
+    )
+
+    return c.json({
+      success: true,
+      message: 'All shares removed successfully',
+      deletedCount: result.rowCount || 0
+    })
+  } catch (error) {
+    console.error('Unshare file endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * DELETE /share/with-me/:shareId
+ * Remove a file from "Shared With Me" for the recipient
+ */
+shareRouter.delete('/share/with-me/:shareId', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const shareId = c.req.param('shareId')
+
+    const result = await removeFromSharedWithMe(shareId, user.uuid)
+
+    if (!result.success) {
+      return c.json(result, result.code === 'SHARE_NOT_FOUND' ? 404 : 400)
+    }
+
+    return c.json({
+      success: true,
+      message: 'Share removed successfully'
+    })
+  } catch (error) {
+    console.error('Remove from shared with me endpoint error:', error)
     return c.json(
       {
         success: false,

@@ -4,8 +4,8 @@ import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import Dialog from '../../components/Dialog/Dialog'
 import styles from './MyFiles.module.css'
-import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoFolderOutline, IoStarOutline, IoStar, IoEllipsisVerticalOutline, IoShareSocialOutline, IoCloseOutline, IoRefreshOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile, apiToggleStarFile, apiRestoreFile, apiShareFilePublic, apiListPublicFiles, apiListSharedWithMe, apiRemoveFromSharedWithMe, getApiBase, type AuthUser } from '../../utils/api'
+import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoFolderOutline, IoStarOutline, IoStar, IoEllipsisVerticalOutline, IoShareSocialOutline, IoCloseOutline, IoRefreshOutline, IoPencilOutline, IoArrowBack, IoArrowForward, IoCheckboxOutline, IoSquareOutline } from 'react-icons/io5'
+import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile, apiToggleStarFile, apiRestoreFile, apiShareFilePublic, apiListPublicFiles, apiListSharedWithMe, apiRemoveFromSharedWithMe, apiUnshareFile, apiRenameFile, apiShareFilePrivately, getApiBase, type AuthUser } from '../../utils/api'
 import { logger } from '../../utils/logger'
 import { getFileIcon } from '../../utils/fileIcons'
 
@@ -22,6 +22,9 @@ interface FileItem {
     share_id?: string
 }
 
+// Constants
+const DOWNLOAD_DELAY_MS = 500
+
 const MyFiles = function () {
     const navigate = useNavigate()
     const [files, setFiles] = useState<FileItem[]>([])
@@ -35,6 +38,14 @@ const MyFiles = function () {
     const [previewText, setPreviewText] = useState<string | null>(null)
     const [menuOpenFileId, setMenuOpenFileId] = useState<string | null>(null)
     const [imageThumbnails, setImageThumbnails] = useState<Record<string, string>>({})
+    const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
+    const [showShareDialog, setShowShareDialog] = useState(false)
+    const [shareFileId, setShareFileId] = useState<string | null>(null)
+    const [shareEmails, setShareEmails] = useState('')
+    const [showRenameDialog, setShowRenameDialog] = useState(false)
+    const [renameFileId, setRenameFileId] = useState<string | null>(null)
+    const [renameFileName, setRenameFileName] = useState('')
+    const [previewIndex, setPreviewIndex] = useState<number>(0)
 
     useEffect(() => {
         // Check authentication
@@ -169,6 +180,13 @@ const MyFiles = function () {
 
     const handleFileClick = async (file: FileItem) => {
         if (file.isFolder) return
+        
+        // Set the preview index
+        const previewableFiles = regularFiles.filter(f => canPreviewFile(f.mime_type, f.original_name))
+        const index = previewableFiles.findIndex(f => f.file_id === file.file_id)
+        if (index !== -1) {
+            setPreviewIndex(index)
+        }
         
         // For public pool files, download via share token
         if (activeSection === 'public-pool' && file.share_token) {
@@ -417,6 +435,164 @@ const MyFiles = function () {
         }
     }
 
+    const handleUnshareFile = async (fileId: string, fileName: string) => {
+        if (confirm(`Unshare "${fileName}"? This will remove all public and private shares.`)) {
+            try {
+                const response = await apiUnshareFile(fileId)
+                if (response.success) {
+                    await loadFiles()
+                    logger.success('File unshared', fileName)
+                    alert(`File unshared successfully. ${response.deletedCount || 0} share(s) removed.`)
+                } else {
+                    logger.error('Unshare failed', response.message)
+                    alert(`Failed to unshare file: ${response.message}`)
+                }
+            } catch (error) {
+                logger.error('Unshare error', error)
+                alert('Failed to unshare file. Please try again.')
+            }
+        }
+    }
+
+    const handleSharePrivately = (fileId: string) => {
+        setShareFileId(fileId)
+        setShareEmails('')
+        setShowShareDialog(true)
+        setMenuOpenFileId(null)
+    }
+
+    const handleSharePrivatelySubmit = async () => {
+        if (!shareFileId || !shareEmails.trim()) {
+            alert('Please enter at least one email address.')
+            return
+        }
+
+        const emails = shareEmails.split(',').map(e => e.trim()).filter(e => e.length > 0)
+        if (emails.length === 0) {
+            alert('Please enter at least one valid email address.')
+            return
+        }
+
+        try {
+            const response = await apiShareFilePrivately(shareFileId, emails)
+            if (response.success) {
+                const message = response.failedEmails && response.failedEmails.length > 0
+                    ? `File shared successfully with ${response.shares?.length || 0} user(s).\nFailed to share with: ${response.failedEmails.join(', ')}`
+                    : `File shared successfully with ${response.shares?.length || 0} user(s)!`
+                alert(message)
+                setShowShareDialog(false)
+                setShareFileId(null)
+                setShareEmails('')
+            } else {
+                alert(`Failed to share file: ${response.message}`)
+            }
+        } catch (error) {
+            logger.error('Share privately error', error)
+            alert('Failed to share file. Please try again.')
+        }
+    }
+
+    const handleRenameFile = (fileId: string, currentName: string) => {
+        setRenameFileId(fileId)
+        setRenameFileName(currentName)
+        setShowRenameDialog(true)
+        setMenuOpenFileId(null)
+    }
+
+    const handleRenameSubmit = async () => {
+        if (!renameFileId || !renameFileName.trim()) {
+            alert('Please enter a valid file name.')
+            return
+        }
+
+        try {
+            const response = await apiRenameFile(renameFileId, renameFileName.trim())
+            if (response.success) {
+                await loadFiles()
+                logger.success('File renamed', renameFileName)
+                setShowRenameDialog(false)
+                setRenameFileId(null)
+                setRenameFileName('')
+            } else {
+                alert(`Failed to rename file: ${response.message}`)
+            }
+        } catch (error) {
+            logger.error('Rename error', error)
+            alert('Failed to rename file. Please try again.')
+        }
+    }
+
+    const handleToggleSelectFile = (fileId: string) => {
+        setSelectedFiles(prev => {
+            const newSet = new Set(prev)
+            if (newSet.has(fileId)) {
+                newSet.delete(fileId)
+            } else {
+                newSet.add(fileId)
+            }
+            return newSet
+        })
+    }
+
+    const handleDownloadSelected = async () => {
+        if (selectedFiles.size === 0) {
+            alert('Please select at least one file to download.')
+            return
+        }
+
+        try {
+            const fileIds = Array.from(selectedFiles)
+            for (const fileId of fileIds) {
+                const file = files.find(f => f.file_id === fileId)
+                if (file) {
+                    await apiDownloadFile(file.file_id, file.original_name)
+                    // Add a small delay between downloads to avoid overwhelming the browser
+                    await new Promise(resolve => setTimeout(resolve, DOWNLOAD_DELAY_MS))
+                }
+            }
+            logger.success('Files downloaded', fileIds.length)
+            setSelectedFiles(new Set())
+        } catch (error) {
+            logger.error('Download selected error', error)
+            alert('Failed to download files. Please try again.')
+        }
+    }
+
+    const handlePreviousFile = () => {
+        const previewableFiles = regularFiles.filter(f => canPreviewFile(f.mime_type, f.original_name))
+        if (previewIndex > 0) {
+            const newIndex = previewIndex - 1
+            setPreviewIndex(newIndex)
+            handlePreviewFile(previewableFiles[newIndex])
+        }
+    }
+
+    const handleNextFile = () => {
+        const previewableFiles = regularFiles.filter(f => canPreviewFile(f.mime_type, f.original_name))
+        if (previewIndex < previewableFiles.length - 1) {
+            const newIndex = previewIndex + 1
+            setPreviewIndex(newIndex)
+            handlePreviewFile(previewableFiles[newIndex])
+        }
+    }
+
+    // Keyboard navigation for preview
+    useEffect(() => {
+        if (!previewFile) return
+        
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') {
+                handlePreviousFile()
+            } else if (e.key === 'ArrowRight') {
+                handleNextFile()
+            } else if (e.key === 'Escape') {
+                closePreview()
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [previewFile])
+
     // Load thumbnails for images
     useEffect(() => {
         const loadThumbnails = async () => {
@@ -502,6 +678,25 @@ const MyFiles = function () {
                             {activeSection === 'public-pool' && 'Public Pool'}
                         </h1>
                         <div className={styles.viewControls}>
+                            {selectedFiles.size > 0 && (
+                                <>
+                                    <span className={styles.selectedCount}>{selectedFiles.size} selected</span>
+                                    <button
+                                        className={styles.actionButton}
+                                        onClick={handleDownloadSelected}
+                                        title="Download selected files"
+                                    >
+                                        <IoDownloadOutline size={20} />
+                                    </button>
+                                    <button
+                                        className={styles.actionButton}
+                                        onClick={() => setSelectedFiles(new Set())}
+                                        title="Clear selection"
+                                    >
+                                        <IoCloseOutline size={20} />
+                                    </button>
+                                </>
+                            )}
                             <button
                                 className={`${styles.viewButton} ${viewMode === 'grid' ? styles.viewButtonActive : ''}`}
                                 onClick={() => setViewMode('grid')}
@@ -580,13 +775,26 @@ const MyFiles = function () {
                                                 const IconComponent = getFileIcon(fileItem.original_name, fileItem.mime_type)
                                                 const isImage = fileItem.mime_type?.startsWith('image/')
                                                 const thumbnail = imageThumbnails[fileItem.file_id]
+                                                const isSelected = selectedFiles.has(fileItem.file_id)
                                                 return (
                                                     <div 
                                                         key={fileItem.file_id} 
-                                                        className={styles.fileItem}
+                                                        className={`${styles.fileItem} ${isSelected ? styles.fileItemSelected : ''}`}
                                                         onClick={() => handleFileClick(fileItem)}
                                                         style={{ cursor: 'pointer' }}
                                                     >
+                                                        {(activeSection === 'my-files' || activeSection === 'recent' || activeSection === 'starred') && (
+                                                            <button
+                                                                className={styles.checkboxButton}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    handleToggleSelectFile(fileItem.file_id)
+                                                                }}
+                                                                title={isSelected ? "Deselect" : "Select"}
+                                                            >
+                                                                {isSelected ? <IoCheckboxOutline size={20} /> : <IoSquareOutline size={20} />}
+                                                            </button>
+                                                        )}
                                                         <div className={styles.fileIcon}>
                                                             {isImage && thumbnail ? (
                                                                 <img src={thumbnail} alt={fileItem.original_name} className={styles.fileThumbnail} />
@@ -598,7 +806,7 @@ const MyFiles = function () {
                                                         <span className={styles.fileSize}>{formatFileSize(fileItem.file_size)}</span>
                                                         <span className={styles.fileDate}>{formatDate(fileItem.created_at)}</span>
                                                         <div className={styles.fileActions} onClick={(e) => e.stopPropagation()}>
-                                                            {activeSection !== 'trash' && (
+                                                            {activeSection !== 'trash' && activeSection !== 'public-pool' && activeSection !== 'shared' && (
                                                                 <button 
                                                                     className={styles.actionButton} 
                                                                     title={fileItem.is_starred ? "Unstar" : "Star"} 
@@ -633,6 +841,8 @@ const MyFiles = function () {
                                                                         <IoCloseOutline size={18} />
                                                                     </button>
                                                                 </>
+                                                            ) : activeSection === 'public-pool' ? (
+                                                                <></>
                                                             ) : (
                                                                 <>
                                                                     <div className={styles.menuContainer}>
@@ -658,6 +868,16 @@ const MyFiles = function () {
                                                                                     onClick={(e) => {
                                                                                         e.preventDefault()
                                                                                         e.stopPropagation()
+                                                                                        handleRenameFile(fileItem.file_id, fileItem.original_name)
+                                                                                    }}
+                                                                                >
+                                                                                    <IoPencilOutline size={16} />
+                                                                                    Rename
+                                                                                </button>
+                                                                                <button 
+                                                                                    onClick={(e) => {
+                                                                                        e.preventDefault()
+                                                                                        e.stopPropagation()
                                                                                         setMenuOpenFileId(null)
                                                                                         handleShareFile(fileItem.file_id, 'public')
                                                                                     }}
@@ -669,12 +889,22 @@ const MyFiles = function () {
                                                                                     onClick={(e) => {
                                                                                         e.preventDefault()
                                                                                         e.stopPropagation()
-                                                                                        setMenuOpenFileId(null)
-                                                                                        handleShareFile(fileItem.file_id, 'link')
+                                                                                        handleSharePrivately(fileItem.file_id)
                                                                                     }}
                                                                                 >
                                                                                     <IoShareSocialOutline size={16} />
-                                                                                    Share with Link
+                                                                                    Share Privately
+                                                                                </button>
+                                                                                <button 
+                                                                                    onClick={(e) => {
+                                                                                        e.preventDefault()
+                                                                                        e.stopPropagation()
+                                                                                        setMenuOpenFileId(null)
+                                                                                        handleUnshareFile(fileItem.file_id, fileItem.original_name)
+                                                                                    }}
+                                                                                >
+                                                                                    <IoCloseOutline size={16} />
+                                                                                    Unshare
                                                                                 </button>
                                                                                 <button 
                                                                                     onClick={(e) => {
@@ -808,11 +1038,33 @@ const MyFiles = function () {
                                                                             e.preventDefault()
                                                                             e.stopPropagation()
                                                                             setMenuOpenFileId(null)
-                                                                            handleShareFile(file.file_id, 'link')
+                                                                            handleSharePrivately(file.file_id)
                                                                         }}
                                                                     >
                                                                         <IoShareSocialOutline size={16} />
-                                                                        Share with Link
+                                                                        Share Privately
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleRenameFile(file.file_id, file.original_name)
+                                                                        }}
+                                                                    >
+                                                                        <IoPencilOutline size={16} />
+                                                                        Rename
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault()
+                                                                            e.stopPropagation()
+                                                                            setMenuOpenFileId(null)
+                                                                            handleUnshareFile(file.file_id, file.original_name)
+                                                                        }}
+                                                                    >
+                                                                        <IoCloseOutline size={16} />
+                                                                        Unshare
                                                                     </button>
                                                                     <button 
                                                                         onClick={(e) => {
@@ -881,9 +1133,110 @@ const MyFiles = function () {
                         ) : (
                             <div className={styles.previewLoading}>Loading preview...</div>
                         )}
+                        <div className={styles.previewNavigation}>
+                            <button
+                                className={styles.previewNavButton}
+                                onClick={handlePreviousFile}
+                                disabled={previewIndex === 0}
+                                title="Previous file (Left arrow)"
+                            >
+                                <IoArrowBack size={24} />
+                            </button>
+                            <span className={styles.previewPosition}>
+                                {previewIndex + 1} of {regularFiles.filter(f => canPreviewFile(f.mime_type, f.original_name)).length}
+                            </span>
+                            <button
+                                className={styles.previewNavButton}
+                                onClick={handleNextFile}
+                                disabled={previewIndex >= regularFiles.filter(f => canPreviewFile(f.mime_type, f.original_name)).length - 1}
+                                title="Next file (Right arrow)"
+                            >
+                                <IoArrowForward size={24} />
+                            </button>
+                        </div>
                     </div>
                 </Dialog>
             )}
+            
+            {/* Share Privately Dialog */}
+            <Dialog
+                isOpen={showShareDialog}
+                onClose={() => {
+                    setShowShareDialog(false)
+                    setShareFileId(null)
+                    setShareEmails('')
+                }}
+                title="Share File Privately"
+            >
+                <div className={styles.dialogContent}>
+                    <p>Enter email addresses separated by commas:</p>
+                    <textarea
+                        className={styles.emailTextarea}
+                        value={shareEmails}
+                        onChange={(e) => setShareEmails(e.target.value)}
+                        placeholder="user1@example.com, user2@example.com"
+                        rows={4}
+                    />
+                    <div className={styles.dialogActions}>
+                        <button
+                            className={styles.primaryButton}
+                            onClick={handleSharePrivatelySubmit}
+                        >
+                            Share
+                        </button>
+                        <button
+                            className={styles.secondaryButton}
+                            onClick={() => {
+                                setShowShareDialog(false)
+                                setShareFileId(null)
+                                setShareEmails('')
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </Dialog>
+
+            {/* Rename Dialog */}
+            <Dialog
+                isOpen={showRenameDialog}
+                onClose={() => {
+                    setShowRenameDialog(false)
+                    setRenameFileId(null)
+                    setRenameFileName('')
+                }}
+                title="Rename File"
+            >
+                <div className={styles.dialogContent}>
+                    <p>Enter new file name:</p>
+                    <input
+                        type="text"
+                        className={styles.renameInput}
+                        value={renameFileName}
+                        onChange={(e) => setRenameFileName(e.target.value)}
+                        placeholder="File name"
+                    />
+                    <div className={styles.dialogActions}>
+                        <button
+                            className={styles.primaryButton}
+                            onClick={handleRenameSubmit}
+                        >
+                            Rename
+                        </button>
+                        <button
+                            className={styles.secondaryButton}
+                            onClick={() => {
+                                setShowRenameDialog(false)
+                                setRenameFileId(null)
+                                setRenameFileName('')
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </Dialog>
         </div>
     )
 }
