@@ -4,7 +4,7 @@ import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Sidebar from '../../components/Sidebar/Sidebar'
 import styles from './ImageGeneration.module.css'
 import { IoSparklesOutline, IoDownloadOutline, IoImageOutline, IoChatbubbleOutline, IoPaperPlaneOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiGenerateImage, type ImageGenerationSettings } from '../../utils/api'
+import { apiGetCurrentUser, apiGenerateImage } from '../../utils/api'
 import { logger } from '../../utils/logger'
 
 interface GeneratedImage {
@@ -13,11 +13,6 @@ interface GeneratedImage {
     mediaId: string
 }
 
-interface GenerationResult {
-    images: GeneratedImage[]
-    prompt: string
-    settings: ImageGenerationSettings
-}
 
 interface Message {
     id: string
@@ -41,10 +36,10 @@ const ImageGeneration = function () {
     const inputRef = useRef<HTMLTextAreaElement>(null)
     
     // Image generation settings
-    const [seed, setSeed] = useState(0)
-    const [numberOfImages, setNumberOfImages] = useState(1)
-    const [aspectRatio, setAspectRatio] = useState('IMAGE_ASPECT_RATIO_SQUARE')
-    const [generationModel, setGenerationModel] = useState('IMAGEN_3_5')
+    const [seed] = useState(0)
+    const [numberOfImages] = useState(1)
+    const [aspectRatio] = useState('IMAGE_ASPECT_RATIO_SQUARE')
+    const [generationModel] = useState('IMAGEN_3_5')
 
     useEffect(() => {
         // Check authentication
@@ -95,15 +90,16 @@ const ImageGeneration = function () {
                 googleCookie: googleCookie.trim()
             })
 
-            if (response.success && response.images) {
+            if (response.success && response.images && response.images.length > 0) {
                 logger.success('Images generated successfully')
+                const images = response.images
                 
                 setMessages(prev => [...prev, {
                     id: Date.now().toString(),
                     role: 'assistant',
-                    content: `Generated ${response.images.length} image(s) based on your prompt.`,
+                    content: `Generated ${images.length} image(s) based on your prompt.`,
                     type: 'image',
-                    images: response.images,
+                    images: images,
                     timestamp: new Date()
                 }])
             } else {
@@ -182,28 +178,84 @@ const ImageGeneration = function () {
                     if (done) break
 
                     buffer += decoder.decode(value, { stream: true })
+                    
+                    // Try to parse complete JSON objects from the buffer
+                    // The response might come as multiple JSON objects separated by newlines
                     const lines = buffer.split('\n')
                     buffer = lines.pop() || ''
 
                     for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            try {
-                                const jsonStr = line.slice(6).trim()
-                                if (jsonStr === '[DONE]') continue
-                                
-                                const data = JSON.parse(jsonStr)
-                                if (data.candidates?.[0]?.content?.parts) {
-                                    for (const part of data.candidates[0].content.parts) {
-                                        if (part.text) {
-                                            fullText += part.text
-                                            setStreamingText(fullText)
+                        const trimmed = line.trim()
+                        if (!trimmed) continue
+                        
+                        // Handle both "data: {...}" format and direct JSON
+                        let jsonStr = trimmed
+                        if (trimmed.startsWith('data: ')) {
+                            jsonStr = trimmed.slice(6).trim()
+                        }
+                        
+                        if (jsonStr === '[DONE]' || jsonStr === '') continue
+                        
+                        try {
+                            let data = JSON.parse(jsonStr)
+                            
+                            // Handle array of responses (the actual format from Gemini)
+                            if (Array.isArray(data)) {
+                                for (const item of data) {
+                                    if (item.candidates?.[0]?.content?.parts) {
+                                        for (const part of item.candidates[0].content.parts) {
+                                            if (part.text) {
+                                                fullText += part.text
+                                                setStreamingText(fullText)
+                                            }
                                         }
                                     }
                                 }
-                            } catch (e) {
-                                // Skip invalid JSON
+                            } 
+                            // Handle single response object
+                            else if (data.candidates?.[0]?.content?.parts) {
+                                for (const part of data.candidates[0].content.parts) {
+                                    if (part.text) {
+                                        fullText += part.text
+                                        setStreamingText(fullText)
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            // Skip invalid JSON - might be partial data
+                            // Try to see if it's a partial array
+                            try {
+                                // Sometimes the response might be a partial JSON array
+                                if (jsonStr.startsWith('[') && !jsonStr.endsWith(']')) {
+                                    // Partial array, wait for more data
+                                    continue
+                                }
+                            } catch {
+                                // Ignore
                             }
                         }
+                    }
+                }
+                
+                // Process any remaining buffer
+                if (buffer.trim()) {
+                    try {
+                        const trimmed = buffer.trim()
+                        let jsonStr = trimmed
+                        if (trimmed.startsWith('data: ')) {
+                            jsonStr = trimmed.slice(6).trim()
+                        }
+                        const data = JSON.parse(jsonStr)
+                        if (data.candidates?.[0]?.content?.parts) {
+                            for (const part of data.candidates[0].content.parts) {
+                                if (part.text) {
+                                    fullText += part.text
+                                    setStreamingText(fullText)
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // Ignore parsing errors for remaining buffer
                     }
                 }
             }
