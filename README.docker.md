@@ -46,10 +46,12 @@ All services run in isolated containers and communicate through a Docker network
    ```
 
 4. **Access the application:**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3000
+   - Frontend: http://localhost:5173 (or http://0.0.0.0:5173)
+   - Backend API: http://localhost:3000 (or http://0.0.0.0:3000)
    - Backend Health: http://localhost:3000/api/health
-   - PostgreSQL: localhost:5432
+   - PostgreSQL: localhost:5432 (or 0.0.0.0:5432)
+   
+   > **Note:** All services bind to 0.0.0.0, making them accessible on any network interface. The frontend automatically detects the hostname from your browser.
 
 5. **Stop all containers:**
    ```bash

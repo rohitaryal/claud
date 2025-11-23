@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoSearchOutline, IoPersonCircleOutline, IoLogOutOutline, IoSettingsOutline, IoDocumentTextOutline, IoFolderOutline, IoTimeOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiLogout, apiSearchFiles } from '../../utils/api'
+import { apiGetCurrentUser, apiLogout, apiSearchFiles, getApiBase } from '../../utils/api'
 import type { AuthUser } from '../../utils/api'
 import styles from './DashboardHeader.module.css'
 
@@ -254,7 +254,7 @@ const DashboardHeader = function () {
                     >
                         {user?.profile_picture_url ? (
                             <img 
-                                src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${user.profile_picture_url}`}
+                                src={`${getApiBase()}${user.profile_picture_url}`}
                                 alt={user.username}
                                 className={styles.profilePicture}
                             />

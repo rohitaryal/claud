@@ -10,8 +10,9 @@ services:
             - ./frontend/:/claud
             - /claud/node_modules
         environment:
-            # Use localhost for browser API calls (backend port is mapped to localhost:3000)
-            - VITE_API_URL=http://localhost:3000
+            # API URL is auto-detected based on browser's hostname
+            # This allows the app to work on localhost, 0.0.0.0, or any other hostname
+            - VITE_API_URL=
         depends_on:
             backend:
                 condition: service_started
