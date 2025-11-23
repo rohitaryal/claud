@@ -44,7 +44,6 @@ const MyFiles = function () {
     const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
     const [showShareDialog, setShowShareDialog] = useState(false)
     const [shareFileId, setShareFileId] = useState<string | null>(null)
-    const [shareEmails, setShareEmails] = useState('')
     const [emailChips, setEmailChips] = useState<string[]>([])
     const [emailInput, setEmailInput] = useState('')
     const [showRenameDialog, setShowRenameDialog] = useState(false)
