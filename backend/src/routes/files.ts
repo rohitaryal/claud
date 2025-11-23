@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { 
   saveFile, 
-  getFileMetadata, 
+  getFileMetadata,
+  getFileMetadataWithAccess,
   getFileStream, 
   listUserFiles, 
   deleteFile,
@@ -151,8 +152,8 @@ fileRouter.get('/:fileId/download', async (c) => {
 
     const fileId = c.req.param('fileId')
 
-    // Get file metadata
-    const fileMetadata = await getFileMetadata(fileId, user.uuid)
+    // Get file metadata - check if user owns it or has access via sharing
+    const fileMetadata = await getFileMetadataWithAccess(fileId, user.uuid)
     if (!fileMetadata) {
       return c.json(
         {
