@@ -55,6 +55,7 @@ const ImageGeneration = function () {
     useEffect(() => {
         // Auto-scroll to bottom when new messages arrive
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+        console.log('Messages state updated:', messages)
     }, [messages])
 
     useEffect(() => {
@@ -94,7 +95,7 @@ const ImageGeneration = function () {
                 const images = response.images
                 
                 setMessages(prev => [...prev, {
-                    id: Date.now().toString(),
+                    id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     role: 'assistant',
                     content: `Generated ${images.length} image(s) based on your prompt.`,
                     type: 'image',
@@ -104,7 +105,7 @@ const ImageGeneration = function () {
             } else {
                 logger.error('Failed to generate images', response.message)
                 setMessages(prev => [...prev, {
-                    id: Date.now().toString(),
+                    id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     role: 'assistant',
                     content: `Error: ${response.message || 'Failed to generate images'}`,
                     type: 'text',
@@ -161,43 +162,95 @@ const ImageGeneration = function () {
             )
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
+                const errorText = await response.text()
+                console.error('API Error Response:', errorText)
+                let errorData
+                try {
+                    errorData = JSON.parse(errorText)
+                } catch {
+                    errorData = { error: { message: errorText } }
+                }
                 throw new Error(errorData.error?.message || `HTTP ${response.status}: Failed to generate text`)
             }
 
-            const data = await response.json()
+            // Get response as text first to see what we're actually receiving
+            const responseText = await response.text()
+            console.log('Raw API Response (first 500 chars):', responseText.substring(0, 500))
+            
+            let data
+            try {
+                data = JSON.parse(responseText)
+            } catch (parseError) {
+                console.error('Failed to parse JSON response:', parseError)
+                console.error('Full response text:', responseText)
+                throw new Error('Invalid JSON response from API')
+            }
+            
+            // Log the parsed response for debugging
+            console.log('Parsed Gemini API Response:', data)
             
             // Extract text from the response
             let fullText = ''
-            if (data.candidates?.[0]?.content?.parts) {
+            
+            // Handle different response structures
+            if (Array.isArray(data)) {
+                // Response is an array of objects
+                for (const item of data) {
+                    if (item.candidates?.[0]?.content?.parts) {
+                        for (const part of item.candidates[0].content.parts) {
+                            if (part.text) {
+                                fullText += part.text
+                            }
+                        }
+                    }
+                }
+            } else if (data.candidates?.[0]?.content?.parts) {
+                // Response is a single object
                 for (const part of data.candidates[0].content.parts) {
                     if (part.text) {
                         fullText += part.text
                     }
                 }
+            } else if (data.candidates?.[0]?.content?.text) {
+                // Alternative structure where text is directly in content
+                fullText = data.candidates[0].content.text
             }
 
+            console.log('Extracted text:', fullText)
+
             // Add final message
-            if (fullText) {
-                setMessages(prev => [...prev, {
-                    id: Date.now().toString(),
+            if (fullText && fullText.trim()) {
+                const newMessage: Message = {
+                    id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     role: 'assistant',
-                    content: fullText,
+                    content: fullText.trim(),
                     type: 'text',
                     timestamp: new Date()
-                }])
+                }
+                console.log('Adding message to state:', newMessage)
+                setMessages(prev => {
+                    const updated = [...prev, newMessage]
+                    console.log('Updated messages array:', updated)
+                    return updated
+                })
             } else {
-                throw new Error('Failed to generate text: No content received from AI service')
+                console.error('No text extracted from response. Full response:', JSON.stringify(data, null, 2))
+                throw new Error('Failed to generate text: No content received from AI service. Response structure may be unexpected.')
             }
         } catch (error) {
             logger.error('Error generating text', error)
-            setMessages(prev => [...prev, {
-                id: Date.now().toString(),
+            console.error('Error details:', error)
+            const errorMessage: Message = {
+                id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 role: 'assistant',
                 content: `Error: ${error instanceof Error ? error.message : 'Failed to generate text'}`,
                 type: 'text',
                 timestamp: new Date()
-            }])
+            }
+            setMessages(prev => {
+                console.log('Adding error message:', errorMessage)
+                return [...prev, errorMessage]
+            })
         } finally {
             setIsGenerating(false)
         }
@@ -208,14 +261,17 @@ const ImageGeneration = function () {
         if (!input.trim() || isGenerating) return
 
         const userMessage: Message = {
-            id: Date.now().toString(),
+            id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             role: 'user',
             content: input.trim(),
             type: mode === 'image' ? 'image' : 'text',
             timestamp: new Date()
         }
 
-        setMessages(prev => [...prev, userMessage])
+        setMessages(prev => {
+            console.log('Adding user message:', userMessage)
+            return [...prev, userMessage]
+        })
         const prompt = input.trim()
         setInput('')
 
