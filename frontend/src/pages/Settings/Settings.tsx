@@ -23,7 +23,8 @@ import {
     apiDeleteAccount,
     apiUploadProfilePicture,
     apiUpdateEmail,
-    apiUpdateStorageLimit
+    apiUpdateStorageLimit,
+    getApiBase
 } from '../../utils/api'
 import type { AuthUser } from '../../utils/api'
 import styles from './Settings.module.css'
@@ -491,7 +492,7 @@ const Settings = function () {
                                         <div className={styles.profilePictureContainer}>
                                             {user?.profile_picture_url ? (
                                                 <img 
-                                                    src={`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}${user.profile_picture_url}`}
+                                                    src={`${getApiBase()}${user.profile_picture_url}`}
                                                     alt="Profile"
                                                     className={styles.profilePicture}
                                                 />

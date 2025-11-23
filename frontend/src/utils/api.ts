@@ -1,8 +1,22 @@
-// Use localhost for all API calls (works from browser on host machine)
-// In Docker, the backend port is mapped to localhost:3000
+// Use dynamic hostname for API calls (works from browser on any host)
+// Dynamically determines the API base URL based on the current page location
 import { logger } from './logger'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+// Get the API base URL dynamically based on window.location.hostname
+// This allows the app to work on localhost, 0.0.0.0, or any other hostname
+export const getApiBase = (): string => {
+  // If VITE_API_URL is explicitly set, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  // Otherwise, use the current hostname with port 3000
+  const hostname = window.location.hostname
+  const protocol = window.location.protocol
+  return `${protocol}//${hostname}:3000`
+}
+
+const API_BASE = getApiBase()
 
 export interface ApiResponse<T = unknown> {
   success: boolean

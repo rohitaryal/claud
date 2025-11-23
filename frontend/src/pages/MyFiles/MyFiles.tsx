@@ -5,7 +5,7 @@ import Sidebar from '../../components/Sidebar/Sidebar'
 import Dialog from '../../components/Dialog/Dialog'
 import styles from './MyFiles.module.css'
 import { IoTrashOutline, IoDownloadOutline, IoGridOutline, IoListOutline, IoFolderOutline, IoStarOutline, IoStar, IoEllipsisVerticalOutline, IoShareSocialOutline, IoCloseOutline, IoRefreshOutline } from 'react-icons/io5'
-import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile, apiToggleStarFile, apiRestoreFile, apiShareFilePublic, apiListPublicFiles, apiListSharedWithMe, apiRemoveFromSharedWithMe, type AuthUser } from '../../utils/api'
+import { apiGetCurrentUser, apiListFiles, apiDeleteFile, apiDownloadFile, apiPermanentDeleteFile, apiToggleStarFile, apiRestoreFile, apiShareFilePublic, apiListPublicFiles, apiListSharedWithMe, apiRemoveFromSharedWithMe, getApiBase, type AuthUser } from '../../utils/api'
 import { logger } from '../../utils/logger'
 import { getFileIcon } from '../../utils/fileIcons'
 
@@ -172,7 +172,7 @@ const MyFiles = function () {
         
         // For public pool files, download via share token
         if (activeSection === 'public-pool' && file.share_token) {
-            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+            const API_BASE = getApiBase()
             const url = `${API_BASE}/api/share/${file.share_token}/download`
             try {
                 const response = await fetch(url, { credentials: 'include' })
@@ -221,7 +221,7 @@ const MyFiles = function () {
         }
 
         try {
-            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+            const API_BASE = getApiBase()
             const url = `${API_BASE}/api/files/${file.file_id}/download`
             
             // For images, videos, and PDFs, we can create a preview URL
@@ -425,7 +425,7 @@ const MyFiles = function () {
             
             for (const file of imageFiles) {
                 try {
-                    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+                    const API_BASE = getApiBase()
                     const url = `${API_BASE}/api/files/${file.file_id}/download`
                     thumbnails[file.file_id] = url
                 } catch {
