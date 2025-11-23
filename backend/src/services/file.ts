@@ -131,22 +131,17 @@ export async function getFileMetadata(fileId: string, userUuid: string): Promise
  * This checks if user either owns the file or has it shared with them
  */
 export async function getFileMetadataWithAccess(fileId: string, userUuid: string): Promise<any> {
-  // First check if user owns the file
-  const ownedFile = await getFileMetadata(fileId, userUuid)
-  if (ownedFile) {
-    return ownedFile
-  }
-  
-  // If not owned, check if file is shared with user
+  // Single optimized query that checks both ownership and share access
   const result = await query(
-    `SELECT f.file_id, f.user_uuid, f.filename, f.original_name, f.file_path, f.file_size, f.mime_type, f.parent_folder_id, f.created_at, f.updated_at, f.is_starred
+    `SELECT DISTINCT f.file_id, f.user_uuid, f.filename, f.original_name, f.file_path, f.file_size, f.mime_type, f.parent_folder_id, f.created_at, f.updated_at, f.is_starred
      FROM files f
-     INNER JOIN file_shares s ON f.file_id = s.file_id
-     WHERE f.file_id = $1 
+     LEFT JOIN file_shares s ON f.file_id = s.file_id 
        AND s.shared_with = $2 
-       AND f.is_deleted = FALSE
        AND s.is_public = FALSE
-       AND (s.expires_at IS NULL OR s.expires_at > NOW())`,
+       AND (s.expires_at IS NULL OR s.expires_at > NOW())
+     WHERE f.file_id = $1 
+       AND f.is_deleted = FALSE
+       AND (f.user_uuid = $2 OR s.shared_with = $2)`,
     [fileId, userUuid]
   )
   return result.rows[0] || null
