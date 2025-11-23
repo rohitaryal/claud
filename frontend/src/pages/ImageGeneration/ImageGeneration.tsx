@@ -187,7 +187,7 @@ const ImageGeneration = function () {
                     timestamp: new Date()
                 }])
             } else {
-                throw new Error('No text content in response')
+                throw new Error('Failed to generate text: No content received from AI service')
             }
         } catch (error) {
             logger.error('Error generating text', error)
