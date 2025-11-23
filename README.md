@@ -18,9 +18,11 @@ docker compose down
 ```
 
 **Access the application:**
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
+- Frontend: http://localhost:5173 (or http://0.0.0.0:5173)
+- Backend API: http://localhost:3000 (or http://0.0.0.0:3000)
 - Health Check: http://localhost:3000/api/health
+
+> **Note:** The application dynamically detects the hostname from your browser, so it works on localhost, 0.0.0.0, or any other hostname where the services are hosted.
 
 For detailed Docker setup documentation, see [README.docker.md](README.docker.md).
 
