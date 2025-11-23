@@ -46,23 +46,20 @@ const Sidebar = function ({ activeSection, onSectionChange }: SidebarProps) {
 
     const sections = [
         { id: 'my-files', label: 'My Files', icon: IoFolderOutline },
-        { id: 'image-generation', label: 'Image Generation', icon: IoSparklesOutline, badge: 'BETA' },
         { id: 'shared', label: 'Shared With Me', icon: IoShareSocialOutline },
         { id: 'recent', label: 'Recent', icon: IoTimeOutline },
         { id: 'starred', label: 'Starred', icon: IoStarOutline },
         { id: 'trash', label: 'Trash', icon: IoTrashOutline },
         { id: 'public-pool', label: 'Public Pool', icon: IoShareSocialOutline },
+        { id: 'image-generation', label: 'Claud Agent', icon: IoSparklesOutline, badge: 'BETA' },
     ]
 
     const handleSectionClick = (sectionId: string) => {
+        onSectionChange(sectionId)
         if (sectionId === 'my-files') {
             navigate('/files')
-            onSectionChange('my-files')
         } else if (sectionId === 'image-generation') {
             navigate('/image-generation')
-            onSectionChange('image-generation')
-        } else {
-            onSectionChange(sectionId)
         }
     }
 

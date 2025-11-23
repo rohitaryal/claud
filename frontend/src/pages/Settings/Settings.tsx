@@ -9,7 +9,8 @@ import {
     IoTrashOutline,
     IoSearchOutline,
     IoCheckmarkCircle,
-    IoCameraOutline
+    IoCameraOutline,
+    IoKeyOutline
 } from 'react-icons/io5'
 import DashboardHeader from '../../components/DashboardHeader/DashboardHeader'
 import Input from '../../components/Input/Input'
@@ -27,7 +28,7 @@ import {
 import type { AuthUser } from '../../utils/api'
 import styles from './Settings.module.css'
 
-type SettingsCategory = 'appearance' | 'account' | 'security' | 'search' | 'danger'
+type SettingsCategory = 'appearance' | 'account' | 'security' | 'api' | 'search' | 'danger'
 
 const Settings = function () {
     const navigate = useNavigate()
@@ -294,10 +295,57 @@ const Settings = function () {
         input.click()
     }
 
+    // API Keys
+    const [googleCookie, setGoogleCookie] = useState('')
+    const [geminiApiKey, setGeminiApiKey] = useState('')
+    const [apiKeysLoading, setApiKeysLoading] = useState(false)
+    const [apiKeysSuccess, setApiKeysSuccess] = useState(false)
+
+    useEffect(() => {
+        // Load saved API keys from localStorage
+        const savedCookie = localStorage.getItem('google_imagefx_cookie')
+        const savedApiKey = localStorage.getItem('gemini_api_key')
+        if (savedCookie) {
+            setGoogleCookie(savedCookie)
+        }
+        if (savedApiKey) {
+            setGeminiApiKey(savedApiKey)
+        }
+    }, [])
+
+    const handleApiKeysSave = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setApiKeysLoading(true)
+        setApiKeysSuccess(false)
+
+        try {
+            // Save to localStorage
+            if (googleCookie.trim()) {
+                localStorage.setItem('google_imagefx_cookie', googleCookie.trim())
+            } else {
+                localStorage.removeItem('google_imagefx_cookie')
+            }
+
+            if (geminiApiKey.trim()) {
+                localStorage.setItem('gemini_api_key', geminiApiKey.trim())
+            } else {
+                localStorage.removeItem('gemini_api_key')
+            }
+
+            setApiKeysSuccess(true)
+            setTimeout(() => setApiKeysSuccess(false), 3000)
+        } catch (error) {
+            console.error('Failed to save API keys', error)
+        } finally {
+            setApiKeysLoading(false)
+        }
+    }
+
     const categories = [
         { id: 'appearance' as SettingsCategory, label: 'Appearance', icon: IoColorPaletteOutline },
         { id: 'account' as SettingsCategory, label: 'Account', icon: IoPersonOutline },
         { id: 'security' as SettingsCategory, label: 'Security', icon: IoLockClosedOutline },
+        { id: 'api' as SettingsCategory, label: 'API Keys', icon: IoKeyOutline },
         { id: 'search' as SettingsCategory, label: 'Search', icon: IoSearchOutline },
         { id: 'danger' as SettingsCategory, label: 'Danger Zone', icon: IoTrashOutline },
     ]
@@ -611,6 +659,67 @@ const Settings = function () {
                                         </button>
                                         {passwordSuccess && (
                                             <p className={styles.successMessage}>Password changed successfully!</p>
+                                        )}
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* API Keys */}
+                        {activeCategory === 'api' && (
+                            <div className={styles.categoryContent}>
+                                <h2 className={styles.categoryTitle}>API Keys</h2>
+                                
+                                <div className={styles.settingGroup}>
+                                    <label className={styles.settingLabel}>Google ImageFX Cookie</label>
+                                    <p className={styles.settingDescription}>
+                                        Required for image generation. Your cookie is stored locally and never shared.
+                                    </p>
+                                    <form onSubmit={handleApiKeysSave} className={styles.form}>
+                                        <Input
+                                            label="Google Cookie"
+                                            type="password"
+                                            placeholder="Enter your Google ImageFX cookie"
+                                            value={googleCookie}
+                                            onChange={(e) => setGoogleCookie(e.target.value)}
+                                            variant={undefined}
+                                        />
+                                        <button 
+                                            type="submit" 
+                                            className={styles.submitButton}
+                                            disabled={apiKeysLoading}
+                                        >
+                                            {apiKeysLoading ? 'Saving...' : 'Save Cookie'}
+                                        </button>
+                                        {apiKeysSuccess && (
+                                            <p className={styles.successMessage}>API keys saved successfully!</p>
+                                        )}
+                                    </form>
+                                </div>
+
+                                <div className={styles.settingGroup}>
+                                    <label className={styles.settingLabel}>Gemini API Key</label>
+                                    <p className={styles.settingDescription}>
+                                        Required for text generation. Get your API key from Google AI Studio.
+                                    </p>
+                                    <form onSubmit={handleApiKeysSave} className={styles.form}>
+                                        <Input
+                                            label="Gemini API Key"
+                                            type="password"
+                                            placeholder="Enter your Gemini API key"
+                                            value={geminiApiKey}
+                                            onChange={(e) => setGeminiApiKey(e.target.value)}
+                                            variant={undefined}
+                                        />
+                                        <button 
+                                            type="submit" 
+                                            className={styles.submitButton}
+                                            disabled={apiKeysLoading}
+                                        >
+                                            {apiKeysLoading ? 'Saving...' : 'Save API Key'}
+                                        </button>
+                                        {apiKeysSuccess && (
+                                            <p className={styles.successMessage}>API keys saved successfully!</p>
                                         )}
                                     </form>
                                 </div>

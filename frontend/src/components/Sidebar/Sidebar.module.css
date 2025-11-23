@@ -79,15 +79,15 @@
     border-radius: var(--border-radius-sm);
     letter-spacing: 0.5px;
     animation: shimmer 2s infinite;
-    box-shadow: 0 0 8px rgba(18, 51, 193, 0.3);
+    box-shadow: 0 0 8px var(--color-primary);
 }
 
 @keyframes shimmer {
     0%, 100% {
-        box-shadow: 0 0 8px rgba(18, 51, 193, 0.3);
+        box-shadow: 0 0 8px var(--color-primary);
     }
     50% {
-        box-shadow: 0 0 16px rgba(18, 51, 193, 0.6), 0 0 24px rgba(28, 217, 241, 0.4);
+        box-shadow: 0 0 16px var(--color-primary), 0 0 24px var(--color-secondary);
     }
 }
 
