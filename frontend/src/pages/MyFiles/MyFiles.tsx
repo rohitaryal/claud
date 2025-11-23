@@ -22,6 +22,9 @@ interface FileItem {
     share_id?: string
 }
 
+// Constants
+const DOWNLOAD_DELAY_MS = 500
+
 const MyFiles = function () {
     const navigate = useNavigate()
     const [files, setFiles] = useState<FileItem[]>([])
@@ -544,7 +547,7 @@ const MyFiles = function () {
                 if (file) {
                     await apiDownloadFile(file.file_id, file.original_name)
                     // Add a small delay between downloads to avoid overwhelming the browser
-                    await new Promise(resolve => setTimeout(resolve, 500))
+                    await new Promise(resolve => setTimeout(resolve, DOWNLOAD_DELAY_MS))
                 }
             }
             logger.success('Files downloaded', fileIds.length)
@@ -575,20 +578,20 @@ const MyFiles = function () {
 
     // Keyboard navigation for preview
     useEffect(() => {
+        if (!previewFile) return
+        
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (previewFile) {
-                if (e.key === 'ArrowLeft') {
-                    handlePreviousFile()
-                } else if (e.key === 'ArrowRight') {
-                    handleNextFile()
-                } else if (e.key === 'Escape') {
-                    closePreview()
-                }
+            if (e.key === 'ArrowLeft') {
+                handlePreviousFile()
+            } else if (e.key === 'ArrowRight') {
+                handleNextFile()
+            } else if (e.key === 'Escape') {
+                closePreview()
             }
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [previewFile, previewIndex])
+    }, [previewFile])
 
     // Load thumbnails for images
     useEffect(() => {
