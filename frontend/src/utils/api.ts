@@ -686,8 +686,8 @@ export async function apiShareFileWithUser(fileId: string, userUuid: string, per
  */
 export async function apiRemoveFromSharedWithMe(shareId: string): Promise<{ success: boolean; message?: string }> {
   try {
-    logger.api('DELETE /api/share/:shareId/remove-access', { shareId })
-    const response = await fetch(`${API_BASE}/api/share/${shareId}/remove-access`, {
+    logger.api('DELETE /api/share/with-me/:shareId', { shareId })
+    const response = await fetch(`${API_BASE}/api/share/with-me/${shareId}`, {
       method: 'DELETE',
       credentials: 'include'
     })
@@ -1042,6 +1042,166 @@ export async function apiValidateGoogleCookie(
       success: false,
       message: 'Network error. Please try again.',
       code: 'NETWORK_ERROR'
+    }
+  }
+}
+
+/**
+ * Get user by email
+ */
+export async function apiGetUserByEmail(email: string): Promise<{ success: boolean; user?: { uuid: string; username: string; email: string }; message?: string }> {
+  try {
+    logger.api('GET /api/auth/user-by-email', { email })
+    const response = await fetch(`${API_BASE}/api/auth/user-by-email?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('User found', { email })
+    } else {
+      logger.warn('User not found', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Get user by email error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Unshare file (remove all shares)
+ */
+export async function apiUnshareFile(fileId: string): Promise<{ success: boolean; message?: string; deletedCount?: number }> {
+  try {
+    logger.api('DELETE /api/share/file/:fileId', { fileId })
+    const response = await fetch(`${API_BASE}/api/share/file/${fileId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('File unshared', { fileId })
+    } else {
+      logger.warn('Failed to unshare file', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Unshare file error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Rename file
+ */
+export async function apiRenameFile(fileId: string, newName: string): Promise<{ success: boolean; file?: FileData; message?: string }> {
+  try {
+    logger.api('PUT /api/files/:fileId', { fileId, newName })
+    const response = await fetch(`${API_BASE}/api/files/${fileId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ original_name: newName })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('File renamed', { fileId, newName })
+    } else {
+      logger.warn('Failed to rename file', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Rename file error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Download multiple files metadata
+ */
+export async function apiDownloadMultipleFiles(fileIds: string[]): Promise<{ success: boolean; files?: FileData[]; message?: string }> {
+  try {
+    logger.api('POST /api/files/download-multiple', { fileIds })
+    const response = await fetch(`${API_BASE}/api/files/download-multiple`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ fileIds })
+    })
+
+    const data = await response.json()
+    if (response.ok) {
+      logger.success('Multiple files download info fetched', { count: data.files?.length })
+    } else {
+      logger.warn('Failed to fetch multiple files', data)
+    }
+    return data
+  } catch (error) {
+    logger.error('Download multiple files error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
+    }
+  }
+}
+
+/**
+ * Share file privately with multiple users by email
+ */
+export async function apiShareFilePrivately(fileId: string, emails: string[], permission: string = 'read'): Promise<{ success: boolean; shares?: any[]; failedEmails?: string[]; message?: string }> {
+  try {
+    logger.api('POST /api/files/:fileId/share (multiple)', { fileId, emails })
+    
+    const results = []
+    const failedEmails = []
+    
+    for (const email of emails) {
+      // First get user by email
+      const userResponse = await apiGetUserByEmail(email.trim())
+      
+      if (userResponse.success && userResponse.user) {
+        // Share with the user
+        const shareResponse = await apiShareFileWithUser(fileId, userResponse.user.uuid, permission)
+        if (shareResponse.success) {
+          results.push(shareResponse.share)
+        } else {
+          failedEmails.push(email)
+        }
+      } else {
+        failedEmails.push(email)
+      }
+    }
+    
+    return {
+      success: results.length > 0,
+      shares: results,
+      failedEmails: failedEmails.length > 0 ? failedEmails : undefined,
+      message: results.length > 0 
+        ? `File shared with ${results.length} user(s)${failedEmails.length > 0 ? ` (${failedEmails.length} failed)` : ''}`
+        : 'Failed to share file with any users'
+    }
+  } catch (error) {
+    logger.error('Share file privately error', error)
+    return {
+      success: false,
+      message: 'Network error. Please try again.'
     }
   }
 }

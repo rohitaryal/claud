@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { register, login, requestPasswordReset, getCurrentUser, changePassword, updateUsername, deleteAccount, updateProfilePicture, updateStorageLimit, updateEmail } from '../services/auth'
+import { register, login, requestPasswordReset, getCurrentUser, changePassword, updateUsername, deleteAccount, updateProfilePicture, updateStorageLimit, updateEmail, getUserByEmail } from '../services/auth'
 import { deleteSession, getFromSession } from '../utils/db'
 import { saveFile } from '../services/file'
 import { v4 as uuidv4 } from 'uuid'
@@ -661,6 +661,78 @@ authRouter.put('/update-storage-limit', async (c) => {
     return c.json(result, 200)
   } catch (error) {
     console.error('Update storage limit endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
+/**
+ * GET /auth/user-by-email
+ * Get user information by email (for sharing)
+ */
+authRouter.get('/user-by-email', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const email = c.req.query('email')
+    if (!email) {
+      return c.json(
+        {
+          success: false,
+          message: 'Email parameter is required',
+          code: 'MISSING_EMAIL'
+        },
+        400
+      )
+    }
+
+    const result = await getUserByEmail(email)
+    return c.json(result, result.success ? 200 : 404)
+  } catch (error) {
+    console.error('Get user by email endpoint error:', error)
     return c.json(
       {
         success: false,

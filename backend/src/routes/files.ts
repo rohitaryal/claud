@@ -892,4 +892,94 @@ fileRouter.delete('/:fileId/permanent', async (c) => {
   }
 })
 
+/**
+ * POST /files/download-multiple
+ * Download multiple files (returns array of file streams metadata)
+ */
+fileRouter.post('/download-multiple', async (c) => {
+  try {
+    // Get session from cookie
+    const cookies = c.req.header('Cookie')
+    if (!cookies) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionMatch = cookies.match(/session=([^;]+)/)
+    if (!sessionMatch) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const sessionId = Buffer.from(sessionMatch[1], 'base64').toString('utf-8').split(':')[0]
+    const user = await getFromSession(sessionId)
+
+    if (!user) {
+      return c.json(
+        {
+          success: false,
+          message: 'Not authenticated',
+          code: 'NOT_AUTHENTICATED'
+        },
+        401
+      )
+    }
+
+    const body = await c.req.json()
+    const { fileIds } = body
+
+    if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
+      return c.json(
+        {
+          success: false,
+          message: 'fileIds array is required',
+          code: 'MISSING_FILE_IDS'
+        },
+        400
+      )
+    }
+
+    // Get metadata for all files
+    const files = []
+    for (const fileId of fileIds) {
+      const fileMetadata = await getFileMetadata(fileId, user.uuid)
+      if (fileMetadata) {
+        files.push({
+          file_id: fileMetadata.file_id,
+          original_name: fileMetadata.original_name,
+          file_size: fileMetadata.file_size,
+          mime_type: fileMetadata.mime_type
+        })
+      }
+    }
+
+    return c.json({
+      success: true,
+      files
+    })
+  } catch (error) {
+    console.error('Download multiple endpoint error:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SERVER_ERROR'
+      },
+      500
+    )
+  }
+})
+
 export default fileRouter
