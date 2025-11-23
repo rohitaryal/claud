@@ -127,6 +127,32 @@ export async function getFileMetadata(fileId: string, userUuid: string): Promise
 }
 
 /**
+ * Get file metadata with access check (owns or shared with user)
+ * This checks if user either owns the file or has it shared with them
+ */
+export async function getFileMetadataWithAccess(fileId: string, userUuid: string): Promise<any> {
+  // First check if user owns the file
+  const ownedFile = await getFileMetadata(fileId, userUuid)
+  if (ownedFile) {
+    return ownedFile
+  }
+  
+  // If not owned, check if file is shared with user
+  const result = await query(
+    `SELECT f.file_id, f.user_uuid, f.filename, f.original_name, f.file_path, f.file_size, f.mime_type, f.parent_folder_id, f.created_at, f.updated_at, f.is_starred
+     FROM files f
+     INNER JOIN file_shares s ON f.file_id = s.file_id
+     WHERE f.file_id = $1 
+       AND s.shared_with = $2 
+       AND f.is_deleted = FALSE
+       AND s.is_public = FALSE
+       AND (s.expires_at IS NULL OR s.expires_at > NOW())`,
+    [fileId, userUuid]
+  )
+  return result.rows[0] || null
+}
+
+/**
  * Get file stream for download
  */
 export function getFileStream(filePath: string): fs.ReadStream | null {
