@@ -52,10 +52,8 @@ This approach runs all three services (frontend, backend, database) in isolated 
 ```bash
 # Start all services
 docker compose up -d
-
 # View logs
 docker compose logs -f
-
 # Stop all services
 docker compose down
 ```
@@ -430,3 +428,34 @@ Long-term / scalability & security:
 - Stronger data protection: at-rest encryption for object storage, field-level encryption for sensitive metadata.
 - Role-based access control (RBAC) for team/corporate use-cases and audit logging for compliance.
 - Performance tuning and load testing to validate architecture at scale; adopt autoscaling and horizontal sharding patterns where needed.
+
+## References
+
+[1] React, “React Documentation.” https://react.dev  
+[2] Vite, “Vite: Next Generation Frontend Tooling.” https://vitejs.dev  
+[3] React Router, “React Router Documentation.” https://reactrouter.com  
+[4] TypeScript, “TypeScript Documentation.” https://www.typescriptlang.org/docs  
+[5] Hono, “Hono Web Framework Documentation.” https://hono.dev  
+[6] Bun, “Bun Documentation.” https://bun.sh/docs  
+[7] PostgreSQL, “PostgreSQL Official Documentation.” https://www.postgresql.org/docs  
+[8] Docker, “Docker Documentation.” https://docs.docker.com  
+[9] Docker Compose, “Docker Compose Documentation.” https://docs.docker.com/compose  
+[10] Git, “Git Documentation.” https://git-scm.com/doc  
+[11] bcryptjs, “bcryptjs NPM Package.” https://www.npmjs.com/package/bcryptjs  
+[12] uuid, “uuid NPM Package (RFC4122 UUID).” https://www.npmjs.com/package/uuid  
+[13] node-postgres, “node-postgres Documentation.” https://node-postgres.com  
+[14] CSS Modules, “CSS Modules Documentation.” https://github.com/css-modules/css-modules  
+[15] Mozilla, “XMLHttpRequest API,” MDN Web Docs. https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest  
+[16] Mozilla, “Fetch API,” MDN Web Docs. https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API  
+[17] Mozilla, “Window.localStorage,” MDN Web Docs. https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage  
+[18] JWT, “Introduction to JSON Web Tokens.” https://jwt.io/introduction  
+[19] R. Fielding, “Architectural Styles and the Design of Network-based Software Architectures,” Dissertation, UC Irvine, 2000. https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm  
+[20] OWASP, “OWASP File Upload Security Guidelines.” https://owasp.org/www-community/vulnerabilities/Unrestricted_File_Upload  
+[21] OWASP, “Authentication Cheat Sheet.” https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html  
+[22] Rohit Aryal, “Claud – Project Repository & Documentation.” https://github.com/rohitaryal/claud
+
+# Plagarism & AI Report
+
+![](image-11.png)
+![alt text](image-12.png)
+![alt text](image-13.png)
